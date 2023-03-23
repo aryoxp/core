@@ -5,12 +5,10 @@ defined('CORE') or (header($_SERVER["SERVER_PROTOCOL"] . " 403 Forbidden") and d
 class CoreController extends CoreApi {
 
   protected $ui;
-  protected $core;
 
   public function __construct() {
     parent::__construct();
     $this->ui = CoreView::instance($this);
-    $this->core = Core::instance();
   }
 
   public function redirect($destination = null) {
