@@ -11,41 +11,39 @@ class CoreView {
   private $scripts = array();
   private $heads   = array();
   private $foots   = array();
+  private $plugins = array();
 
-  public const RETURN = 1;
+  public const RETURN   = 1;
   public const RELATIVE = 2;
-  public const CORE = 4;
-  public const ASSET = 8;
-  public const APP = 16;
-  public const SHARED = 32;
-
+  public const CORE     = 4;
+  public const ASSET    = 8;
+  public const APP      = 16;
+  public const SHARED   = 32;
   public const ALL_VIEW = -1;
-
-  private $pluginDefs = array();
 
   public static function instance() {
     if (self::$instance == null) self::$instance = new CoreView();
     return self::$instance;
   }
 
-  /**
-   * Get an instance of language library 
-   * and load the specified language definition file.
-   * $path: path to the language definition file, relative to /app/asset/lang/ directory
-   * $location: path to the language definition file, relative to /app/ or global .shared/ directory
-   */
-  public function language($path, $location = CoreLanguage::LOCATION_APP, $countryCode = CoreLanguage::DEFAULT_LANG_CODE) {
-    CoreLanguage::instance()->load($path, $location, $countryCode);
-  }
+  // /**
+  //  * Get an instance of language library 
+  //  * and load the specified language definition file.
+  //  * $path: path to the language definition file, relative to /app/asset/lang/ directory
+  //  * $location: path to the language definition file, relative to /app/ or global .shared/ directory
+  //  */
+  // public function language($path, $location = CoreLanguage::LOCATION_APP, $countryCode = CoreLanguage::DEFAULT_LANG_CODE) {
+  //   CoreLanguage::instance()->load($path, $location, $countryCode);
+  // }
 
-  /**
-   * Get the language definition of a specified key.
-   * $params: parameters passed to the language string template.
-   */
-  public function l($key = '', ...$params) {
-    if ($key == '' || trim($key) == '') return "-";
-    return CoreLanguage::instance()->get($key, ...$params);
-  }
+  // /**
+  //  * Get the language definition of a specified key.
+  //  * $params: parameters passed to the language string template.
+  //  */
+  // public function l($key = '', ...$params) {
+  //   if ($key == '' || trim($key) == '') return "-";
+  //   return CoreLanguage::instance()->get($key, ...$params);
+  // }
 
   /**
    * Output the specified data into JSON format. 
@@ -105,14 +103,21 @@ class CoreView {
     if ($return) return ob_get_clean();
   }
 
-  public function pluginView($key, $data = null, $index = CoreView::ALL_VIEW, $options = CoreView::SHARED) {
-    if (isset($this->pluginDefs[$key]) && $p = $this->pluginDefs[$key]) {
-      $views = $p['views'];
+  public function viewPlugin($key, $data = null, $index = CoreView::ALL_VIEW, $options = CoreView::SHARED) {
+    if (isset($this->plugins[$key]) && $p = $this->plugins[$key]) {
+      $views = $p['views'] ?? array();
       $path = $p['path'] ? $p['path'] : null;
       if (substr("testers", -1) != DS) $path .= DS;
       if ($index == CoreView::ALL_VIEW) {
         foreach($views as $v) $this->view($path . $v, $data, $options);
       } else $this->view($path . $views[$index], $data, $options);
+
+      $views = $p['coreviews'] ?? array();
+      $path = $p['path'] ? $p['path'] : null;
+      if (substr("testers", -1) != DS) $path .= DS;
+      if ($index == CoreView::ALL_VIEW) {
+        foreach($views as $v) $this->view(CORE_ASSET_PATH. $v, $data, $options);
+      } else $this->view(CORE_ASSET_PATH . $views[$index], $data, $options);
     }
   }
 
@@ -147,6 +152,8 @@ class CoreView {
       $this->scripts[] = $script;
       return;
     }
+
+
 
     $scriptPath = ($assetPath ? CORE_ROOT_PATH . $assetPath : CORE_APP_PATH . CORE_APP_ASSET) . $path;
     if (file_exists($scriptPath)) {
@@ -183,23 +190,23 @@ class CoreView {
 
   public function usePlugin(...$key) {
 
-    if (!count($this->pluginDefs)) {
-      $pluginDefsFile = CORE_CONFIG_PATH . CoreView::PLUGIN_DEF_FILE;
-      $appPluginDefsFile = CORE_APP_PATH . CORE_APP_CONFIG . CoreView::PLUGIN_DEF_FILE;
-      $sharedPluginDefsFile = CORE_SHARED_PATH . CORE_SHARED_CONFIG . CoreView::PLUGIN_DEF_FILE;
+    if (!count($this->plugins)) {
+      $pluginsFile = CORE_CONFIG_PATH . CoreView::PLUGIN_DEF_FILE;
+      $apppluginsFile = CORE_APP_PATH . CORE_APP_CONFIG . CoreView::PLUGIN_DEF_FILE;
+      $sharedpluginsFile = CORE_SHARED_PATH . CORE_SHARED_CONFIG . CoreView::PLUGIN_DEF_FILE;
 
-      // var_dump($pluginDefsFile, $appPluginDefsFile, $sharedPluginDefsFile);
+      // var_dump($pluginsFile, $apppluginsFile, $sharedpluginsFile);
 
-      if (file_exists($pluginDefsFile) and is_readable($pluginDefsFile))
-        $this->pluginDefs = parse_ini_file($pluginDefsFile, true);
-      if (file_exists($appPluginDefsFile) and is_readable($appPluginDefsFile))
-        $this->pluginDefs = array_merge($this->pluginDefs, parse_ini_file($appPluginDefsFile, true));
-      if (file_exists($sharedPluginDefsFile) and is_readable($sharedPluginDefsFile))
-        $this->pluginDefs = array_merge($this->pluginDefs, parse_ini_file($sharedPluginDefsFile, true));
+      if (file_exists($pluginsFile) and is_readable($pluginsFile))
+        $this->plugins = parse_ini_file($pluginsFile, true);
+      if (file_exists($apppluginsFile) and is_readable($apppluginsFile))
+        $this->plugins = array_merge($this->plugins, parse_ini_file($apppluginsFile, true));
+      if (file_exists($sharedpluginsFile) and is_readable($sharedpluginsFile))
+        $this->plugins = array_merge($this->plugins, parse_ini_file($sharedpluginsFile, true));
     }
 
     foreach ($key as $k) {
-      if (isset($this->pluginDefs[$k]) && $p = $this->pluginDefs[$k]) {
+      if (isset($this->plugins[$k]) && $p = $this->plugins[$k]) {
         if (isset($p['dependencies'])) {
           foreach ($p['dependencies'] as $dep) {
             $this->usePlugin($dep);
@@ -207,32 +214,32 @@ class CoreView {
         }
         if (isset($p['scripts'])) {
           foreach ($p['scripts'] as $s) {
-            $this->useScript($s, null, $p['path'] ? $p['path'] . DS : null);
+            $this->useScript($s, null, isset($p['path']) ? $p['path'] . DS : null);
           }
         }
         if (isset($p['styles'])) {
           foreach ($p['styles'] as $s) {
-            $this->useStyle($s, null, $p['path'] ? $p['path'] . DS : null);
+            $this->useStyle($s, null, isset($p['path']) ? $p['path'] . DS : null);
           }
         }
         if (isset($p['corescripts'])) {
           foreach ($p['corescripts'] as $s) {
-            $this->useScript($s, null, "core/asset/");
+            $this->useScript($s, null, CORE_ASSET_PATH);
           }
         }
         if (isset($p['corestyles'])) {
-          foreach ($p['corescripts)'] as $s) {
-            $this->useStyle($s, null, "core/asset/");
+          foreach ($p['corestyles'] as $s) {
+            $this->useStyle($s, null, CORE_ASSET_PATH);
           }
         }
       } else echo "<!-- Cannot find plugin definition of key: $k. -->";
     }
   }
 
-  public function useCoreClients(...$plugins) {
+  public function useCoreLib(...$pluginKeys) {
     $this->usePlugin('core-client'); // core-client-min
 
-    foreach ($plugins as $plugin) $this->usePlugin($plugin);
+    foreach ($pluginKeys as $pluginKey) $this->usePlugin($pluginKey);
 
     $clientBaseConfig                  = new stdClass;
     $clientBaseConfig->{'baseurl'}     = $this->location();
@@ -242,37 +249,40 @@ class CoreView {
 
     Core::lib(Core::CONFIG)->set('core', base64_encode(json_encode($clientBaseConfig)), CoreConfig::CONFIG_TYPE_CLIENT);
   }
-  public function useClientLibs(...$plugins) {
-    return $this->useCoreClients(...$plugins);
-  }
-  public function loadClientLibs(...$plugins) {
-    return $this->useCoreClients(...$plugins);
-  }
-  public function useCoreLibs(...$plugins) {
-    return $this->useCoreClients(...$plugins);
-  }
-  public function loadCoreLibs(...$plugins) {
-    return $this->useCoreClients(...$plugins);
-  }
-  public function useClientLib(...$plugins) {
-    return $this->useCoreClients(...$plugins);
-  }
-  public function loadClientLib(...$plugins) {
-    return $this->useCoreClients(...$plugins);
-  }
-  public function useCoreLib(...$plugins) {
-    return $this->useCoreClients(...$plugins);
-  }
-  public function loadCoreLib(...$plugins) {
-    return $this->useCoreClients(...$plugins);
-  }
+  // public function useClientLibs(...$plugins) {
+  //   return $this->useCoreClients(...$plugins);
+  // }
+  // public function loadClientLibs(...$plugins) {
+  //   return $this->useCoreClients(...$plugins);
+  // }
+  // public function useCoreLibs(...$plugins) {
+  //   return $this->useCoreClients(...$plugins);
+  // }
+  // public function loadCoreLibs(...$plugins) {
+  //   return $this->useCoreClients(...$plugins);
+  // }
+  // public function useClientLib(...$plugins) {
+  //   return $this->useCoreClients(...$plugins);
+  // }
+  // public function loadClientLib(...$plugins) {
+  //   return $this->useCoreClients(...$plugins);
+  // }
+  // public function useCoreLib(...$plugins) {
+  //   return $this->useCoreClients(...$plugins);
+  // }
+  // public function loadCoreLib(...$plugins) {
+  //   return $this->useCoreClients(...$plugins);
+  // }
 
-  protected function metaConfig() {
+  private function metaConfig() {
     if (!$cfgs = Core::lib(Core::CONFIG)->dump(CoreConfig::CONFIG_TYPE_CLIENT)) return;
-    echo '    <meta id="core-lang" data-lang="' . "\n      ";
-    echo implode("\n      ", 
-      str_split(CoreApi::compress(json_encode(CoreLanguage::instance()->dump())), 80)
-      ) . "\">\n";
+    if ($lang = (Core::instance())->peekLib(Core::LANGUAGE)) {
+
+      echo '    <meta id="core-lang" data-lang="' . "\n      ";
+      echo implode("\n      ", 
+        str_split(CoreApi::compress(json_encode($lang->dump())), 80)
+        ) . "\">\n";
+    }
     echo '    <meta id="core-client-config" ';
     $i = 0;
     foreach ($cfgs as $key => $value) {
@@ -284,4 +294,21 @@ class CoreView {
     }
     echo ">\n";
   }
+
+  private function headStyle() {
+    foreach($this->styles as $s) echo '    <link rel="stylesheet" href="'.$s.'">' . "\n";
+  }
+
+  private function customHead() {
+    if ($this->heads && count($this->heads)) echo "\n    " . implode("\n    " , $this->heads) . "\n\n";
+  }
+
+  private function footScript() {
+    foreach($this->scripts as $s) echo '  <script type="text/javascript" src="'.$s.'"></script>' . "\n";
+  }
+
+  private function customFoot() {
+    if ($this->foots && count($this->foots)) echo "\n  " . implode("\n  " , $this->foots) . "\n\n";
+  }
+
 }

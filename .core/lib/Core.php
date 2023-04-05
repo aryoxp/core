@@ -16,7 +16,6 @@ class Core {
   private $config;
   private $uri;
   private $language;
-
   private $runtime;
 
   const AUTOLOADER = "autoloader";
@@ -67,4 +66,21 @@ class Core {
         return $this->runtime ? $this->runtime : CoreRuntime::instance(...$args);
     }
   }
+
+  public function peekLib($lib) {
+    switch ($lib) {
+      case Core::LANGUAGE:
+        return $this->language;
+      case Core::RUNTIME:
+        return $this->runtime;
+      case Core::AUTOLOADER:
+        return $this->autoloader;
+      case Core::CONFIG:
+        return $this->config;
+      case Core::URI:
+        return $this->uri;      
+      default: return null;
+    }
+  }
+
 }

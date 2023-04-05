@@ -20,7 +20,7 @@ class ModuleController extends CoreController {
     $defaultLangCode = "jp"; // echo CoreLanguage::DEFAULT_LANG_CODE;
     Core::lib(Core::CONFIG)->set('defaultlang', $defaultLangCode, CoreConfig::CONFIG_TYPE_CLIENT);
     $this->ui->usePlugin('core-language');
-    $this->ui->language('admin', CoreLanguage::LOCATION_APP, $defaultLangCode);
+    // $this->ui->language('admin', CoreLanguage::LOCATION_APP, $defaultLangCode);
   }
 
   protected function isAppAuthorized($app = null) {
@@ -86,7 +86,7 @@ class ModuleController extends CoreController {
   }
 
   protected function render($content = "", $options = []) {
-    $this->ui->useCoreClients();
+    $this->ui->useCoreLib();
     $this->ui->usePlugin('core-language', 
       'bootstrap', 
       'bootstrap-icons', 
@@ -104,7 +104,7 @@ class ModuleController extends CoreController {
   }
 
   protected function renderDenied($message = null, $options = []) {
-    $this->ui->useCoreClients();
+    $this->ui->useCoreLib();
     $this->ui->usePlugin('core-language', 
       'bootstrap', 
       'bootstrap-icons', 

@@ -17,14 +17,14 @@ class CoreResult {
     return new CoreResult($result, $status, $error);
   }
 
-  public static function compress($data) {
-    return base64_encode(gzcompress(json_encode($data), 9));
-  }
+  // public static function compress($data) {
+  //   return base64_encode(gzcompress(json_encode($data), 9));
+  // }
 
   public function show() {
     $result = new stdClass;
     $result->coreStatus = $this->status;
-    $result->coreError = $this->error;
+    $result->coreError  = $this->error;
     $result->coreResult = $this->result;
     @header('content-type:application/json');
     echo json_encode($result);

@@ -28,7 +28,7 @@ define('CORE_CVS_PATH', CORE_CORE_PATH . $coreConfig['core']['core_pattern_direc
 define('CORE_LIB_PATH', CORE_CORE_PATH . $coreConfig['core']['core_library_directory'] . DS);
 define('CORE_API_PATH', CORE_CORE_PATH . $coreConfig['core']['core_api_directory'] . DS);
 define('CORE_CONFIG_PATH', CORE_CORE_PATH . $coreConfig['core']['core_config_directory'] . DS);
-define('CORE_ASSET_PATH', CORE_CORE_PATH . $coreConfig['core']['core_asset_directory'] . DS);
+define('CORE_ASSET_PATH', $coreConfig['core']['core_asset_directory'] . DS);
 define('CORE_VIEW_PATH', CORE_CORE_PATH . $coreConfig['core']['core_view_directory'] . DS);
 define('CORE_LANG_PATH', CORE_ASSET_PATH . $coreConfig['core']['core_lang_directory'] . DS);
 define('CORE_RUNTIME_PATH', CORE_CORE_PATH . $coreConfig['core']['core_runtime_directory'] . DS);

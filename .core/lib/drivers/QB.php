@@ -45,7 +45,7 @@ class QBWhere {
   public $col, $op, $val, $con;
   public function __construct($col, $opVal = null, $val = null, $con = QB::AND) {
     // if ($col instanceof QBRaw || $col == QB::OG || $col == QB::EG) {
-    if ($col == QB::OG || $col == QB::EG) {
+    if ($col == QB::OG || $col == QB::EG || $col == QB::SG || $col == QB::CG) {
       $this->col = $col;
       $this->con = $opVal; // QB::AND or QB::OR
       return;
@@ -57,7 +57,8 @@ class QBWhere {
   }
   public function flat() {
     if ($this->col instanceof QBRaw && !$this->op && !$this->val) return $this->col->raw;
-    if ($this->col == QB::OG || $this->col == QB::EG) return $this->col;
+    if ($this->col == QB::OG || $this->col == QB::EG || $this->col == QB::SG || $this->col == QB::CG) 
+      return $this->col;
     if ($this->val === null) $this->op = QB::IS;
     return QB::bt($this->col) . QB::SP . $this->op . QB::SP . QB::qt($this->val);
   }
@@ -70,7 +71,7 @@ class QBHaving {
   public $col, $op, $val, $con;
   public function __construct($col, $opVal = null, $val = null, $con = QB::AND) {
     // if ($col instanceof QBRaw || $col == QB::OG || $col == QB::EG) {
-    if ($col == QB::OG || $col == QB::EG) {
+    if ($col == QB::OG || $col == QB::EG || $col == QB::SG || $col == QB::CG) {
       $this->col = $col;
       $this->con = $opVal; // QB::AND or QB::OR
       return;
@@ -82,7 +83,8 @@ class QBHaving {
   }
   public function flat() {
     if ($this->col instanceof QBRaw && !$this->op && !$this->val) return $this->col->raw;
-    if ($this->col == QB::OG || $this->col == QB::EG) return $this->col;
+    if ($this->col == QB::OG || $this->col == QB::EG || $this->col == QB::SG || $this->col == QB::CG) 
+      return $this->col;
     return QB::bt($this->col) . QB::SP . $this->op . QB::SP . QB::qt($this->val);
   }
 }
@@ -113,6 +115,8 @@ abstract class QBBase {
   public const AND   = 'AND';
   public const OG    = '(';
   public const EG    = ')';
+  public const SG    = '(';
+  public const CG    = ')';
   public const ASC   = 'ASC';
   public const DESC  = 'DESC';
   public const RAND  = 'RAND()';
@@ -123,6 +127,8 @@ abstract class QBBase {
   public const EQ    = '=';
   public const NEQ   = '<>';
   public const LIKE  = 'LIKE';
+  public const NLIKE = 'NOT LIKE';
+  public const NOT   = 'NOT';
 
   public const INNER = 'INNER JOIN';
   public const LEFT  = 'LEFT JOIN';
@@ -238,13 +244,13 @@ class QB extends QBBase {
   private $_table;
 
   private $_selects = [];
-  private $_joins = [];
+  private $_joins   = [];
   private $_insert;
-  private $_update = [];
+  private $_update  = [];
   private $_wheres  = [];
   private $_groups  = [];
   private $_havings = [];
-  private $_orders = [];
+  private $_orders  = [];
   private $_limit;
 
 

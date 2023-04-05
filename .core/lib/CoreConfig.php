@@ -7,14 +7,14 @@ class CoreConfig {
   private static $instance; // to store the singleton instance
   private $config; // to store the configuration data
 
-  const CONFIG_TYPE_APP = 'app';
-  const CONFIG_TYPE_SHARED = 'shared';
-  const CONFIG_TYPE_RUNTIME = 'runtime';
-  const CONFIG_TYPE_CORE = 'core';
-  const CONFIG_TYPE_CLIENT = 'client';
-  const CONFIG_TYPE_ALL = 'all';
+  const CONFIG_TYPE_APP       = 'app';
+  const CONFIG_TYPE_SHARED    = 'shared';
+  const CONFIG_TYPE_RUNTIME   = 'runtime';
+  const CONFIG_TYPE_CORE      = 'core';
+  const CONFIG_TYPE_CLIENT    = 'client';
+  const CONFIG_TYPE_ALL       = 'all';
 
-  const CONFIG_FILE_TYPE_INI = 'ini';
+  const CONFIG_FILE_TYPE_INI  = 'ini';
   const CONFIG_FILE_TYPE_JSON = 'json';
 
   public static function instance($coreConfig = null) {

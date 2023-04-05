@@ -1,0 +1,16 @@
+[
+  {
+    "id": "docs",
+    "label": "Documentation",
+    "url": "docs",
+    "icon": "file-earmark-code",
+    "subs": [
+      {
+        "id": "sub-docs",
+        "label": "Sub-Documentation",
+        "url": "sub-docs",
+        "icon": "file-earmark-code"
+      }
+    ]
+  }
+]

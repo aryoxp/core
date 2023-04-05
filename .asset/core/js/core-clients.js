@@ -245,12 +245,12 @@ class Core {
    * Shorthand methods and utilities
   */
 
-  /**
-   * Getting a language entry by key
-   */
-  static l(key, ...args) {
-    return Core.instance().language().get(key, ...args)
-  }
+  // /**
+  //  * Getting a language entry by key
+  //  */
+  // static l(key, ...args) {
+  //   return Core.instance().language().get(key, ...args)
+  // }
 
   static compress(data) { // encoded to base64 encoding
     return btoa(String.fromCharCode.apply(null, pako.gzip(JSON.stringify(data), {to: 'string'})))

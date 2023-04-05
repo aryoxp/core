@@ -7,7 +7,7 @@ class CoreService {
   private static $connections      = [];
   private static $dbConfigFilename = 'db.ini';
 
-  protected static function instance($configKey = null, $queryBuilder = null) {
+  protected static function instance($configKey = null) {
 
     if ($configKey === null) 
       $configKey = Core::lib(Core::CONFIG)->get('default_db_key');

@@ -33,7 +33,7 @@ class CoreLanguageController extends CoreApi {
      */ 
     $filepath = CORE_APP_PATH . ($basePath ? $basePath : CORE_APP_LANG) 
       . $file
-      . "." . self::SUFFIX . ".${countryId}.json";
+      . "." . self::SUFFIX . "." . $countryId . ".json";
     $langJson = file_exists($filepath) ? file_get_contents($filepath) : "{}";
 
     /**
