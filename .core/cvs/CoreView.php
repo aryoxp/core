@@ -242,6 +242,9 @@ class CoreView {
     foreach ($pluginKeys as $pluginKey) $this->usePlugin($pluginKey);
 
     $clientBaseConfig                  = new stdClass;
+    $clientBaseConfig->{'app'}         = Core::lib(Core::URI)->get(CoreUri::APP);
+    $clientBaseConfig->{'controller'}  = Core::lib(Core::URI)->get(CoreUri::CONTROLLERID);
+    $clientBaseConfig->{'method'}      = Core::lib(Core::URI)->get(CoreUri::METHOD);
     $clientBaseConfig->{'baseurl'}     = $this->location();
     $clientBaseConfig->{'basefileurl'} = $this->file();
     $clientBaseConfig->{'asseturl'}    = $this->asset();

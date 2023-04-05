@@ -95,6 +95,20 @@ searchMobileTrigger.addEventListener('click', () => {
 
 
 $(() => {
+
+  let cfg = Core.instance().config();
+  let app = cfg.get('app');
+  let controller = cfg.get('controller');
+  let method = cfg.get('method');
+
+  // Auto-activate and auto-collapse menu and menu items
+  // Below: not defined in the menu.json file
+  $(`.nav-link.menu-${app}-${controller}-${method}`).addClass('active');
+  $(`a.submenu-link.menu-${app}-${controller}-${method}`).addClass('active');
+  // Below: defined in the menu.json file
+  $('a.submenu-link.active').parents('.has-submenu').find('.nav-link').addClass('active');
+  $('a.submenu-link.active').parents('.submenu').addClass('show');
+
   // let dialog = new CoreWindow('.card', { draggable: true, width: '400px' })
   // dialog.show();
   // let dialog = new CoreInfo("Hello! This is an info for the dialog. Nice and thank you!", {

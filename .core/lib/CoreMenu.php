@@ -18,4 +18,5 @@ class CoreMenu {
   public function addSub($menu) {
     $this->subs[] = $menu;
   }
+
 }

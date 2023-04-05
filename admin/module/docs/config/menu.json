@@ -3,13 +3,18 @@
     "id": "docs",
     "label": "Documentation",
     "url": "docs",
-    "icon": "file-earmark-code",
+    "icon": "book",
     "subs": [
       {
-        "id": "sub-docs",
-        "label": "Sub-Documentation",
-        "url": "sub-docs",
+        "id": "doc-framework",
+        "label": "Core Framework",
+        "url": "doc",
         "icon": "file-earmark-code"
+      }, {
+        "id": "user-manual",
+        "label": "User Manual",
+        "url": "doc/manual",
+        "icon": "question-circle"
       }
     ]
   }

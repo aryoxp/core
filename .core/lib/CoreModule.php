@@ -11,6 +11,11 @@ class CoreModule {
     $this->menu = CoreModule::loadMenu($id);
   }
 
+  public function menu() {
+    return $this->menu;
+  }
+
+
   private static function parseMenu($menu) {
     $m = new CoreMenu();
     if (property_exists($menu, 'label')) $m->label = $menu->label;
@@ -34,6 +39,14 @@ class CoreModule {
         $menus[] = CoreModule::parseMenu($menu);
     }
     return $menus;
+  }
+
+  public static function getModules() {
+    $moduleKeys = CoreModule::getAvailableModules();
+    $modules = array();
+    foreach($moduleKeys as $key)
+      $modules[] = new CoreModule($key);
+    return $modules;
   }
 
   public static function getAvailableModules() {
