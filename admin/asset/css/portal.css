@@ -9677,7 +9677,7 @@ button.close:focus {
 .app-card {
   position: relative;
   background: #fff;
-  border-radius: 0.25rem; }
+  border-radius: 0.75rem; }
   .app-card.border-left-decoration {
     border-left: 3px solid #1571a3; }
   .app-card .app-card-link-mask {

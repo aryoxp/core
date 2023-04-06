@@ -1,6 +1,6 @@
 <?php
 
-class ModuleApiController extends CoreController {
+class CoreModuleApiController extends CoreController {
 
   private $module, $controller, $method, $args;
 

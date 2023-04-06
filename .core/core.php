@@ -86,6 +86,7 @@ try {
   // try to instantiate the controller and execute method with the provided args
   if (file_exists(CORE_APP_PATH . CORE_APP_CONTROLLER . $controller . ".php") 
     || file_exists(CORE_APP_PATH . CORE_APP_API . $controller . ".php")
+    || file_exists(CORE_CORE_PATH . CORE_APP_CONTROLLER . $controller . ".php") 
     || file_exists(CORE_SHARED_PATH . CORE_SHARED_CONTROLLER . $controller . ".php")
     || file_exists(CORE_SHARED_PATH . CORE_SHARED_API . $controller . ".php") 
     || file_exists(CORE_API_PATH . $controller . ".php")) {

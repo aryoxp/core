@@ -7,11 +7,11 @@ class CoreView {
   private static $instance;
   private const PLUGIN_DEF_FILE = 'plugins.ini';
 
-  private $styles  = array();
-  private $scripts = array();
-  private $heads   = array();
-  private $foots   = array();
-  private $plugins = array();
+  protected $styles  = array();
+  protected $scripts = array();
+  protected $heads   = array();
+  protected $foots   = array();
+  protected $plugins = array();
 
   public const RETURN   = 1;
   public const RELATIVE = 2;
@@ -148,21 +148,19 @@ class CoreView {
      */
     if (preg_match("/^http(s?)\:\/\//i", $path)) {
       $script = $path . ($pad ? $pad : '');
-      if (in_array($script, $this->scripts)) return;
+      if (in_array($script, $this->scripts)) return true;
       $this->scripts[] = $script;
-      return;
+      return true;
     }
-
-
 
     $scriptPath = ($assetPath ? CORE_ROOT_PATH . $assetPath : CORE_APP_PATH . CORE_APP_ASSET) . $path;
     if (file_exists($scriptPath)) {
       $script = $this->asset($path, $assetPath) . ($pad ? $pad : '');
       if (!in_array($script, $this->scripts))
         $this->scripts[] = $script;
-    } else {
-      echo '<!-- Invalid: ' . $scriptPath . '-->';
-    }
+      return true;
+    } else echo '<!-- Invalid: ' . $scriptPath . '-->';
+    return false;
   }
 
   public function useStyle($path, $pad = null, $assetPath = null) {
@@ -173,9 +171,9 @@ class CoreView {
      */
     if (preg_match("/^http(s?)\:\/\//i", $path)) {
       $style = $path . ($pad ? $pad : '');
-      if (in_array($style, $this->styles)) return;
+      if (in_array($style, $this->styles)) return true;
       $this->styles[] = $style;
-      return;
+      return true;
     }
 
     $stylePath = ($assetPath ? CORE_ROOT_PATH . $assetPath : CORE_APP_PATH . CORE_APP_ASSET) . $path;
@@ -183,9 +181,9 @@ class CoreView {
       $style = $this->asset($path, $assetPath) . ($pad ? $pad : '');
       if (!in_array($style, $this->styles))
         $this->styles[] = $style;
-    } else {
-      echo '<!-- Invalid: ' . $stylePath . '-->';
-    }
+      return true;
+    } else  echo '<!-- Invalid: ' . $stylePath . '-->';
+    return false;
   }
 
   public function usePlugin(...$key) {
@@ -252,31 +250,8 @@ class CoreView {
 
     Core::lib(Core::CONFIG)->set('core', base64_encode(json_encode($clientBaseConfig)), CoreConfig::CONFIG_TYPE_CLIENT);
   }
-  // public function useClientLibs(...$plugins) {
-  //   return $this->useCoreClients(...$plugins);
-  // }
-  // public function loadClientLibs(...$plugins) {
-  //   return $this->useCoreClients(...$plugins);
-  // }
-  // public function useCoreLibs(...$plugins) {
-  //   return $this->useCoreClients(...$plugins);
-  // }
-  // public function loadCoreLibs(...$plugins) {
-  //   return $this->useCoreClients(...$plugins);
-  // }
-  // public function useClientLib(...$plugins) {
-  //   return $this->useCoreClients(...$plugins);
-  // }
-  // public function loadClientLib(...$plugins) {
-  //   return $this->useCoreClients(...$plugins);
-  // }
-  // public function useCoreLib(...$plugins) {
-  //   return $this->useCoreClients(...$plugins);
-  // }
-  // public function loadCoreLib(...$plugins) {
-  //   return $this->useCoreClients(...$plugins);
-  // }
 
+  // Needed from Core's View: head.php
   private function metaConfig() {
     if (!$cfgs = Core::lib(Core::CONFIG)->dump(CoreConfig::CONFIG_TYPE_CLIENT)) return;
     if ($lang = (Core::instance())->peekLib(Core::LANGUAGE)) {
@@ -290,7 +265,7 @@ class CoreView {
     $i = 0;
     foreach ($cfgs as $key => $value) {
       if ($key == 'core') {
-        echo ($i > 0 ? "\n" : "") . "data-{$key}=\"" . "\n      ";
+        echo ($i > 0 ? "\n" : "") . "      data-{$key}=\"" . "\n      ";
         echo implode("\n      ", str_split($value, 80)) . "\"";
       } else echo ($i > 0 ? "\n      " : "") . "data-{$key}=\"{$value}\"";
       $i++;

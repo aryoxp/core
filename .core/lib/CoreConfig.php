@@ -37,6 +37,7 @@ class CoreConfig {
       json_decode(file_get_contents($filename));
     if ($appConfig && count($appConfig)) 
       $this->config[$configtype] = array_merge($this->config[$configtype], $appConfig);
+    return $this;
   }
 
   public function load($filename, $filetype = CoreConfig::CONFIG_FILE_TYPE_INI, $configtype = CoreConfig::CONFIG_TYPE_APP) {
@@ -66,6 +67,7 @@ class CoreConfig {
   public function set($key, $value, $configtype = CoreConfig::CONFIG_TYPE_APP) {
     $key = strtolower(preg_replace('/[^a-z0-9]/i', "", $key));
     $this->config[$configtype][$key] = $value;
+    return $this;
   }
   
   public function dump($type = CoreConfig::CONFIG_TYPE_APP) {

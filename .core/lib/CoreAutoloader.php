@@ -16,6 +16,7 @@ class CoreAutoloader {
     spl_autoload_register(array($this, 'coreDriverLoader'));
 		spl_autoload_register(array($this, 'coreApiLoader'));
     spl_autoload_register(array($this, 'coreCvsLoader'));
+    spl_autoload_register(array($this, 'coreControllerLoader'));
 		spl_autoload_register(array($this, 'appLibraryLoader'));
 		spl_autoload_register(array($this, 'appApiLoader'));
 		spl_autoload_register(array($this, 'appControllerLoader'));
@@ -39,6 +40,10 @@ class CoreAutoloader {
 	private function coreApiLoader( $className ) {
 		@include_once CORE_API_PATH . $className . '.php';		
 	}
+
+  private function coreControllerLoader( $className ) {
+    @include_once CORE_CORE_PATH . CORE_APP_CONTROLLER . $className . ".php";
+  }
 	
 	private function appLibraryLoader( $className ) {
 		@include_once CORE_APP_PATH . CORE_APP_LIB . $className . '.php';

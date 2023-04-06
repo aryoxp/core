@@ -1,0 +1,30 @@
+[
+  {
+    "id": "lab",
+    "label": "Laboratory",
+    "url": "docs",
+    "icon": "thermometer-half",
+    "subs": [
+      {
+        "id": "lab-inventaris",
+        "label": "Inventory",
+        "url": "m/x/lab/inventaris"
+      },
+      {
+        "id": "lab-pinjam-alat",
+        "label": "Peminjaman Alat",
+        "url": "m/x/lab/pinjam"
+      },
+      {
+        "id": "lab-settings",
+        "label": "Settings",
+        "url": "m/x/lab/settings"
+      },
+      {
+        "id": "lab-setup",
+        "label": "Setup",
+        "url": "m/x/lab/setup"
+      }
+    ]
+  }
+]
