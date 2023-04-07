@@ -19,4 +19,16 @@ class MtaLineApiController extends CoreApi {
       CoreError::instance($e->getMessage())->show();
     }
   }
+
+  public function saveLine() {
+    $idline = $this->postv('idline');
+    $line = json_decode($this->postv('line', "[]"));
+    $lineService = new LineService();
+    try {
+      $result = $lineService->saveLine($idline, $line);
+      CoreResult::instance($result)->json();
+    } catch(Exception $e) {
+      CoreError::instance($e->getMessage())->show();
+    }
+  }
 }

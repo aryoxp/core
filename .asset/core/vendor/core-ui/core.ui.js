@@ -95,7 +95,7 @@ class CoreWindow {
     var ph = $(this.element).parent().height();
     var w = $(this.element).width();
     var h = $(this.element).height();
-    console.log(pw, ph, w, h);
+    // console.log(pw, ph, w, h);
     this.position.x = (pw-w)/2;
     this.position.y = (ph-h)/2;
     $(this.element).css('transform', `translate(${this.position.x}px,${this.position.y}px)`);

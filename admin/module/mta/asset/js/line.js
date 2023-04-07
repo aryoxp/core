@@ -35,6 +35,9 @@ class App {
         }]
       }]
     });
+    App.map.addListener('click', e => {
+      $('#mta-poly-context').hide();
+    });
 
     var infoWindow = new google.maps.InfoWindow;
 
@@ -106,10 +109,11 @@ class App {
     // Clean all previously created markers
     // App.markers.forEach(marker => marker.setMap(null));
 
-    line.points.forEach(p => { // console.log(p);
-      path.push({
-        lat: parseFloat(p.lat), lng: parseFloat(p.lng)
-      });
+    line.points.forEach(p => { // console.log(p.idpoint);
+      let pos = new google.maps.LatLng(p.lat, p.lng);
+      pos.idpoint = p.idpoint;
+      path.push(pos);
+
       if (!parseInt(p.stop)) return;
       // Draw marker on Map
       if (!App.markers.has(p.idpoint)) {
@@ -147,6 +151,19 @@ class App {
         // ]
       });
       poly.setMap(App.map);
+      poly.addListener('dblclick', (e) => {
+        poly.setEditable(!poly.getEditable());
+        e.stop();
+      });
+      poly.addListener('contextmenu', (e) => {
+        // console.log(poly);
+        if (poly.getEditable() && e.vertex) poly.getPath().removeAt(e.vertex);
+        else if (!poly.getEditable()) {
+          $('#mta-poly-context').css('top', e.domEvent.clientY).css('left', e.domEvent.clientX).show();
+          $('#btn-save-line').attr('data-id', poly.idline);
+        }
+      });
+
       App.polylines.set(line.idline, poly);
     } else App.polylines.get(line.idline).setMap(App.map);
   }
@@ -194,6 +211,33 @@ $(() => {
     App.markers.forEach(marker => marker.setMap(null));
     App.markers.clear();
     App.polylines.clear();
+  });
+
+  $('#btn-save-line').on('click', () => {
+    let idline = $('#btn-save-line').attr('data-id');
+    let path = App.polylines.get(idline).getPath();
+    let line = [];
+    path.forEach((p, index) => {
+      // console.log(p, p.idpoint);
+      line.push({
+				idpoint: p.idpoint,
+				lat: p.lat(),
+				lng: p.lng(),
+				sequence: index
+			});
+    });
+    // console.log(line);
+    ajax.post('m/x/mta/lineApi/saveLine', {
+      line: JSON.stringify(line),
+      idline: idline
+    }).then((response) => {
+      if (response) 
+        (new CoreInfo("Line route path has been saved.")).show();
+    }, (err) => {
+      (new CoreInfo(err)).show();
+    });
+    $('#mta-poly-context').fadeOut('fast');
+
   });
 
 });
