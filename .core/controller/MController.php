@@ -32,12 +32,14 @@ class MController extends CoreController {
     if (!class_exists($controller)) throw CoreError::instance("Invalid controller: '$controller'");
     
     $controllerInstance = new $controller();
-    
-    if (!$controllerInstance instanceof CoreModuleController)
-      throw CoreError::instance("Invalid controller: '$controller'");
+    if (!$controllerInstance instanceof CoreModuleController && 
+        !$controllerInstance instanceof CoreApi)
+      throw CoreError::instance("Invalid module controller: '$controller'");
 
-    $controllerInstance->init($module, $controller, $controllerId, $method, $args);
-    $controllerInstance->preamble();
+    if ($controllerInstance instanceof CoreModuleController) {
+      $controllerInstance->init($module, $controller, $controllerId, $method, $args);
+      $controllerInstance->preamble();
+    }
 
     try {
       if (method_exists($controller, $method))

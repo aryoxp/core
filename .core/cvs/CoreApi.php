@@ -9,6 +9,7 @@ class CoreApi {
     $this->core = Core::instance();
     $config = Core::lib(Core::CONFIG);
     $config->load($config->get('default_config_file', CoreConfig::CONFIG_TYPE_CORE));
+    define('CORE_MODULE_PATH', CORE_APP_PATH . CoreModule::MODULE_DIR . DS . CoreModule::part(CoreModule::MODULE) . DS);
     // $config->set("rbac", "data", CoreConfig::CONFIG_TYPE_CLIENT);
   }
 

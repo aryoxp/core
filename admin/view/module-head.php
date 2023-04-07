@@ -8,5 +8,5 @@ $this->view('head.php', array('title' => $title), CoreView::CORE);
   <?php $this->view('header.php', null, CoreModuleView::APP); ?>
   <?php $this->view('sidepanel.php', null, CoreModuleView::APP); ?>
 </header> <!--//app-header-->
-<div class="app-wrapper pt-5 flex-grow-1 d-flex align-items-stretch">
+<div class="app-wrapper pt-5 mt-2 flex-grow-1 d-flex align-items-stretch flex-column">
 

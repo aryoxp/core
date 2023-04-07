@@ -31,7 +31,7 @@
             <a class="dropdown-toggle no-toggle-arrow" id="notifications-dropdown-toggle" data-bs-toggle="dropdown"
               href="#" role="button" aria-expanded="false" title="Notifications">
               <i class="bi bi-bell icon"></i>
-              <span class="icon-badge">3</span>
+              <!-- <span class="icon-badge">3</span> -->
             </a>
             <!--//dropdown-toggle-->
 

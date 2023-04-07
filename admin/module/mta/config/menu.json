@@ -1,0 +1,35 @@
+[
+  {
+    "id": "mta",
+    "label": "Malang Assistant",
+    "url": "docs",
+    "icon": "bus-front",
+    "subs": [
+      {
+        "id": "mta-line",
+        "label": "Line",
+        "url": "m/x/mta"
+      },
+      {
+        "id": "mta-interchange",
+        "label": "Interchange",
+        "url": "m/x/mta/home/interchange"
+      },
+      {
+        "id": "mta-stop",
+        "label": "Stops",
+        "url": "m/x/mta/home/Stop"
+      },
+      {
+        "id": "mta-settings",
+        "label": "Settings",
+        "url": "m/x/mta/home/settings"
+      },
+      {
+        "id": "mta-setup",
+        "label": "Setup",
+        "url": "m/x/mta/setup"
+      }
+    ]
+  }
+]

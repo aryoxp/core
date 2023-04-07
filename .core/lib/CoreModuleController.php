@@ -7,7 +7,6 @@ abstract class CoreModuleController extends CoreController {
   public function __construct() {
     parent::__construct();
     $this->ui = CoreModuleView::instance($this);
-    define('CORE_MODULE_PATH', CORE_APP_PATH . CoreModule::MODULE_DIR . DS . CoreModule::part(CoreModule::MODULE) . DS);
   }
 
   public abstract function preamble();
