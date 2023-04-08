@@ -12,4 +12,10 @@ class MtaHomeController extends CoreModuleController {
     $this->ui->view('line.php', null, CoreModuleView::MODULE);
   }
 
+  public function import() {
+    $this->menuId('mta-line-import');
+    $this->ui->useScript('js/import.js');
+    $this->ui->view('import.php', null, CoreModuleView::MODULE);
+  }
+
 }

@@ -22,7 +22,7 @@ class LineService extends CoreService {
     return $db->query($qb->get());
   }
 
-  public function saveLine($idline, $line = []) {
+  public function saveLine($idline, $points = []) {
     $db = self::instance('mta');
     $db->begin();
     try {
@@ -33,7 +33,7 @@ class LineService extends CoreService {
         ->where('idline', QB::esc($idline));
       $db->query($qb->get());
   
-      foreach($line as $p) {
+      foreach($points as $p) {
 
         // Insert points or update as necessary
         // Mark the updated points to be kept
@@ -75,5 +75,62 @@ class LineService extends CoreService {
     }
 
   }
+
+  public function deleteLine($idline) {
+    try {
+      $db = self::instance('mta');
+      $qb = QB::instance('point')
+        ->delete()
+        ->where('idpoint', QB::IN, QB::raw("(SELECT idpoint FROM linepoint WHERE idline = '".QB::esc($idline)."')"));
+      $db->begin();
+      $db->query($qb->get());
+      // Enable below to also delete the line
+      $qb = QB::instance('line')->delete()->where('idline', QB::esc($idline));
+      $db->query($qb->get());
+      $db->commit();
+      return true;
+    } catch(Exception $e) {
+      $db->rollback();
+      throw $e;
+    }
+  }
+
+  public function updateLine($idline, $name, $linecolor, $direction, $enabled) {
+    try {
+      $db = self::instance('mta');
+
+      $update['name'] = QB::esc($name);
+      $update['direction'] = QB::esc($direction);
+      $update['linecolor'] = QB::esc($linecolor); 
+      $update['enabled'] = QB::esc($enabled); 
+
+      $qb = QB::instance('line')
+        ->update($update)
+        ->where('idline', QB::esc($idline));
+      $db->query($qb->get());
+      return true;
+    } catch(Exception $e) {
+      throw $e;
+    }
+  }
+
+  public function createLine($name, $linecolor, $direction, $idlinetype, $enabled) {
+    try {
+      $db = self::instance('mta');
+
+      $insert['name'] = QB::esc($name);
+      $insert['direction'] = QB::esc($direction);
+      $insert['linecolor'] = QB::esc($linecolor);
+      $insert['idlinetype'] = QB::esc($idlinetype); 
+      $insert['enabled'] = QB::esc($enabled); 
+
+      $qb = QB::instance('line')->insert($insert);
+      $db->query($qb->get());
+      return true;
+    } catch(Exception $e) {
+      throw $e;
+    }
+  }
+
 
 }

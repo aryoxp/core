@@ -52,8 +52,7 @@ class CoreWindow {
         let close = this.options.negative();
         if (close == false) continueClose = close;
       }  
-    if (continueClose) $(this.element).fadeOut('fast');
-    $('.backdrop').remove();
+    if (continueClose) this.hide()
     return this;
   }
 
@@ -64,14 +63,12 @@ class CoreWindow {
         let close = this.options.positive();
         if (close == false) continueClose = close;
       }  
-    if (continueClose) $(this.element).fadeOut('fast');
-    $('.backdrop').remove();
+    if (continueClose) this.hide();
     return this;
   }
 
   onBackdrop(e) {
     this.onNegative(e);
-    $('.backdrop').remove();
     return this;
   }
 
@@ -102,8 +99,14 @@ class CoreWindow {
     return this;
   }
 
+  title(title = null) {
+    $(this.element).find('.app-card-body h5').remove();
+    $(this.element).find('.app-card-body').prepend(`<h5>${title ? title : this.options.title}</h5>`);
+    return this; 
+  }
+
   show() {
-    $(this.element).remove().appendTo('body').css('position', 'absolute').css('z-index', '2030');
+    $(this.element).detach().appendTo('body').css('position', 'absolute').css('z-index', '2030');
     this.center();
     if(this.options.backdrop) {
       let backdrop = $('<div class="backdrop position-absolute" style="z-index: 2029; width: 100%; height: 100%; background-color:#0005"></div>').insertBefore(this.element);
@@ -115,6 +118,11 @@ class CoreWindow {
     this.attachListener();
     return this;
   }
+
+  hide() {
+    $(this.element).fadeOut('fast');
+    $('.backdrop').remove();
+  }
 }
 
 class CoreInfo extends CoreWindow {
@@ -125,11 +133,6 @@ class CoreInfo extends CoreWindow {
     }, options));
     this.setContent(content);
     if (this.options.title) this.title(this.options.title);
-  }
-  title(title = null) {
-    $(this.element).find('.app-card-body h5').remove();
-    $(this.element).find('.app-card-body').prepend(`<h5>${title ? title : this.options.title}</h5>`);
-    return this; 
   }
   show() {
     super.show();

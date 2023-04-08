@@ -26,6 +26,11 @@
         "url": "m/x/mta/home/settings"
       },
       {
+        "id": "mta-line-import",
+        "label": "Import GPX",
+        "url": "m/x/mta/home/import"
+      },
+      {
         "id": "mta-setup",
         "label": "Setup",
         "url": "m/x/mta/setup"

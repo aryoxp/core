@@ -9229,7 +9229,7 @@ button.close:focus {
     text-decoration: none; }
   .btn .bi {
     position: relative;
-    top: -2px; }
+    top: 0px; }
 
 .btn:focus, .btn.focus {
   box-shadow: none !important; }
