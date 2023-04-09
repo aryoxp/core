@@ -48,8 +48,9 @@
     <div class="col-auto flex-fill d-flex justify-content-between">
       <span>&copy; <?php echo date('Y'); ?> Media, Game, and Mobile Laboratory.<br>All rights reserved.</span>
       <span class="text-end">
-      <a href="https://filkom.ub.ac.id">Faculty of Computer Science</a>.<br>
-      <a href="https://ub.ac.id">Universitas Brawijaya</a>.
+        <a href="https://filkom.ub.ac.id">
+        <img src="https://filkom.ub.ac.id/wp-content/uploads/2020/12/logo_filkom.png" height="36" />
+        </a>
       </span>
     </div>
   </div>
