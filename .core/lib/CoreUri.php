@@ -87,7 +87,8 @@ class CoreUri {
 
     // Remove all padded slash, and add trailing slash at end.
     // Hence, no double trailing slash at the end of the path.
-    $this->basepath = trim($this->basepath, "/") . "/";
+    $this->basepath = trim($this->basepath, '/');
+    if (!empty($this->basepath)) $this->basepath .= "/";
 
     // Composing global base URL, excluding app name.
     $this->baseurl = $this->scheme . "://" .
