@@ -75,12 +75,14 @@ use PSpell\Config;
         </li><!--//nav-item-->
 
         <?php 
+        if (UAC::isSignedIn()) :
           $modules = CoreModule::getModules();
           foreach($modules as $module) {
             $menus = $module->menu();
             foreach($menus as $menu)
               generateMenus($menu, $ui); 
           }
+        endif;
         ?>
 
         <?php // echo $this->view('sidepanel-menu-dummy.php'); ?>

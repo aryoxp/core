@@ -67,12 +67,16 @@
             <a class="dropdown-toggle" id="user-dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button"
               aria-expanded="false" style="padding-top:-2px"><i class="bi bi-person-circle icon"></i></a>
             <ul class="dropdown-menu" aria-labelledby="user-dropdown-toggle">
+              <?php if (UAC::isSignedIn()) : ?>
               <li><a class="dropdown-item" href="<?php echo $this->location('account'); ?>">Account</a></li>
               <li><a class="dropdown-item" href="<?php echo $this->location('settings'); ?>">Settings</a></li>
               <li>
                 <hr class="dropdown-divider">
               </li>
-              <li><a class="dropdown-item" href="<?php echo $this->location('login'); ?>">Log Out</a></li>
+              <li><a class="dropdown-item" href="<?php echo $this->location('home/signOut'); ?>">Sign Out <i class="bi bi-door-open text-danger ms-2"></i><i class="bi bi-arrow-right text-danger"></i></a></li>
+              <?php else: ?>
+              <li><a class="dropdown-item" href="<?php echo $this->location(); ?>">Sign In <i class="bi bi-arrow-right text-primary ms-2"></i><i class="bi bi-door-open text-primary"></i> </a></li>
+              <?php endif; ?>
             </ul>
           </div>
           <!--//app-user-dropdown-->
