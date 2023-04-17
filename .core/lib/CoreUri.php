@@ -16,6 +16,7 @@ class CoreUri {
   private $baseurl;
   private $basefileurl;
   private $baselinkurl;
+  private $baselinkappurl;
 
   private $app;
   private $controller;
@@ -23,22 +24,23 @@ class CoreUri {
   private $method;
   private $args;
 
-  const CONTROLLER   = 1;
-  const METHOD       = 2;
-  const ARGS         = 3;
-  const APP          = 4;
-  const CONTROLLERID = 5;
-  const SCHEME       = 11;
-  const HOST         = 12;
-  const PORT         = 13;
-  const URI          = 14;
-  const SCRIPT       = 15;
-  const PATHINFO     = 16;
-  const BASEPATH     = 17;
-  const BASEURL      = 18;
-  const BASEFILEURL  = 19;
-  const BASELINKURL  = 20;
-  const QUERYSTRING  = 21;
+  const CONTROLLER     = 1;
+  const METHOD         = 2;
+  const ARGS           = 3;
+  const APP            = 4;
+  const CONTROLLERID   = 5;
+  const SCHEME         = 11;
+  const HOST           = 12;
+  const PORT           = 13;
+  const URI            = 14;
+  const SCRIPT         = 15;
+  const PATHINFO       = 16;
+  const BASEPATH       = 17;
+  const BASEURL        = 18;
+  const BASEFILEURL    = 19;
+  const BASELINKURL    = 20;
+  const BASELINKAPPURL = 21;
+  const QUERYSTRING    = 22;
 
   private static $instance;
 
@@ -46,7 +48,6 @@ class CoreUri {
     if (!CoreUri::$instance) {
       CoreUri::$instance = new CoreUri($coreConfig);
     }
-
     return CoreUri::$instance;
   }
 
@@ -68,7 +69,6 @@ class CoreUri {
     }
 
     if (trim($this->pathinfo) == "") $this->pathinfo = CORE_APP;
-    
     // var_dump($this->uri, $this->script, $this->pathinfo);
 
     /**
@@ -102,8 +102,7 @@ class CoreUri {
       $this->host . ($this->port ? ":" . $this->port : "") . "/" .
       $this->basepath .
       ($coreConfig['runtime']['pretty_url'] === true ? "" : $this->script . "/");
-      // (strpos($this->uri, $this->script) === false ? "" : $this->script . "/");
-      
+    $this->baselinkappurl = $this->baselinkurl;  
     
     /**
      * Controller, method, args extraction.
@@ -112,11 +111,11 @@ class CoreUri {
     list($paths) = explode("?", $this->pathinfo);
     $pathParts   = explode("/", trim($paths, "/"));
     if (CORE_MULTI_APPS) {
-      $app                = strtolower(array_shift($pathParts));
-      $this->app          = empty($app) ? $coreConfig['runtime']['default_app'] : $app;
-      $this->basepath    .= $this->app ? $this->app . DS : '';
-      $this->baselinkurl .= $this->app ? $this->app . DS : '';
-      $this->basefileurl .= $this->app ? $this->app . DS : '';
+      $app                   = strtolower(array_shift($pathParts));
+      $this->app             = empty($app) ? $coreConfig['runtime']['default_app'] : $app;
+      $this->basepath       .= $this->app ? $this->app . DS : '';
+      $this->baselinkappurl .= $this->app ? $this->app . DS : '';
+      $this->basefileurl    .= $this->app ? $this->app . DS : '';
     }
     $controller  = $pathParts ? array_shift($pathParts) : '';
     $method      = array_shift($pathParts);
@@ -129,9 +128,7 @@ class CoreUri {
       $coreConfig['runtime']['default_method'] :
       $method;
     $this->args = $pathParts;
-
     // var_dump($this);
-
   }
 
   public function get($part = CoreUri::URI) {
@@ -154,6 +151,8 @@ class CoreUri {
         return $this->baseurl;
       case CoreUri::BASELINKURL:
         return $this->baselinkurl;        
+      case CoreUri::BASELINKAPPURL:
+        return $this->baselinkappurl;
       case CoreUri::BASEFILEURL:
         return $this->basefileurl;  
       case CoreUri::APP:

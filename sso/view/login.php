@@ -6,6 +6,16 @@
 
     <h1 class="app-page-title pb-4 mb-4" style="color: #1571a3; border-bottom: 1px solid #e7e9ed;"><div class="app-icon-holder d-inline me-2 p-2" style="background-color: #edf7fd; border-radius: 50%;"><i class="bi bi-key-fill d-inline-block text-center" style="width: 28px; height: 28px;"></i></div> SignIn</h1>
 
+    <?php if(isset($_GET['e'])) : ?>
+    <div class="col-md-4 alert alert-danger mx-auto">
+      <i class="bi bi-exclamation-triangle"></i> <?php 
+        switch($_GET['e']) {
+          case 1 : echo "Invalid username and/or password."; break;
+          case 2 : echo "SSO token generation error."; break;
+          default : echo "Unknown error.";
+        }; ?>
+    </div>
+    <?php endif; ?>
     
     <div class="text-center row">
       <main class="form-signin col-md-6 col-xs-12 mx-auto" style="max-width: 300px;">

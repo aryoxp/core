@@ -126,6 +126,10 @@ abstract class QBBase {
   public const NOTIN = 'NOT IN';
   public const EQ    = '=';
   public const NEQ   = '<>';
+  public const LT    = '<';
+  public const GT    = '>';
+  public const LTEQ  = '<=';
+  public const GTEQ  = '>=';
   public const LIKE  = 'LIKE';
   public const NLIKE = 'NOT LIKE';
   public const NOT   = 'NOT';

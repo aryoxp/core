@@ -15,45 +15,40 @@ class HomeController extends CoreController {
     $redirect = $this->postv('redirect');
     $remember = $this->postv('remember', false);
 
-    // TODO: Check Username and Password
-    // TODO: Redirect to login page if failed
-
-    $userdata = new stdClass;
-    $userdata->username = $username;
-
-    $uuids = Couch::get("_uuids");
-    $uuid = $uuids->uuids[0];
-    $userdata->id = $uuid;
-    $userdata->expire = time() + 24 * 60 * 60;
-    
-    $result = Couch::post('sso', $userdata);
-    $id = $result->id;
-
     if($remember)
       setcookie('username', $username, time() + 30 * 24 * 60 * 60, "/");
     else setcookie('username', $username, time() - 1, "/");
 
-    $location = ((isset($redirect) && $redirect) 
-      ? $redirect . "?token=$id" 
-      : $this->ui->location("/admin/home/index?token=" . $id, CoreView::APP));
+    // TODO: Check Username and Password
+    // TODO: Redirect to login page if failed
+    $auth = true;
 
-    header('location: ' . $location);
+    if($auth) {
+      $sso = new SSOMySQL();
+      $userdata = new stdClass;
+      $userdata->username = $username;
+      $uuid = $sso->setSession($userdata);
+      if($uuid === false) {
+        header('location: ' . $this->location() . '?e=2&redirect=' . urlencode($redirect));
+      } else {
+        $location = ((isset($redirect) && $redirect) 
+          ? $redirect . "?token=$uuid" 
+          : $this->ui->location("/admin/home/index?token=" . $uuid, CoreView::APP));
+        header('location: ' . $location);
+      }
+    } else
+      header('location: ' . $this->location() . '?e=1&redirect=' . urlencode($redirect));
     exit;
   }
 
   public function verify() {
     $token = $this->postv('token');
-    
-    $selector = new stdClass;
-    $selector->_id = $token;
-    $query = new stdClass;
-    $query->selector = $selector;
-
-    $result = Couch::post('sso/_find', $query);
-    // var_dump($query, $result); exit;
-    if (count($result->docs)) {
-      CoreResult::instance($result->docs[0])->show();
-    } else CoreError::instance("SSO session not found.")->show();
+    $sso = new SSOMySQL();
+    $userdata = $sso->getSession($token);
+    if ($userdata) {
+      $userdata->uuid = $token;
+      CoreResult::instance($userdata)->show();
+    } else CoreError::instance("Unable to verify SSO session or SSO session expired.")->show();
   }
 
   public function signOut() {

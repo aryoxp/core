@@ -123,17 +123,17 @@ class CoreView {
   }
 
   public function location($path = '', $location = CoreView::NONE, $basePath = null) {
-    if (preg_match("/http(s?)\:\/\//i", $path ?? "")) return $path;
-    $index = Core::lib(Core::CONFIG)->get('pretty_url', CoreConfig::CONFIG_TYPE_RUNTIME) ? "" : "index.php";
+    if (preg_match("/^http(s?)\:\/\//i", $path ?? "")) return $path;
     switch($location) {
       case CoreView::APP:
+        $index = Core::lib(Core::CONFIG)->get('pretty_url', CoreConfig::CONFIG_TYPE_RUNTIME) ? "" : "index.php";
         $location = Core::lib(Core::URI)->get(CoreUri::BASEURL)
         . ($index ? ($index . DS) : "") 
         . ($basePath ? rtrim($basePath, "/") . DS : null) 
         . $path;
         break;
       default:
-        $location = Core::lib(Core::URI)->get(CoreUri::BASELINKURL) 
+        $location = Core::lib(Core::URI)->get(CoreUri::BASELINKAPPURL) 
         . ($basePath ? rtrim($basePath, "/") . DS : null) 
         . $path;
         break;
