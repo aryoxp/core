@@ -61,10 +61,7 @@ class CoreUri {
     $this->query    = $_SERVER['QUERY_STRING'];
 
     
-    $this->pathinfo = isset($_SERVER['PATH_INFO']) ? 
-      (trim($_SERVER['PATH_INFO'], $_SERVER['QUERY_STRING'])) : 
-      null;
-    
+    $this->pathinfo = $_SERVER['PATH_INFO'] ?? null; 
     if ($this->pathinfo === null) {
       throw new Exception("Web server is not configured to have PATH_INFO defined.");
       exit;
@@ -79,7 +76,7 @@ class CoreUri {
      */
 
     // Remove trailing query string if any.
-    list($this->basepath) = str_replace($this->pathinfo, "", explode("?", $_SERVER['REQUEST_URI']));
+    list($this->basepath) = str_replace($this->pathinfo, "", explode("?", urldecode($_SERVER['REQUEST_URI'])));
 
     // Remove script file from URI if any.
     if(strpos($this->basepath, $this->script) !== false)

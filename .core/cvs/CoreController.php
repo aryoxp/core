@@ -21,13 +21,13 @@ class CoreController extends CoreApi {
 
   // UI URL Wrappers
 
-  public function location($path = null) {
-    return $this->ui->location($path);
+  public function location($path = null, $location = CoreView::NONE, $basePath = null) {
+    return $this->ui->location($path, $location, $basePath);
   }
-  public function file($path) {
-    return $this->ui->file($path);
+  public function file($path, $location = CoreView::NONE, $basePath = null) {
+    return $this->ui->file($path, $location, $basePath);
   }
-  public function asset($path) {
-    return $this->ui->asset($path);
+  public function asset($path, $location = CoreView::NONE, $basePath = null) {
+    return $this->ui->asset($path, $location, $basePath);
   }
 }

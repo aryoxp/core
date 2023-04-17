@@ -75,7 +75,7 @@
               </li>
               <li><a class="dropdown-item" href="<?php echo $this->location('home/signOut'); ?>">Sign Out <i class="bi bi-door-open text-danger ms-2"></i><i class="bi bi-arrow-right text-danger"></i></a></li>
               <?php else: ?>
-              <li><a class="dropdown-item" href="<?php echo $this->location(); ?>">Sign In <i class="bi bi-arrow-right text-primary ms-2"></i><i class="bi bi-door-open text-primary"></i> </a></li>
+              <li><a class="dropdown-item" href="<?php echo $this->location('sso', CoreView::APP); ?>">Sign In <i class="bi bi-arrow-right text-primary ms-2"></i><i class="bi bi-door-open text-primary"></i> </a></li>
               <?php endif; ?>
             </ul>
           </div>

@@ -13,6 +13,7 @@ class CoreView {
   protected $foots   = array();
   protected $plugins = array();
 
+  public const NONE     = 0;
   public const RETURN   = 1;
   public const RELATIVE = 2;
   public const CORE     = 4;
@@ -121,22 +122,46 @@ class CoreView {
     }
   }
 
-  public function location($path = '', $basePath = null) {
-    if (preg_match("/http(s?)\:\/\//i", $path)) return $path;
-    $location = Core::lib(Core::URI)->get(CoreUri::BASELINKURL) . ($basePath ? rtrim($basePath, "/") . DS : null) . $path;
+  public function location($path = '', $location = CoreView::NONE, $basePath = null) {
+    if (preg_match("/http(s?)\:\/\//i", $path ?? "")) return $path;
+    $index = Core::lib(Core::CONFIG)->get('pretty_url', CoreConfig::CONFIG_TYPE_RUNTIME) ? "" : "index.php";
+    switch($location) {
+      case CoreView::APP:
+        $location = Core::lib(Core::URI)->get(CoreUri::BASEURL)
+        . ($index ? ($index . DS) : "") 
+        . ($basePath ? rtrim($basePath, "/") . DS : null) 
+        . $path;
+        break;
+      default:
+        $location = Core::lib(Core::URI)->get(CoreUri::BASELINKURL) 
+        . ($basePath ? rtrim($basePath, "/") . DS : null) 
+        . $path;
+        break;
+    }
     return @$location;
   }
 
-  public function file($path = '', $basePath = null) {
-    if (preg_match("/http(s?)\:\/\//i", $path)) return $path;
-    $location = Core::lib(Core::URI)->get(CoreUri::BASEFILEURL) . ($basePath ? rtrim($basePath, "/") . DS : null) . $path;
+  public function file($path = '', $location = CoreView::NONE, $basePath = null) {
+    if (preg_match("/http(s?)\:\/\//i", $path ?? "")) return $path;
+    switch($location) {
+      case CoreView::APP:
+        $location = Core::lib(Core::URI)->get(CoreUri::BASEURL) 
+        . ($basePath ? rtrim($basePath, "/") . DS : null) . $path;
+        break;
+      default:
+        $location = Core::lib(Core::URI)->get(CoreUri::BASEFILEURL) 
+        . ($basePath ? rtrim($basePath, "/") . DS : null) 
+        . $path;
+        break;
+    }
     return @$location;
   }
 
   public function asset($path = '', $basePath = null) {
-    if (preg_match("/http(s?)\:\/\//i", $path)) return $path;
+    if (preg_match("/http(s?)\:\/\//i", $path ?? "")) return $path;
     $location = Core::lib(Core::URI)->get(CoreUri::BASEURL)
-      . ($basePath ? $basePath : Core::lib(Core::URI)->get(CoreUri::APP) . DS . CORE_APP_ASSET) . $path;
+      . ($basePath ? $basePath : Core::lib(Core::URI)->get(CoreUri::APP) . DS . CORE_APP_ASSET) 
+      . $path;
     return @$location;
   }
 
@@ -202,7 +227,7 @@ class CoreView {
       if (file_exists($sharedpluginsFile) and is_readable($sharedpluginsFile))
         $this->plugins = array_merge($this->plugins, parse_ini_file($sharedpluginsFile, true));
     }
-
+    // var_dump(CORE_ASSET_PATH);
     foreach ($key as $k) {
       if (isset($this->plugins[$k]) && $p = $this->plugins[$k]) {
         if (isset($p['dependencies'])) {
