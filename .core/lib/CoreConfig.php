@@ -5,6 +5,7 @@ defined('CORE') or (header($_SERVER["SERVER_PROTOCOL"] . " 403 Forbidden") and d
 class CoreConfig {
 
   private static $instance; // to store the singleton instance
+  private static $dbConfigFilename = 'db.ini';
   private $config; // to store the configuration data
 
   const CONFIG_TYPE_APP       = 'app';
@@ -12,6 +13,7 @@ class CoreConfig {
   const CONFIG_TYPE_RUNTIME   = 'runtime';
   const CONFIG_TYPE_CORE      = 'core';
   const CONFIG_TYPE_CLIENT    = 'client';
+  const CONFIG_TYPE_DB        = 'db';
   const CONFIG_TYPE_ALL       = 'all';
 
   const CONFIG_FILE_TYPE_INI  = 'ini';
@@ -38,6 +40,24 @@ class CoreConfig {
     if ($appConfig && count($appConfig)) 
       $this->config[$configtype] = array_merge($this->config[$configtype], $appConfig);
     return $this;
+  }
+
+  public function loadDatabaseConfig() {
+    $sharedDbConfigFile = CORE_SHARED_PATH . CORE_SHARED_CONFIG . self::$dbConfigFilename;
+    $appDbConfigFile = CORE_APP_PATH . CORE_APP_CONFIG . self::$dbConfigFilename;
+    $moduleDbConfigFile = CORE_MODULE_PATH . CORE_APP_CONFIG . self::$dbConfigFilename;
+
+    if (!file_exists($appDbConfigFile) && !file_exists($sharedDbConfigFile) && !file_exists($moduleDbConfigFile))
+      throw CoreError::instance('Database config file: ' . self::$dbConfigFilename . ' does not exists.');
+
+    // build DB configuration data, app-defined config have higher precedence
+    $dbConfig = [];
+    if (file_exists($sharedDbConfigFile)) $dbConfig = array_merge(parse_ini_file($sharedDbConfigFile, true));
+    if (file_exists($appDbConfigFile)) $dbConfig = array_merge(parse_ini_file($appDbConfigFile, true));
+    if (file_exists($moduleDbConfigFile)) $dbConfig = array_merge(parse_ini_file($moduleDbConfigFile, true));
+
+    $this->set('dbkeys', $dbConfig, CoreConfig::CONFIG_TYPE_DB);
+    return $dbConfig; 
   }
 
   public function load($filename, $filetype = CoreConfig::CONFIG_FILE_TYPE_INI, $configtype = CoreConfig::CONFIG_TYPE_APP) {

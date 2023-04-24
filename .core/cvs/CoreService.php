@@ -1,29 +1,20 @@
-<?php 
+<?php
+
+use PSpell\Config;
 
 defined('CORE') or (header($_SERVER["SERVER_PROTOCOL"] . " 403 Forbidden") and die('403.14 - Access denied.'));
 
 class CoreService {
 
-  private static $connections      = [];
-  private static $dbConfigFilename = 'db.ini';
+  private static $connections = [];
 
   protected static function instance($configKey = null) {
 
+    $config = Core::lib(Core::CONFIG);
     if ($configKey === null) 
-      $configKey = Core::lib(Core::CONFIG)->get('default_db_key');
-
-    $sharedDbConfigFile = CORE_SHARED_PATH . CORE_SHARED_CONFIG . CoreService::$dbConfigFilename;
-    $appDbConfigFile = CORE_APP_PATH . CORE_APP_CONFIG . CoreService::$dbConfigFilename;
-    $moduleDbConfigFile = CORE_MODULE_PATH . CORE_APP_CONFIG . CoreService::$dbConfigFilename;
-
-    if (!file_exists($appDbConfigFile) && !file_exists($sharedDbConfigFile) && !file_exists($moduleDbConfigFile))
-      throw CoreError::instance('Database config file: ' . CoreService::$dbConfigFilename . ' does not exists.');
-
-    // build DB configuration data, app-defined config have higher precedence
-    $dbConfig = [];
-    if (file_exists($sharedDbConfigFile)) $dbConfig = array_merge(parse_ini_file($sharedDbConfigFile, true));
-    if (file_exists($appDbConfigFile)) $dbConfig = array_merge(parse_ini_file($appDbConfigFile, true));
-    if (file_exists($moduleDbConfigFile)) $dbConfig = array_merge(parse_ini_file($moduleDbConfigFile, true));
+      $configKey = $config->get('default_db_key');
+    
+    $dbConfig = $config->loadDatabaseConfig();
 
     if (!@$dbConfig[$configKey])
       throw CoreError::instance('Database configuration for key: \'' . $configKey . '\' does not exists.');
