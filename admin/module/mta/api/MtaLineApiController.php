@@ -20,6 +20,16 @@ class MtaLineApiController extends CoreApi {
     }
   }
 
+  public function getInterchanges() {
+    $lineService = new LineService();
+    try {
+      $interchanges = $lineService->getInterchanges();
+      CoreResult::instance($interchanges)->json();
+    } catch(Exception $e) {
+      CoreError::instance($e->getMessage())->show();
+    }
+  }
+
   public function saveLine() {
     $idline = $this->postv('idline');
     $points = json_decode($this->postv('points', "[]"));

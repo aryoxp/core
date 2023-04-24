@@ -2368,7 +2368,7 @@ textarea.form-control-lg {
   --bs-btn-padding-y: 0.375rem;
   --bs-btn-font-family: ;
   --bs-btn-font-size: 1rem;
-  --bs-btn-font-weight: 400;
+  --bs-btn-font-weight: 300;
   --bs-btn-line-height: 1.5;
   --bs-btn-color: #212529;
   --bs-btn-bg: transparent;
@@ -9227,7 +9227,7 @@ button.close:focus {
   box-shadow: none; }
 
 .btn {
-  font-weight: 600;
+  /* font-weight: 600; */
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
   border: none; }

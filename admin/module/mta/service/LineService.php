@@ -14,11 +14,24 @@ class LineService extends CoreService {
   public function getLine($id) {
     $db = self::instance('mta');
     $qb = QB::instance('linepoint l')
-      ->select('p.idpoint', 'p.lat', 'p.lng', 'l.sequence', 'l.stop', 'ln.linecolor')
+      ->select('p.idpoint', 'p.lat', 'p.lng', 'l.sequence', 'l.stop', 'l.idinterchange', 'ln.linecolor')
+      ->select(QB::raw(QB::qt($id) . ' AS idline'))
       ->leftJoin('point p', 'p.idpoint', 'l.idpoint')
       ->leftJoin('line ln', 'ln.idline', 'l.idline')
       ->where('l.idline', QB::IN, QB::raw(QB::OG . QB::esc($id) . QB::CG))
       ->orderBy('l.sequence');
+    return $db->query($qb->get());
+  }
+
+  public function getInterchanges() {
+    $db = self::instance('mta');
+    $qb = QB::instance('interchange i')
+      ->select('i.idinterchange')
+      ->select(QB::raw('GROUP_CONCAT(lp.idpoint) AS idpoints'))
+      ->select(QB::raw('GROUP_CONCAT(lp.idline) AS idlines'))
+      ->leftJoin('linepoint lp', 'lp.idinterchange', 'i.idinterchange')
+      ->groupBy('i.idinterchange')
+      ->orderBy('i.idinterchange');
     return $db->query($qb->get());
   }
 
@@ -63,8 +76,8 @@ class LineService extends CoreService {
       // Delete unnecessary points
       $sql = "DELETE FROM point WHERE idpoint NOT IN (
                 SELECT idpoint FROM linepoint WHERE keep = 1
-                UNION SELECT start AS idpoint FROM path 
-                UNION SELECT end AS idpoint FROM path
+                UNION SELECT idpointstart AS idpoint FROM linepath 
+                UNION SELECT idpointend AS idpoint FROM linepath
               ) ";
       $res = $db->query($sql);
       if ($res === true) $db->commit();

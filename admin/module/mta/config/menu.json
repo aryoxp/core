@@ -4,11 +4,20 @@
     "label": "Malang Assistant",
     "url": "docs",
     "icon": "bus-front",
-    "subs": [
+    "subs": [{
+        "id": "mta-navigation",
+        "label": "Navigation",
+        "url": "m/x/mta/home/navigation"
+      },
       {
         "id": "mta-line",
         "label": "Line",
         "url": "m/x/mta"
+      },
+      {
+        "id": "mta-network",
+        "label": "Network",
+        "url": "m/x/mta/home/network"
       },
       {
         "id": "mta-interchange",
@@ -29,6 +38,11 @@
         "id": "mta-line-import",
         "label": "Import GPX",
         "url": "m/x/mta/home/import"
+      },
+      {
+        "id": "mta-compression",
+        "label": "Compression Test",
+        "url": "m/x/mta/compression"
       },
       {
         "id": "mta-setup",
