@@ -33,7 +33,11 @@ $(() => {
         let decoded = Core.decompress(result.compressed);
         let decompressTime = performance.now();
         let mem = performance.memory.usedJSHeapSize - ram;
-        gc();
+        try {
+          gc();
+        } catch(e) {
+          
+        }
         let row = '<tr>';
           row += `<td>${result.durationJson} ms</td>`
           row += `<td>${result.durationCompressing} ms</td>`

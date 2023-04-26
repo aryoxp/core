@@ -37,23 +37,17 @@
 <div class="container p-3 flex-fill d-flex flex-column">
   <div class="row flex-fill d-flex flex-column justify-content-center">
     <div class="col-auto mt-3">
-    <h1 class="text-secondary display-4"><?php echo $welcome; ?></h1>
-    <img src="<?php echo $this->asset('images/mgm.png'); ?>" style="width:300px;" alt="MGM: Media, Game, and Mobile Laboratory" />
+      <h1 class="text-secondary display-4"><?php echo $welcome; ?></h1>
+      <div class="d-flex align-items-end">
+        <img src="<?php echo $this->asset('images/mgm.png'); ?>" style="width:300px;" alt="MGM: Media, Game, and Mobile Laboratory" />  
+        <span class="pb-4"><?php echo $this->view('nav.php'); ?></span>
+      </div>
     </div>
     <div class="col-auto my-5">
       <a href="<?php echo $this->location('../admin'); ?>" type="button" class="btn btn-lg btn-secondary">Enter &rsaquo;</a>
     </div>
   </div>
-  <div class="row border-top p-3">
-    <div class="col-auto flex-fill d-flex justify-content-between">
-      <span>&copy; <?php echo date('Y'); ?> Media, Game, and Mobile Laboratory.<br>All rights reserved.</span>
-      <span class="text-end">
-        <a href="https://filkom.ub.ac.id">
-        <img src="https://filkom.ub.ac.id/wp-content/uploads/2020/12/logo_filkom.png" height="36" />
-        </a>
-      </span>
-    </div>
-  </div>
+  <?php echo $this->view('footer.php'); ?>
 </div>
 
 <?php $this->view('foot.php', null, CoreView::CORE);
