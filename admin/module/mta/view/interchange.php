@@ -1,5 +1,5 @@
 <div id="mta-nav" class="p-3 border-top">
-  <div class="row g-3 align-items-cente justify-content-between">
+  <div class="row g-3 align-items-center justify-content-between">
     <div class="col-auto row g-3 mt-0">
       <div class="col-auto">
         <label for="input-line-id" class="col-form-label">Transport Line:</label>
@@ -20,8 +20,25 @@
   </div>  
 </div>
 <div id="map" class="flex-fill"></div>
-<div id="mta-controls" class="p-3 border-top">
-  <button id="btn-clear-map" class="btn btn-primary">Clear</button>
+<div id="mta-controls" class="p-3 border-top row justify-content-between">
+  <div class="col-auto row mt-0">
+    <div class="col-auto">
+      <label for="input-line-id" class="col-form-label">Interchange Line:</label>
+    </div>
+    <div class="col-auto">
+      <select name="icid" id="input-interchange-id" class="col-auto form-select">
+        <option value="0">Select Interchange</option>
+      </select>
+    </div>
+    <div class="col-auto">
+      <button id="bt-show-ic" class="col-auto btn btn-primary">Show</button>
+      <button id="bt-delete-ic" class="col-auto btn btn-danger text-light">Delete</button>
+    </div>
+  </div>
+  <div class="col-auto">
+    <button id="btn-clear-map" class="col-auto btn btn-primary">Clear</button>
+  </div>
+
 </div>
 <div id="mta-profile" class="card shadow" style="width: 500px; display:none;">
   <div class="card-header app-card-header"></div>
@@ -79,10 +96,11 @@
     </div>
   </div>
 </div>
-<div id="mta-poly-context" class="p-3 position-absolute bg-white border rounded-3" style="display:none;">
-  <button id="btn-save-line" class="btn btn-sm btn-success text-light px-4">Save</button>
-  <button id="btn-hide-line" class="btn btn-sm btn-secondary text-light"><i class="bi bi-eye-slash"></i></button>
-  <button id="btn-simplify-line" class="btn btn-sm btn-secondary text-light">Simplify</button>
-  <button id="btn-reverse-line" class="btn btn-sm btn-secondary text-light">Reverse</button>
-  <button id="btn-delete-line" class="btn btn-sm btn-danger text-light ms-5"><i class="bi bi-exclamation-triangle"></i> DELETE</button>
+<div id="mta-marker-context" class="p-3 position-absolute bg-white border rounded-3" style="display:none;">
+  <button id="btn-mark-stop" class="btn btn-sm btn-success text-light px-4">Mark as Stop</button>
+  <button id="btn-unmark-stop" class="btn btn-sm btn-danger text-light px-4">Unmark from Stop</button>
+</div>
+<div id="mta-interchange-context" class="p-3 position-absolute bg-white border rounded-3" style="display:none;">
+  <button id="btn-show-interchange" class="btn btn-sm btn-primary text-light px-4">Show Interchange</button>
+  <button id="btn-create-interchange" class="btn btn-sm btn-success text-light px-4">Create New Interchange</button>
 </div>

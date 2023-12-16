@@ -4,6 +4,30 @@
   // Use the 'v' parameter to indicate the version to load (alpha, beta, weekly, etc.)
 });
 
+class DouglasPeucker {
+
+  static toleranceDistance = 3; // meter
+  static oneDegreeInMeter = 111319.9; // 1 degree in meter
+
+  static perpendicularDistance(point, origin, destination) {
+  
+    // (py – qy)x + (qx – px)y + (pxqy – qxpy) = 0
+  
+    let a = origin.lat - destination.lat;
+    let b = destination.lng - origin.lng;
+    let c = (origin.lng * destination.lat)
+            - (destination.lng * origin.lat);
+  
+    //d = |Am + Bn + C| / sqrt (A^2 + B^2);
+  
+    return Math.abs(a * point.lng + b * point.lat + c) /
+            (Math.sqrt(a * a + b * b));
+  
+  }
+
+}
+
+
 class App {
 
   static dialogLineProfile;
@@ -120,12 +144,20 @@ class App {
       strokeWeight: 3,
       strokeColor: line.linecolor
     }
+    App.directionIcon = {
+      path: "M 0,0 -1,2 1,2 z",
+      strokeColor: line.linecolor,
+      fillColor: line.linecolor,
+      strokeWeight: 1,
+      fillOpacity: 1,
+    }
 
 		// Create array of points
     let path = [];
 
     // Clean all previously created markers
     // App.markers.forEach(marker => marker.setMap(null));
+    // line.points = line.points.reverse();
 
     line.points.forEach(p => { // console.log(p.idpoint);
       let pos = new google.maps.LatLng(p.lat, p.lng);
@@ -161,15 +193,15 @@ class App {
         strokeOpacity: 0.5,
         strokeWeight: 5,
         idline: line.idline,
+        line: line,
         // editable: true,
         // strokeOpacity: 0,
-        // icons: [
-        //   {
-        //     icon: lineSymbol,
-        //     offset: "0",
-        //     repeat: "20px",
-        //   },
-        // ]
+        icons: [
+          {
+            icon: App.directionIcon,
+            offset: "100%",
+          },
+        ]
       });
       poly.setMap(App.map);
       
@@ -194,6 +226,8 @@ class App {
         } else if (!poly.getEditable()) {
           $('#mta-poly-context').css('top', e.domEvent.clientY).css('left', e.domEvent.clientX).show();
           $('#btn-save-line').attr('data-id', poly.idline);
+          $('#btn-simplify-line').attr('data-id', poly.idline);
+          $('#btn-reverse-line').attr('data-id', poly.idline);
         }
       });
 
@@ -210,6 +244,37 @@ class App {
     for (var n = 0; n < points.length; n++)
       bounds.extend(points[n]);
     if (points.length > 0) App.map.fitBounds(bounds);
+  }
+
+  static douglasPeucker(points) {
+
+    let length = points.length;
+
+    let maxDistance = 0;
+    let maxIndex = 0;
+    let distanceDeg = DouglasPeucker.toleranceDistance / DouglasPeucker.oneDegreeInMeter;
+
+    for (let i = 1; i < length - 2; i++) {
+
+      let origin = points[0];
+      let destination = points[length - 1];
+
+      let pDistance = DouglasPeucker.perpendicularDistance(points[i], origin, destination);
+      if (pDistance > maxDistance) {
+        maxDistance = pDistance;
+        maxIndex = i;
+      }
+
+    }
+
+    if (maxDistance > distanceDeg) {
+        points[maxIndex].keep = true;
+        App.douglasPeucker(points.slice(0, maxIndex));
+        App.douglasPeucker(points.slice(maxIndex, length));
+    }
+
+    return points;
+
   }
 
 }
@@ -311,6 +376,65 @@ $(() => {
       .show();
   });
 
+  $('#btn-simplify-line').on('click', () => {
+    let idline = $('#btn-save-line').attr('data-id');
+    let path = App.polylines.get(idline).getPath();
+    let line = App.polylines.get(idline).line;
+    App.polylines.get(idline).setMap(null);
+    let points = [];
+    path.forEach((p, index) => {
+      // console.log(p, p.idpoint);
+      points.push({
+				idpoint: p.idpoint,
+				lat: p.lat(),
+				lng: p.lng(),
+				sequence: index
+			});
+    });
+    App.douglasPeucker(points);
+    let spoints = [];
+    for(let point of points) {
+      if (point.keep) spoints.push(point);
+    }
+
+    var sline = {
+      idline: line.idline,
+      name: line.name + " - " + line.direction,
+      linecolor: line.linecolor,
+      points: spoints
+    }
+
+    App.polylines.delete(idline);
+    App.drawLine(sline);
+
+    // console.log(line, points, spoints);
+
+  });
+
+  $('#btn-reverse-line').on('click', () => {
+    let idline = $('#btn-reverse-line').attr('data-id');
+    let path = App.polylines.get(idline).getPath();
+    let line = App.polylines.get(idline).line;
+    App.polylines.get(idline).setMap(null);
+    let points = [];
+    path.forEach((p, index) => { // console.log(p, p.idpoint);
+      points.push({
+				idpoint: p.idpoint,
+				lat: p.lat(),
+				lng: p.lng(),
+				sequence: index
+			});
+    });
+    var rline = {
+      idline: line.idline,
+      name: line.name + " - " + line.direction,
+      linecolor: line.linecolor,
+      points: points.reverse()
+    }
+    App.polylines.delete(idline);
+    App.drawLine(rline);
+  });
+
   $('#btn-open-line').on('click', () => {
     let id = $('#input-line-id').val();
     let linecolor = $('#input-line-id').find(`:selected`).data('linecolor');
@@ -391,8 +515,6 @@ $(() => {
 
   $('#mta-profile .btn-delete').on('click', (e) => {
     let idline = App.dialogLineProfile.idline;
-    // console.log(App.polylines, App.polylines.get(idline));
-    // return;
     (new CoreConfirm(`Are you sure you want to <span class="text-danger">DELETE</span> this line?<br>This action is CANNOT be undone.`))
       .title('<span class="text-danger"><i class="bi bi-exclamation-triangle"></i> DELETE Line</span>')
       .positive(e => {

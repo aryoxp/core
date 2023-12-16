@@ -24,9 +24,10 @@ class HomeController extends CoreController {
     $auth = true;
 
     if($auth) {
-      $sso = new SSOMySQL();
       $userdata = new stdClass;
       $userdata->username = $username;
+      // $sso = new SSORedis();
+      $sso = new SSOMySQL();
       $uuid = $sso->setSession($userdata);
       if($uuid === false) {
         header('location: ' . $this->location() . '?e=2&redirect=' . urlencode($redirect));
@@ -43,6 +44,7 @@ class HomeController extends CoreController {
 
   public function verify() {
     $token = $this->postv('token');
+    // $sso = new SSORedis();
     $sso = new SSOMySQL();
     $userdata = $sso->getSession($token);
     if ($userdata) {

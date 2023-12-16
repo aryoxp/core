@@ -1,82 +1,80 @@
-(function ($) {
 
-  class Toast {
-    constructor(content, opts) {
-      this.content = content
-      this.settings = Object.assign({}, Toast.default, opts)
-    }
-
-    static instance(content, opts) {
-      return new Toast(content, opts)
-    }
-
-    toast(opts) {
-      this.settings = Object.assign({}, this.settings, opts)
-      let autohide =
-        this.settings.autohide == false || this.settings.delay == 0
-          ? ' data-bs-autohide="false"'
-          : "";
-      let delay =
-        this.settings.delay != Toast.default.delay
-          ? ` data-bs-delay="${this.settings.delay}"`
-          : "";
-      if (!$(".toast-container").length) $('body').append('<div class="toast-container position-absolute top-0 end-0"></div>')
-      let idx = $(".toast-container .toast").length
-        ? Math.max.apply(
-            null,
-            $(".toast-container .toast")
-              .map((i, t) => {
-                return parseInt($(t).attr("data-id"));
-              })
-              .get()
-          ) + 1
-        : 1;
-      let id = ` data-id="${idx}" id="toast-${idx}"`;
-      let t = `<div class="toast" role="alert" aria-live="assertive" aria-atomic="true"${autohide}${delay}${id}>`
-
-      if (this.settings.title) {
-        t += `<div class="toast-header">`
-        t += `<div class="rounded me-2 bg-${this.settings.type} px-2" alt="..." style="--bs-bg-opacity: .7">&nbsp;</div>`
-        t += `<strong class="me-auto">${this.settings.title ? this.settings.title : ''}</strong>`
-        t += `<small class="text-muted">${this.settings.subtitle ? this.settings.subtitle : ''}</small>`
-        t += `<button type="button" class="btn-close me-0" data-bs-dismiss="toast" aria-label="Close"></button>`
-        t += `</div>`
-      }
-
-      t += `<div class="toast-body d-flex justify-content-between border rounded border-${this.settings.type} bg-${this.settings.type} text-${this.settings.type}" style="${this.settings.style}"><span class="toast-content" style="${this.settings.textstyle}">${this.content}</span>`
-      t += this.settings.title ? '' : `<button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>`
-      t += `</div>`
-      t += `</div>`
-      $('.toast-container').append(t);
-      return new bootstrap.Toast($('.toast-container').find('.toast:last')).show()
-    }
-    show(options) {
-      return this.toast(options)
-    }
-  }
-  
-  Toast.default = {
-    delay: 5000,
-    title: null,
-    subtitle: null,
-    autohide: true,
-    type: 'secondary',
-    style: '--bs-bg-opacity: .3;',
-    textstyle: 'filter: brightness(0.65);'
+class Toast {
+  constructor(content, opts) {
+    this.content = content
+    this.settings = Object.assign({}, Toast.default, opts)
   }
 
-  // remove from DOM when a toast is hidden
-  $('body').on('hidden.bs.toast', '.toast', (e) => $(e.currentTarget).remove())
+  static instance(content, opts) {
+    return new Toast(content, opts)
+  }
 
-  // embed toast function in jQuery
-  $.toast = (content, opts) => Toast.instance(content, opts).toast()
-  $.toastInstance = (content, opts) => { return Toast.instance(content, opts) }
+  toast(opts) {
+    this.settings = Object.assign({}, this.settings, opts)
+    let autohide =
+      this.settings.autohide == false || this.settings.delay == 0
+        ? ' data-bs-autohide="false"'
+        : "";
+    let delay =
+      this.settings.delay != Toast.default.delay
+        ? ` data-bs-delay="${this.settings.delay}"`
+        : "";
+    if (!$(".toast-container").length) $('body').append('<div class="toast-container position-absolute top-0 end-0"></div>')
+    let idx = $(".toast-container .toast").length
+      ? Math.max.apply(
+          null,
+          $(".toast-container .toast")
+            .map((i, t) => {
+              return parseInt($(t).attr("data-id"));
+            })
+            .get()
+        ) + 1
+      : 1;
+    let id = ` data-id="${idx}" id="toast-${idx}"`;
+    let t = `<div class="toast" role="alert" aria-live="assertive" aria-atomic="true"${autohide}${delay}${id}>`
 
-  $(window).resize((e) => {
-    UI.broadcast('window-resize', e) 
-  })
+    if (this.settings.title) {
+      t += `<div class="toast-header">`
+      t += `<div class="rounded me-2 bg-${this.settings.type} px-2" alt="..." style="--bs-bg-opacity: .7">&nbsp;</div>`
+      t += `<strong class="me-auto">${this.settings.title ? this.settings.title : ''}</strong>`
+      t += `<small class="text-muted">${this.settings.subtitle ? this.settings.subtitle : ''}</small>`
+      t += `<button type="button" class="btn-close me-0" data-bs-dismiss="toast" aria-label="Close"></button>`
+      t += `</div>`
+    }
 
-}(jQuery))
+    t += `<div class="toast-body d-flex justify-content-between border rounded border-${this.settings.type} bg-${this.settings.type} text-${this.settings.type}" style="${this.settings.style}"><span class="toast-content" style="${this.settings.textstyle}">${this.content}</span>`
+    t += this.settings.title ? '' : `<button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>`
+    t += `</div>`
+    t += `</div>`
+    $('.toast-container').append(t);
+    return new bootstrap.Toast($('.toast-container').find('.toast:last')).show()
+  }
+  show(options) {
+    return this.toast(options)
+  }
+}
+
+Toast.default = {
+  delay: 5000,
+  title: null,
+  subtitle: null,
+  autohide: true,
+  type: 'secondary',
+  style: '--bs-bg-opacity: .3;',
+  textstyle: 'filter: brightness(0.65);'
+}
+
+// remove from DOM when a toast is hidden
+$('body').on('hidden.bs.toast', '.toast', (e) => $(e.currentTarget).remove())
+
+// embed toast function in jQuery
+$.toast = (content, opts) => Toast.instance(content, opts).toast()
+$.toastInstance = (content, opts) => { return Toast.instance(content, opts) }
+
+$(window).resize((e) => {
+  UI.broadcast('window-resize', e) 
+})
+
 
 class Dialog {
   constructor(content, opts) {

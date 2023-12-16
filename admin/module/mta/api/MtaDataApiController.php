@@ -44,4 +44,14 @@ class MtaDataApiController extends CoreModuleApiController {
     $data->memCompressing = $data->memCompressed - $data->memJson;
     CoreResult::instance($data)->show();
   }
+
+  public function getAllData() {
+    try {
+      $dataService = new DataService();
+      $result = $dataService->dump();
+      CoreResult::instance($result)->json();
+    } catch(Exception $e) {
+      CoreError::instance($e->getMessage())->show();
+    }
+  }
 }

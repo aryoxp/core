@@ -79,11 +79,11 @@ class CoreWindow {
 
   attachListener() {
     $(this.element).find(this.options.closeBtn)
-      .off('click', this.onNegative.bind(this))
+      .off('click')
       .on('click', this.onNegative.bind(this));
 
     $(this.element).find(this.options.positiveBtn)
-      .off('click', this.onPositive.bind(this))
+      .off('click')
       .on('click', this.onPositive.bind(this));
   }
 

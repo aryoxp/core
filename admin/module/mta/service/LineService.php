@@ -7,7 +7,9 @@ class LineService extends CoreService {
     $qb = QB::instance('line l')
       ->select()
       ->distinct()
-      ->select(QB::raw('(SELECT COUNT(*) FROM linepoint lp WHERE lp.idline = l.idline) AS count'));
+      ->select(QB::raw('(SELECT COUNT(*) FROM linepoint lp WHERE lp.idline = l.idline) AS count'))
+      ->orderBy('name')
+      ->orderBy('direction', QB::DESC);
     return $db->query($qb->get());
   }
 

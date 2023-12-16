@@ -12,6 +12,19 @@ class MtaHomeController extends CoreModuleController {
     $this->ui->view('line.php', null, CoreModuleView::MODULE);
   }
 
+  public function stop() {
+    $this->menuId('mta-stop');
+    $this->ui->useScript('js/stop.js');
+    $this->ui->view('stop.php', null, CoreModuleView::MODULE);
+  }
+
+  public function interchange() {
+    $this->menuId('mta-interchange');
+    $this->ui->usePlugin('general-ui');
+    $this->ui->useScript('js/interchange.js');
+    $this->ui->view('interchange.php', null, CoreModuleView::MODULE);
+  }
+
   public function navigation() {
     $this->menuId('mta-navigation');
     $this->ui->useScript('js/navigation.js');

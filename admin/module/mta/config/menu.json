@@ -20,14 +20,14 @@
         "url": "m/x/mta/home/network"
       },
       {
+        "id": "mta-stop",
+        "label": "Stops",
+        "url": "m/x/mta/home/stop"
+      },
+      {
         "id": "mta-interchange",
         "label": "Interchange",
         "url": "m/x/mta/home/interchange"
-      },
-      {
-        "id": "mta-stop",
-        "label": "Stops",
-        "url": "m/x/mta/home/Stop"
       },
       {
         "id": "mta-settings",

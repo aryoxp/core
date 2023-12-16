@@ -79,10 +79,7 @@
     </div>
   </div>
 </div>
-<div id="mta-poly-context" class="p-3 position-absolute bg-white border rounded-3" style="display:none;">
-  <button id="btn-save-line" class="btn btn-sm btn-success text-light px-4">Save</button>
-  <button id="btn-hide-line" class="btn btn-sm btn-secondary text-light"><i class="bi bi-eye-slash"></i></button>
-  <button id="btn-simplify-line" class="btn btn-sm btn-secondary text-light">Simplify</button>
-  <button id="btn-reverse-line" class="btn btn-sm btn-secondary text-light">Reverse</button>
-  <button id="btn-delete-line" class="btn btn-sm btn-danger text-light ms-5"><i class="bi bi-exclamation-triangle"></i> DELETE</button>
+<div id="mta-marker-context" class="p-3 position-absolute bg-white border rounded-3" style="display:none;">
+  <button id="btn-mark-stop" class="btn btn-sm btn-success text-light px-4">Mark as Stop</button>
+  <button id="btn-unmark-stop" class="btn btn-sm btn-danger text-light px-4">Unmark from Stop</button>
 </div>

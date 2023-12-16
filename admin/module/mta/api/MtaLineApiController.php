@@ -30,6 +30,73 @@ class MtaLineApiController extends CoreApi {
     }
   }
 
+  public function createInterchange($idpoint) {
+    $icService = new InterchangeService();
+    try {
+      $result = $icService->create($idpoint);
+      CoreResult::instance($result)->json();
+    } catch(Exception $e) {
+      CoreError::instance($e->getMessage())->show();
+    }
+  }
+
+  public function deleteInterchange() {
+    $idinterchange = $this->postv('idinterchange');
+    $points = $this->postv('points');
+    // var_dump('A');
+    // var_dump($idinterchange, $points);
+    // exit;
+    $icService = new InterchangeService();
+    try {
+      $result = $icService->deleteInterchange($idinterchange);
+      CoreResult::instance($result)->json();
+    } catch(Exception $e) {
+      CoreError::instance($e->getMessage())->show();
+    }
+  }
+
+  public function addPointToInterchange($idpoint, $idinterchange) {
+    $icService = new InterchangeService();
+    try {
+      $result = $icService->addPoint($idpoint, $idinterchange);
+      CoreResult::instance($result)->json();
+    } catch(Exception $e) {
+      CoreError::instance($e->getMessage())->show();
+    }
+  }
+
+  public function removePointFromInterchange($idpoint, $idinterchange) {
+    $icService = new InterchangeService();
+    try {
+      $result = $icService->removePoint($idpoint, $idinterchange);
+      CoreResult::instance($result)->json();
+    } catch(Exception $e) {
+      CoreError::instance($e->getMessage())->show();
+    }
+  }
+
+  public function markPointAsStop() {
+    $stopService = new StopService();
+    try {
+      $idpoint = $this->postv('id', 0);
+      $result = $stopService->setStop($idpoint);
+      CoreResult::instance($result)->json();
+    } catch(Exception $e) {
+      CoreError::instance($e->getMessage())->show();
+    }
+  }
+
+  public function unmarkPointFromStop() {
+    $stopService = new StopService();
+    try {
+      $idpoint = $this->postv('id', 0);
+      $result = $stopService->setStop($idpoint, false);
+      CoreResult::instance($result)->json();
+    } catch(Exception $e) {
+      CoreError::instance($e->getMessage())->show();
+    }
+  }
+
   public function saveLine() {
     $idline = $this->postv('idline');
     $points = json_decode($this->postv('points', "[]"));
