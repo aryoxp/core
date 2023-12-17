@@ -83,3 +83,6 @@
   <button id="btn-mark-stop" class="btn btn-sm btn-success text-light px-4">Mark as Stop</button>
   <button id="btn-unmark-stop" class="btn btn-sm btn-danger text-light px-4">Unmark from Stop</button>
 </div>
+<div id="mta-polyline-context" class="p-3 position-absolute bg-white border rounded-3" style="display:none;">
+  <button id="btn-show-hide" class="btn btn-sm btn-primary text-light px-4"><i class="bi bi-eye"></i> Show/Hide</button>
+</div>

@@ -127,6 +127,8 @@ class App {
     // Clean all previously created markers
     // App.markers.forEach(marker => marker.setMap(null));
 
+    let markers = [];
+
     line.points.forEach(p => { // console.log(p.idpoint);
       let pos = new google.maps.LatLng(p.lat, p.lng);
       pos.idpoint = p.idpoint;
@@ -156,6 +158,7 @@ class App {
         });
         // Add marker to marker list
         App.markers.set(p.idpoint, marker);
+        markers.push(marker);
       } else App.markers.get(p.idpoint).setMap(App.map);
 
     });
@@ -168,37 +171,36 @@ class App {
         strokeOpacity: 0.5,
         strokeWeight: 5,
         idline: line.idline,
-        // editable: true,
-        // strokeOpacity: 0,
-        // icons: [
-        //   {
-        //     icon: lineSymbol,
-        //     offset: "0",
-        //     repeat: "20px",
-        //   },
-        // ]
+        markers: markers
       });
       poly.setMap(App.map);
+      poly.addListener('rightclick', (e) => {
+        console.log(e);
+        $('#mta-polyline-context').css('top', e.domEvent.clientY).css('left', e.domEvent.clientX).show();
+        $('#btn-show-hide').attr('data-id', poly.idline);
+      });
       
       App.focusTo(poly);
-
       poly.getPath().addListener('set_at', (index, vertex) => {
         let p = poly.getPath().getAt(index);
         Object.entries(vertex).forEach(([key, val], index) => {
           if (typeof val != "function") p[key] = vertex[key];
         })
         if (p.isStop) App.markers.get(p.idpoint).setPosition(new google.maps.LatLng(p.lat(), p.lng()));
-        // console.log(p, vertex);
       })
-      // poly.addListener('dblclick', (e) => {
-      //   poly.setEditable(!poly.getEditable());
-      //   e.stop();
-      // });
-
-
       App.polylines.set(line.idline, poly);
     } else {
       App.polylines.get(line.idline).setMap(App.map);
+    }
+    // set camera to center of the line
+    var bounds = new google.maps.LatLngBounds();
+    var points = App.polylines.get(line.idline).getPath().getArray();
+    for (var n = 0; n < points.length; n++)
+      bounds.extend(points[n]);
+    App.map.setCenter(bounds.getCenter());
+
+    // if camera is far, zoom out to show the line as a whole. 
+    if (App.map.getZoom() <= 14) {
       App.focusTo(App.polylines.get(line.idline));
     }
   }
@@ -258,10 +260,8 @@ $(() => {
       id: id
     }).then((response) => {
       App.stopIcon.strokeColor = marker.line.linecolor;
-      console.log(marker.isStop, response);
       marker.isStop = true;
       marker.setIcon(App.stopIcon);
-      console.log(marker.isStop);
       $('#mta-marker-context').fadeOut('fast');  
     }, (err) => {
       (new CoreInfo(err)).show();
@@ -277,186 +277,20 @@ $(() => {
       id: id
     }).then((response) => {
       App.pointIcon.fillColor = marker.line.linecolor;
-      console.log(marker.isStop, response);
       marker.isStop = false;
       marker.setIcon(App.pointIcon);
-      console.log(marker.isStop);
       $('#mta-marker-context').fadeOut('fast');  
     }, (err) => {
       (new CoreInfo(err)).show();
     });
   });
 
-  // $('#btn-hide-line').on('click', () => {
-  //   let idline = $('#btn-save-line').attr('data-id');
-  //   App.polylines.get(idline).setMap(null);
-  //   App.markers.forEach(marker => {
-  //     if (marker.idline == idline) {
-  //       marker.setMap(null);
-  //       App.markers.delete(marker.idpoint);
-  //     }
-  //   }); 
-  //   // App.markers.clear();
-  //   $('#mta-marker-context').fadeOut('fast');
-  // });
-
-  // $('#btn-save-line').on('click', () => {
-  //   let idline = $('#btn-save-line').attr('data-id');
-  //   let path = App.polylines.get(idline).getPath();
-  //   let points = [];
-  //   path.forEach((p, index) => {
-  //     // console.log(p, p.idpoint);
-  //     points.push({
-	// 			idpoint: p.idpoint,
-	// 			lat: p.lat(),
-	// 			lng: p.lng(),
-	// 			sequence: index
-	// 		});
-  //   });
-  //   // console.log(line);
-  //   ajax.post('m/x/mta/lineApi/saveLine', {
-  //     points: JSON.stringify(points),
-  //     idline: idline
-  //   }).then((response) => {
-  //     if (response) 
-  //       (new CoreInfo("Line route path has been saved.")).show();
-  //   }, (err) => {
-  //     (new CoreInfo(err)).show();
-  //   });
-  //   $('#mta-marker-context').fadeOut('fast');
-
-  // });
-
-  // $('#btn-delete-line').on('click', () => {
-  //   let idline = $('#btn-save-line').attr('data-id');
-  //   (new CoreConfirm(`Are you sure you want to <span class="text-danger">DELETE</span> this line?<br>This action is CANNOT be undone.`))
-  //     .title('<span class="text-danger"><i class="bi bi-exclamation-triangle"></i> DELETE Line</span>')
-  //     .positive(e => {
-  //       ajax.post('m/x/mta/lineApi/deleteLine', {
-  //         idline: idline
-  //       }).then((response) => {
-  //         if (response) {
-  //           (new CoreInfo("Line has been deleted.")).title('Information').show();
-  //           $('#btn-hide-line').trigger('click');
-  //           App.getLines();
-  //         }
-  //       }, (err) => {
-  //         (new CoreInfo(err)).show();
-  //       });
-  //       $('#mta-marker-context').fadeOut('fast');
-  //     })
-  //     .show();
-  // });
-
-  // $('#btn-open-line').on('click', () => {
-  //   let id = $('#input-line-id').val();
-  //   let linecolor = $('#input-line-id').find(`:selected`).data('linecolor');
-  //   let name = $('#input-line-id').find(`:selected`).data('name');
-  //   let direction = $('#input-line-id').find(`:selected`).data('direction');
-  //   let enabled = $('#input-line-id').find(`:selected`).data('enabled')
-  //   if (id == 0) {
-  //     (new CoreInfo('Please select a line.')).show();
-  //     return;
-  //   }
-  //   $('#btn-load-line').trigger('click');
-  //   $('#input-color').val(linecolor);
-  //   $('#input-name').val(name);
-  //   $(`#input-direction-${direction.toLowerCase()[0]}`).prop('checked', true);
-  //   $(`#input-enabled`).prop('checked', parseInt(enabled));
-  //   $('.input-color-preview').css('background-color', linecolor);
-  //   $('#mta-profile .btn-delete').show();
-  //   App.dialogLineProfile = (new CoreWindow('#mta-profile', {
-  //     draggable: true,
-  //     width: '450px'
-  //   })).show();
-  //   App.dialogLineProfile.idline = id;
-  // });
-
-  // $('#btn-new-line').on('click', () => {
-  //   let id = null;
-  //   let linecolor = "#555";
-  //   let direction = "o";
-  //   let enabled = $('#input-line-id').find(`:selected`).data('enabled')
-  //   $('#input-color').val(linecolor);
-  //   $('#input-name').val('');
-  //   $(`#input-direction-${direction.toLowerCase()[0]}`).prop('checked', true);
-  //   $(`#input-enabled`).prop('checked', parseInt(enabled));
-  //   $('.input-color-preview').css('background-color', linecolor);
-  //   $('#mta-profile .btn-delete').hide();
-  //   App.dialogLineProfile = (new CoreWindow('#mta-profile', {
-  //     draggable: true,
-  //     width: '450px'
-  //   })).show();
-  //   App.dialogLineProfile.idline = null;
-  // });
-
-  // $('#input-color').on('input', (e) => {
-  //   $('.input-color-preview').css('background-color', $('#input-color').val());
-  // });
-
-  // $('#mta-profile .btn-save').on('click', () => {
-  //   let id = App.dialogLineProfile.idline;
-  //   let name = $('#input-name').val();
-  //   let linecolor = $('#input-color').val();
-  //   let direction = $('#input-direction-o').prop('checked') ? "O" : "I";
-  //   let enabled = $('#input-enabled').prop(`checked`) ? 1 : 0;
-  //   if (id != null) {
-  //     ajax.post('m/x/mta/lineApi/updateLine', {
-  //       idline: id,
-  //       name: name,
-  //       direction: direction,
-  //       linecolor: linecolor,
-  //       enabled: enabled
-  //     }).then(result => {
-  //       (new CoreInfo('Line profile has been saved.')).show();
-  //       App.dialogLineProfile.hide();
-  //       App.getLines();
-  //     }, error => (new CoreInfo(error)).show());
-  //   } else {
-  //     ajax.post('m/x/mta/lineApi/createLine', {
-  //       name: name,
-  //       direction: direction,
-  //       linecolor: linecolor,
-  //       enabled: enabled
-  //     }).then(result => {
-  //       (new CoreInfo('Line profile has been created.')).show();
-  //       App.dialogLineProfile.hide();
-  //       App.getLines();
-  //     }, error => (new CoreInfo(error)).show());
-  //   }
-  // });
-
-  // $('#mta-profile .btn-delete').on('click', (e) => {
-  //   let idline = App.dialogLineProfile.idline;
-  //   // console.log(App.polylines, App.polylines.get(idline));
-  //   // return;
-  //   (new CoreConfirm(`Are you sure you want to <span class="text-danger">DELETE</span> this line?<br>This action is CANNOT be undone.`))
-  //     .title('<span class="text-danger"><i class="bi bi-exclamation-triangle"></i> DELETE Line</span>')
-  //     .positive(e => {
-  //       ajax.post('m/x/mta/lineApi/deleteLine', {
-  //         idline: idline
-  //       }).then((response) => {
-  //         if (response) {
-  //           (new CoreInfo("Line has been deleted.")).title('Information').show();
-  //           let poly = App.polylines.get(idline);
-  //           if (poly) poly.setMap(null);
-  //           App.markers.forEach(marker => {
-  //             if (marker.idline == idline) {
-  //               marker.setMap(null);
-  //               App.markers.delete(marker.idpoint);
-  //             }
-  //           }); 
-  //           App.dialogLineProfile.hide();
-  //           App.getLines();
-  //         }
-  //       }, (err) => {
-  //         (new CoreInfo(err)).show();
-  //       });
-  //       $('#mta-marker-context').fadeOut('fast');
-  //     })
-  //     .show();
-  // });
-
-
+  $('#btn-show-hide').on('click', () => {
+    let id = $('#btn-show-hide').attr('data-id');
+    let poly = App.polylines.get(id);
+    poly.setMap(null);
+    for(marker of poly.markers) marker.setMap(null);
+    $('#mta-polyline-context').fadeOut('fast');
+  });
 
 });
