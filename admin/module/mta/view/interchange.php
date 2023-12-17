@@ -103,4 +103,5 @@
 <div id="mta-interchange-context" class="p-3 position-absolute bg-white border rounded-3" style="display:none;">
   <button id="btn-show-interchange" class="btn btn-sm btn-primary text-light px-4">Show Interchange</button>
   <button id="btn-create-interchange" class="btn btn-sm btn-success text-light px-4">Create New Interchange</button>
+  <button id="btn-nearby-lines" class="btn btn-sm btn-warning text-dark px-4">Nearby Lines</button>
 </div>

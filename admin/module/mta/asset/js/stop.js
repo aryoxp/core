@@ -39,6 +39,7 @@ class App {
     });
     App.map.addListener('click', e => {
       $('#mta-marker-context').hide();
+      $('#mta-polyline-context').hide();
     });
 
     var infoWindow = new google.maps.InfoWindow;
@@ -193,11 +194,11 @@ class App {
       App.polylines.get(line.idline).setMap(App.map);
     }
     // set camera to center of the line
-    var bounds = new google.maps.LatLngBounds();
-    var points = App.polylines.get(line.idline).getPath().getArray();
-    for (var n = 0; n < points.length; n++)
-      bounds.extend(points[n]);
-    App.map.setCenter(bounds.getCenter());
+    // var bounds = new google.maps.LatLngBounds();
+    // var points = App.polylines.get(line.idline).getPath().getArray();
+    // for (var n = 0; n < points.length; n++)
+    //   bounds.extend(points[n]);
+    // App.map.setCenter(bounds.getCenter());
 
     // if camera is far, zoom out to show the line as a whole. 
     if (App.map.getZoom() <= 14) {

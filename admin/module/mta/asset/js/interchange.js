@@ -118,8 +118,8 @@ class App {
   }
 
   static addPointToInterchange(idpoint, idinterchange) {
-    Core.instance().ajax().get(`m/x/mta/lineApi/addPointToInterchange/${idpoint}/${idinterchange}`,).then(result => {
-      console.log(result, App.markers);
+    Core.instance().ajax().get(`m/x/mta/lineApi/addPointToInterchange/${idpoint}/${idinterchange}`).then(result => {
+      // console.log(result);
       if (result) {
         let marker = App.markers.get(idpoint);
         marker.idinterchange = idinterchange;
@@ -135,8 +135,8 @@ class App {
     });    
   }
   static removePointFromInterchange(idpoint, idinterchange) {
-    Core.instance().ajax().get(`m/x/mta/lineApi/removePointFromInterchange/${idpoint}/${idinterchange}`,).then(result => {
-      console.log(result);
+    Core.instance().ajax().get(`m/x/mta/lineApi/removePointFromInterchange/${idpoint}/${idinterchange}`).then(result => {
+      // console.log(result);
       if (result) {
         let marker = App.markers.get(idpoint);
         marker.setIcon(App.stopIcon);
@@ -224,6 +224,7 @@ class App {
           $('#mta-interchange-context').css('top', e.domEvent.clientY).css('left', e.domEvent.clientX).show();
           $('#btn-show-interchange').attr('data-id', marker.idinterchange);
           $('#btn-create-interchange').attr('data-id', marker.idpoint);
+          $('#btn-nearby-lines').attr('data-lat', p.lat).attr('data-lng', p.lng);
           if(!marker.idinterchange) {
             $('#btn-create-interchange').show();
             $('#btn-show-interchange').hide();
@@ -276,7 +277,7 @@ class App {
       });
       poly.setMap(App.map);
       
-      App.focusTo(poly);
+      if (App.map.getZoom() < 10) App.focusTo(poly);
 
       poly.getPath().addListener('set_at', (index, vertex) => {
         let p = poly.getPath().getAt(index);
@@ -295,7 +296,7 @@ class App {
       App.polylines.set(line.idline, poly);
     } else {
       App.polylines.get(line.idline).setMap(App.map);
-      App.focusTo(App.polylines.get(line.idline));
+      if (App.map.getZoom() < 10) App.focusTo(App.polylines.get(line.idline));
     }
   }
 
@@ -503,6 +504,20 @@ $(() => {
         }
       }
 
+      $('#mta-interchange-context').hide();
+    }, err => {
+      (new CoreInfo(err)).show();
+    });
+  });
+
+  $('#btn-nearby-lines').on('click', () => {
+    let lat = $('#btn-nearby-lines').attr('data-lat');
+    let lng = $('#btn-nearby-lines').attr('data-lng');
+    Core.instance().ajax().get(`m/x/mta/lineApi/getNearbyLineIds/${lat}/${lng}/50`).then(async (lines) => {
+      for(let line of lines) {
+        let node = $('#input-line-id').find(`option[data-id="${line.idline}"]`).prop('selected', true);
+        if (node.length) $('#btn-load-line').trigger('click');
+      }
       $('#mta-interchange-context').hide();
     }, err => {
       (new CoreInfo(err)).show();

@@ -43,4 +43,16 @@ class InterchangeService extends CoreService {
     return $db->query($qb->get());
   }
 
+  public function getNearbyLineIds($lat, $lng, $distance) {
+    $diff = $distance * 0.00000898311;    
+    $db = self::instance('mta');
+    $qb = QB::instance('linepoint l')
+      ->select('l.idline')
+      ->leftJoin('point p', 'p.idpoint', 'l.idpoint')
+      ->distinct()
+      ->where(QB::raw("SQRT(POWER(p.lat - $lat, 2) + POWER(p.lng - $lng, 2)) < $diff"))
+      ->where('l.stop', 1);
+    return $db->query($qb->get());
+  } 
+
 }

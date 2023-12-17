@@ -75,6 +75,16 @@ class MtaLineApiController extends CoreApi {
     }
   }
 
+  public function getNearbyLineIds($lat, $lng, $distance = 20) {
+    $icService = new InterchangeService();
+    try {
+      $result = $icService->getNearbyLineIds($lat, $lng, $distance);
+      CoreResult::instance($result)->json();
+    } catch(Exception $e) {
+      CoreError::instance($e->getMessage())->show();
+    }
+  }
+
   public function markPointAsStop() {
     $stopService = new StopService();
     try {

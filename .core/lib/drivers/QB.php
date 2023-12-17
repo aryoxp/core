@@ -54,6 +54,7 @@ class QBWhere {
     $this->op  = $val === null ? '=' : $opVal;
     $this->val = $val === null ? $opVal : $val;
     $this->con = $con;
+    if ($this->val === null) $this->op = null;
   }
   public function flat() {
     if ($this->col instanceof QBRaw && !$this->op && !$this->val) return $this->col->raw;
