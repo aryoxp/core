@@ -96,12 +96,11 @@
     </div>
   </div>
 </div>
-<div id="mta-marker-context" class="p-3 position-absolute bg-white border rounded-3" style="display:none;">
-  <button id="btn-mark-stop" class="btn btn-sm btn-success text-light px-4">Mark as Stop</button>
-  <button id="btn-unmark-stop" class="btn btn-sm btn-danger text-light px-4">Unmark from Stop</button>
-</div>
-<div id="mta-interchange-context" class="p-3 position-absolute bg-white border rounded-3" style="display:none;">
+<div id="mta-interchange-context" class="p-3 position-absolute bg-white border rounded-3 flex-column" style="display:none;">
+  <span class="mb-2" id="line-info"></span>
   <button id="btn-show-interchange" class="btn btn-sm btn-primary text-light px-4">Show Interchange</button>
   <button id="btn-create-interchange" class="btn btn-sm btn-success text-light px-4">Create New Interchange</button>
-  <button id="btn-nearby-lines" class="btn btn-sm btn-warning text-dark px-4">Nearby Lines</button>
+  <button id="btn-nearby-lines" class="btn btn-sm btn-warning text-dark px-4 mt-2">Nearby Lines</button>
+  <button id="btn-mark-stop" class="btn btn-sm btn-success text-light px-4 mt-2">Mark as Stop</button>
+  <button id="btn-unmark-stop" class="btn btn-sm btn-danger text-light px-4 mt-2">Unmark from Stop</button>
 </div>

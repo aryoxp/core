@@ -40,8 +40,7 @@ class App {
       }]
     });
     App.map.addListener('click', e => {
-      $('#mta-marker-context').hide();
-      $('#mta-interchange-context').hide();
+      $('#mta-interchange-context').removeClass('d-flex').hide();
     });
 
 
@@ -190,6 +189,7 @@ class App {
 
 		// Create array of points
     let path = [];
+    let linemarkers = [];
 
     // Clean all previously created markers
     // App.markers.forEach(marker => marker.setMap(null));
@@ -205,10 +205,10 @@ class App {
       // if (!parseInt(p.stop)) return;
       // Draw marker on Map
       if (!App.markers.has(p.idpoint)) {
-        if (!parseInt(p.stop)) return;
+        // if (!parseInt(p.stop)) return;
         var marker = new google.maps.Marker({
           position: new google.maps.LatLng(p.lat, p.lng),
-          map: App.map,
+          map: parseInt(p.stop) ? App.map : null,
           icon: parseInt(p.stop) ? App.stopIcon : App.pointIcon,
           idline: line.idline,
           idpoint: p.idpoint,
@@ -221,10 +221,15 @@ class App {
         //Add right-click listener 
         marker.addListener('rightclick', (e) => {
           // console.log(e, marker);
-          $('#mta-interchange-context').css('top', e.domEvent.clientY).css('left', e.domEvent.clientX).show();
+          $('#mta-interchange-context').css('top', e.domEvent.clientY).css('left', e.domEvent.clientX).addClass('d-flex');
+          $('#line-info').html(`${marker.line.idline}/${marker.line.name}-${marker.line.direction} ${marker.line.direction == "Outbound" ? "▷" : "◁"}`);
           $('#btn-show-interchange').attr('data-id', marker.idinterchange);
           $('#btn-create-interchange').attr('data-id', marker.idpoint);
-          $('#btn-nearby-lines').attr('data-lat', p.lat).attr('data-lng', p.lng);
+          $('#btn-mark-stop').attr('data-id', marker.idpoint);
+          $('#btn-unmark-stop').attr('data-id', marker.idpoint);
+          $('#btn-nearby-lines').attr('data-idline', marker.idline)
+            .attr('data-lat', p.lat)
+            .attr('data-lng', p.lng);
           if(!marker.idinterchange) {
             $('#btn-create-interchange').show();
             $('#btn-show-interchange').hide();
@@ -253,6 +258,7 @@ class App {
         });
         // Add marker to marker list
         App.markers.set(p.idpoint, marker);
+        linemarkers.push(marker);
       } else App.markers.get(p.idpoint).setMap(App.map);
 
     });
@@ -265,6 +271,7 @@ class App {
         strokeOpacity: 0.5,
         strokeWeight: 5,
         idline: line.idline,
+        markers: linemarkers
         // editable: true,
         // strokeOpacity: 0,
         // icons: [
@@ -287,15 +294,23 @@ class App {
         if (p.isStop) App.markers.get(p.idpoint).setPosition(new google.maps.LatLng(p.lat(), p.lng()));
         // console.log(p, vertex);
       })
-      // poly.addListener('dblclick', (e) => {
-      //   poly.setEditable(!poly.getEditable());
-      //   e.stop();
-      // });
+      poly.addListener('dblclick', (e) => {
+        for(let marker of poly.markers) {
+          if(marker.isStop) continue;
+          if(marker.getMap() == null) marker.setMap(App.map);
+          else marker.setMap(null);
+        }
+        e.stop();
+      });
 
 
       App.polylines.set(line.idline, poly);
     } else {
-      App.polylines.get(line.idline).setMap(App.map);
+      let polyline = App.polylines.get(line.idline);
+      polyline.setMap(App.map);
+      for(let marker of polyline.markers) {
+        if (!marker.isStop) marker.setMap(null);
+      } 
       if (App.map.getZoom() < 10) App.focusTo(App.polylines.get(line.idline));
     }
   }
@@ -310,12 +325,10 @@ class App {
 
   static async checkShown(idlines) {
     for(let idline of idlines) {
-      // console.log(idline);
       let polyline = App.polylines.get(idline);
       if(!polyline){
-        console.warn("Loading idline: " + idline);
+        // console.warn("Loading idline: " + idline);
         await App.getLine(idline).then(async (line) => {
-          // console.log(idline, line);
           await App.drawLine(line).then(Promise.resolve());
         });
       }
@@ -346,7 +359,8 @@ $(() => {
     ajax.get(`m/x/mta/lineApi/getLine/${id}`).then(points => { // console.log(points);
       var line = {
         idline: id,
-        name: name + " - " + direction,
+        name: name,
+        direction: direction, 
         linecolor: linecolor,
         points: points
       }
@@ -401,7 +415,7 @@ $(() => {
   });
 
   $('#bt-delete-ic').on('click', (e) => {
-    console.log(e);
+    // console.log(e);
     (new CoreConfirm(`Are you sure you want to <span class="text-danger">DELETE</span> this interchange?<br>This action is CANNOT be undone.`))
       .title('<span class="text-danger"><i class="bi bi-exclamation-triangle"></i> DELETE interchange</span>')
       .positive(e => {
@@ -412,7 +426,7 @@ $(() => {
         ajax.post('m/x/mta/lineApi/deleteInterchange', {
           idinterchange: idinterchange,
           points: points
-        }).then((response) => { console.log(response);
+        }).then((response) => { // console.log(response);
           if (response) {
             App.getInterchanges();
             App.interchangeId = null;
@@ -428,7 +442,7 @@ $(() => {
         }, (err) => {
           (new CoreInfo(err)).show();
         });
-        $('#mta-marker-context').fadeOut('fast');
+        $('#mta-marker-context').removeClass('d-flex').hide();
       })
       .show();
   });
@@ -453,7 +467,7 @@ $(() => {
     }
 
     await App.checkShown(lines).then(() => {
-      console.warn("All lines loaded");
+      // console.warn("All lines loaded");
       if(node.length) {
         App.interchangeId = idinterchange;
         App.interchangePoints = new Set(points);
@@ -474,7 +488,7 @@ $(() => {
           // console.log(marker);
           App.map.setCenter(marker.position);
           App.map.setZoom(16);
-          $('#mta-interchange-context').hide();
+          $('#mta-interchange-context').removeClass('d-flex').hide();
         }
       }
       App.getInterchanges().then(() => {
@@ -504,7 +518,7 @@ $(() => {
         }
       }
 
-      $('#mta-interchange-context').hide();
+      $('#mta-interchange-context').removeClass('d-flex').hide();
     }, err => {
       (new CoreInfo(err)).show();
     });
@@ -513,54 +527,57 @@ $(() => {
   $('#btn-nearby-lines').on('click', () => {
     let lat = $('#btn-nearby-lines').attr('data-lat');
     let lng = $('#btn-nearby-lines').attr('data-lng');
+    let idline = $('#btn-nearby-lines').attr('data-idline');
     Core.instance().ajax().get(`m/x/mta/lineApi/getNearbyLineIds/${lat}/${lng}/50`).then(async (lines) => {
       for(let line of lines) {
+        if (line.idline == idline) continue;
         let node = $('#input-line-id').find(`option[data-id="${line.idline}"]`).prop('selected', true);
         if (node.length) $('#btn-load-line').trigger('click');
+        // for(let marker of App.polylines.get(line.idline).markers)
       }
-      $('#mta-interchange-context').hide();
+      $('#mta-interchange-context').removeClass('d-flex').hide();
     }, err => {
       (new CoreInfo(err)).show();
     });
   })
 
-  // $('#btn-mark-stop').on('click', () => {
-  //   let id = $('#btn-mark-stop').attr('data-id');
-  //   let marker = App.markers.get(id);
-  //   if(marker.isStop) return;
+  $('#btn-mark-stop').on('click', () => {
+    let id = $('#btn-mark-stop').attr('data-id');
+    let marker = App.markers.get(id);
+    if(marker.isStop) return;
 
-  //   ajax.post('m/x/mta/lineApi/markPointAsStop/', {
-  //     id: id
-  //   }).then((response) => {
-  //     App.stopIcon.strokeColor = marker.line.linecolor;
-  //     console.log(marker.isStop, response);
-  //     marker.isStop = true;
-  //     marker.setIcon(App.stopIcon);
-  //     console.log(marker.isStop);
-  //     $('#mta-marker-context').fadeOut('fast');  
-  //   }, (err) => {
-  //     (new CoreInfo(err)).show();
-  //   });
-  // });
+    ajax.post('m/x/mta/lineApi/markPointAsStop/', {
+      id: id
+    }).then((response) => {
+      App.stopIcon.strokeColor = marker.line.linecolor;
+      // console.log(marker.isStop, response);
+      marker.isStop = true;
+      marker.setIcon(App.stopIcon);
+      // console.log(marker.isStop);
+      $('#mta-interchange-context').removeClass('d-flex').hide();  
+    }, (err) => {
+      (new CoreInfo(err)).show();
+    });
+  });
 
-  // $('#btn-unmark-stop').on('click', () => {
-  //   let id = $('#btn-unmark-stop').attr('data-id');
-  //   let marker = App.markers.get(id);
-  //   if(!marker.isStop) return;
+  $('#btn-unmark-stop').on('click', () => {
+    let id = $('#btn-unmark-stop').attr('data-id');
+    let marker = App.markers.get(id);
+    if(!marker.isStop) return;
 
-  //   ajax.post('m/x/mta/lineApi/unmarkPointFromStop/', {
-  //     id: id
-  //   }).then((response) => {
-  //     App.pointIcon.fillColor = marker.line.linecolor;
-  //     console.log(marker.isStop, response);
-  //     marker.isStop = false;
-  //     marker.setIcon(App.pointIcon);
-  //     console.log(marker.isStop);
-  //     $('#mta-marker-context').fadeOut('fast');  
-  //   }, (err) => {
-  //     (new CoreInfo(err)).show();
-  //   });
-  // });
+    ajax.post('m/x/mta/lineApi/unmarkPointFromStop/', {
+      id: id
+    }).then((response) => {
+      App.pointIcon.fillColor = marker.line.linecolor;
+      // console.log(marker.isStop, response);
+      marker.isStop = false;
+      marker.setIcon(App.pointIcon);
+      // console.log(marker.isStop);
+      $('#mta-interchange-context').removeClass('d-flex').hide();  
+    }, (err) => {
+      (new CoreInfo(err)).show();
+    });
+  });
 
   // $('#btn-hide-line').on('click', () => {
   //   let idline = $('#btn-save-line').attr('data-id');
