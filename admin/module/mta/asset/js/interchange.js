@@ -98,6 +98,8 @@ class App {
     let lpoints = await Core.instance().ajax().get(`m/x/mta/lineApi/getLine/${idline}`);
     var line = {
       idline: idline,
+      name: lpoints[0].name,
+      direction: lpoints[0].direction == "O" ? "Outbound" : "Inbound", 
       linecolor: lpoints[0].linecolor,
       points: lpoints
     };
@@ -297,8 +299,17 @@ class App {
       poly.addListener('dblclick', (e) => {
         for(let marker of poly.markers) {
           if(marker.isStop) continue;
-          if(marker.getMap() == null) marker.setMap(App.map);
-          else marker.setMap(null);
+          // console.warn("DBLCLICK", marker);
+          if(marker.getMap() == null) {
+            marker.setMap(App.map);
+            // if (marker.isStop) {
+            //   App.stopIcon.strokeColor = marker.line.linecolor;
+            //   marker.setIcon(App.stopIcon);
+            // } else {
+              App.pointIcon.fillColor = marker.line.linecolor;
+              marker.setIcon(App.pointIcon);
+            // }
+          } else marker.setMap(null);
         }
         e.stop();
       });
@@ -360,7 +371,7 @@ $(() => {
       var line = {
         idline: id,
         name: name,
-        direction: direction, 
+        direction: direction == "O" ? "Outbound" : "Inbound" , 
         linecolor: linecolor,
         points: points
       }
@@ -387,20 +398,28 @@ $(() => {
       ajax.get(`m/x/mta/lineApi/getLine/${id}`).then(lpoints => { //console.log(lpoints);
         var line = {
           idline: id,
+          name: lpoints[0].name,
+          direction: lpoints[0].direction == "O" ? "Outbound" : "Inbound", 
           linecolor: lpoints[0].linecolor,
           points: lpoints
         }
+        // console.log(line);
         App.drawLine(line).then((e) => {
           let marker = null;
           points.forEach(p => {
             marker = App.markers.get(p);
-            if (marker) {
-              App.interchangeIcon.strokeColor = marker.line.linecolor;
-              marker.setIcon(App.interchangeIcon);
+            if (marker && marker.isStop) {
+              if (marker.idinterchange) {
+                App.interchangeIcon.strokeColor = marker.line.linecolor;
+                marker.setIcon(App.interchangeIcon);
+              } else {
+                App.stopIcon.strokeColor = marker.line.linecolor;
+                marker.setIcon(App.stopIcon);
+              }
             }
+
           });
           if (marker) {
-            // console.log(marker);
             setTimeout(() => {
               App.map.setCenter(marker.position);
               App.map.setZoom(16);
@@ -473,15 +492,19 @@ $(() => {
         App.interchangePoints = new Set(points);
         // console.log(node);
         App.markers.forEach(m => {
-          App.stopIcon.strokeColor = m.line.linecolor;
-          m.setIcon(App.stopIcon);
+          if (m.isStop) {
+            App.stopIcon.strokeColor = m.line.linecolor;
+            m.setIcon(App.stopIcon);
+          }
         });
         let marker = null;
         points.forEach(p => {
           marker = App.markers.get(p);
-          if (marker) {
-            App.interchangeIcon.strokeColor = marker.line.linecolor;
-            marker.setIcon(App.interchangeIcon);
+          if (marker && marker.isStop) {
+            if (marker.idinterchange) {
+              App.interchangeIcon.strokeColor = marker.line.linecolor;
+              marker.setIcon(App.interchangeIcon);
+            }
           }
         });
         if (marker) {

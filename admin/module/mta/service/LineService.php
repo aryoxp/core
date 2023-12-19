@@ -16,7 +16,7 @@ class LineService extends CoreService {
   public function getLine($id) {
     $db = self::instance('mta');
     $qb = QB::instance('linepoint l')
-      ->select('p.idpoint', 'p.lat', 'p.lng', 'l.sequence', 'l.stop', 'l.idinterchange', 'ln.linecolor')
+      ->select('p.idpoint', 'p.lat', 'p.lng', 'l.sequence', 'l.stop', 'l.idinterchange', 'ln.name', 'ln.direction', 'ln.linecolor')
       ->select(QB::raw(QB::qt($id) . ' AS idline'))
       ->leftJoin('point p', 'p.idpoint', 'l.idpoint')
       ->leftJoin('line ln', 'ln.idline', 'l.idline')
