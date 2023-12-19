@@ -371,7 +371,7 @@ $(() => {
       var line = {
         idline: id,
         name: name,
-        direction: direction == "O" ? "Outbound" : "Inbound" , 
+        direction: points[0].direction == "O" ? "Outbound" : "Inbound" , 
         linecolor: linecolor,
         points: points
       }
@@ -450,11 +450,14 @@ $(() => {
             App.getInterchanges();
             App.interchangeId = null;
             App.interchangePoints = new Set();
-            App.markers.forEach(m => {
-              App.stopIcon.strokeColor = m.line.linecolor;
-              m.setIcon(App.stopIcon);
-              m.idinterchange = null;
-            });
+            for(let point of points) {
+              let marker = App.markers.get(point);
+              if (marker) {
+                App.stopIcon.strokeColor = marker.line.linecolor;
+                marker.idinterchange = null;
+                marker.setIcon(App.stopIcon);
+              } 
+            }
             (new CoreInfo("Interchange has been deleted.")).title('Information').show();
 
           }
