@@ -1,0 +1,14 @@
+[
+  {
+    "id": "waca",
+    "label": "WIS Academic",
+    "url": "docs",
+    "icon": "mortarboard",
+    "subs": [{
+        "id": "waca-register-student",
+        "label": "<i class=\"bi bi-person-add me-2\"></i> Register Student",
+        "url": "m/x/waca/home/regstudent"
+      }
+    ]
+  }
+]

@@ -1,0 +1,19 @@
+[
+  {
+    "id": "wmon",
+    "label": "WIS Keuangan",
+    "url": "docs",
+    "icon": "cash-coin",
+    "subs": [{
+        "id": "wmon-transaksi-in",
+        "label": "<i class=\"bi bi-box-arrow-in-right me-2\"></i> Kas Masuk",
+        "url": "m/x/wmon/transaksi/in"
+      },
+      {
+        "id": "wmon-transaksi-out",
+        "label": "<i class=\"bi bi-box-arrow-right me-2\"></i> Kas Keluar",
+        "url": "m/x/wmon/transaksi/out"
+      }
+    ]
+  }
+]
