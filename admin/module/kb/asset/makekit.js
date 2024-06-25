@@ -273,7 +273,9 @@ class App {
         cmaps.forEach(t => { console.log(t);
           conceptMapsHtml += `<span class="cmap list-item" data-cmid="${t.id}">`
            + `<span class="d-flex align-items-center">`
-           + `<span class="text-truncate" style="font-size:0.9rem">${t.title}</span> <code class="bg-danger-subtle rounded mx-2 px-2 text-danger">${t.id}</code> <span class="badge text-bg-warning">${t.created}</span></span>`
+           + `<span class="text-truncate" style="font-size:0.9rem">${t.title}</span>`
+           + `<code class="bg-danger-subtle rounded mx-2 px-2 text-danger text-nowrap text-truncate">${t.id}</code>`
+           + `<span class="badge text-bg-warning">${t.created}</span></span>`
            + `<bi class="bi bi-check-lg text-primary d-none"></bi></span>`
         });
         $('#concept-map-open-dialog .list-concept-map').slideUp({

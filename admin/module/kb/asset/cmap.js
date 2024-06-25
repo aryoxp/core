@@ -122,16 +122,36 @@ class App {
     });
 
     $(".app-navbar .bt-save").on("click", () => {
-      new CoreConfirm("Save concept map?").positive(() => {
-        let data = {};
-        data.canvas = KitBuildUI.buildConceptMapData(this.canvas);
-        data.map = {
-          cmid: App.uuidv4(),
-          direction: this.canvas.direction,
-        };
-        data.fileName = this.fileName ? this.fileName : null;
-        // console.log(data, Core.compress(data));
-        // api.saveFileAs(data);
+      if (!this.conceptMap) {
+        (new CoreInfo('Please open a concept map to save')).show();
+        return;
+      }
+      console.log(this.conceptMap);
+      $('input[name="fid"]').val(this.conceptMap.map.id);
+      $('input[name="title"]').val(this.conceptMap.map.title);
+      let mapdata = {};
+      mapdata.canvas = KitBuildUI.buildConceptMapData(this.canvas);
+      mapdata.map = {
+        cmid: this.conceptMap.map.cmid,
+        direction: this.canvas.direction,
+      };
+      let data = {
+        id: this.conceptMap.map.cmid,
+        title: this.conceptMap.title,
+        data: Core.compress(mapdata)
+      }; console.log(data, mapdata);
+      // return;
+      (new CoreConfirm("Save concept map?")).positive(() => {
+        this.ajax.post('m/x/kb/kitBuildApi/save', data).then(conceptMap => { 
+          console.warn(conceptMap);
+          conceptMap = Object.assign(conceptMap, Core.decompress(conceptMap.data));
+          new CoreInfo('Concept map has been saved.').show();
+          this.setConceptMap(conceptMap);
+          // App.saveAsDialog.hide();
+        }, error => {
+          new CoreError(`An error has occurred. ${error}`).show();
+          console.error(error);
+        });
       }).show();
     });
 
@@ -173,9 +193,13 @@ class App {
         title: $('input[name="title"]').val(),
         data: Core.compress(mapdata)
       }; // console.log(data); 
-      this.ajax.post('m/x/kb/kitBuildApi/save', data).then(result => { // console.warn(result);
+      this.ajax.post('m/x/kb/kitBuildApi/save', data).then(conceptMap => { 
+        if (conceptMap) { 
+          conceptMap = Object.assign(conceptMap, Core.decompress(conceptMap.data));
+          this.setConceptMap(conceptMap);
+        } 
+        console.warn(conceptMap);
         new CoreInfo('Concept map has been saved.').show();
-        this.setConceptMap(mapdata);
         App.saveAsDialog.hide();
       }, error => {
         new CoreError(`An error has occurred. ${error}`).show();
@@ -198,7 +222,6 @@ class App {
       })).show();
       $('.bt-refresh-cmap-list').trigger('click');
     });
-
     $('.bt-refresh-cmap-list').on('click', (e) => {
       this.ajax.get(`m/x/kb/kitBuildApi/searchConceptMaps/`).then(cmaps => { console.log(cmaps)
         let conceptMapsHtml = '';
@@ -206,7 +229,7 @@ class App {
           conceptMapsHtml += `<span class="cmap list-item" data-cmid="${t.id}">`
            + `<span class="d-flex align-items-center">`
            + `<span class="text-truncate" style="font-size:0.9rem">${t.title}</span> <code class="bg-danger-subtle rounded mx-2 px-2 text-danger">${t.id}</code> <span class="badge text-bg-warning">${t.created}</span></span>`
-           + `<bi class="bi bi-check-lg text-primary d-none"></bi></span>`
+           + `<i class="bi bi-check-lg text-primary d-none"></i></span>`
         });
         $('#concept-map-open-dialog .list-concept-map').slideUp({
           duration: 100,
@@ -227,12 +250,13 @@ class App {
         });
       });
     });
-
     $('#concept-map-open-dialog .list-concept-map').on('click', '.list-item', (e) => {
       let cmid = $(e.currentTarget).attr('data-cmid');
       App.dialogOpen.cmid = cmid;
+      $('#concept-map-open-dialog .list-concept-map .list-item').removeClass('active');
+      $('#concept-map-open-dialog .list-concept-map .bi-check-lg').addClass('d-none');
+      $(e.currentTarget).addClass('active').find('i.bi-check-lg').removeClass('d-none');
     });
-
     $("#concept-map-open-dialog").on("click", ".bt-paste", async (e) => {
       let encoded = await navigator.clipboard.readText();
       $('#decode-textarea').val(encoded);
@@ -242,6 +266,7 @@ class App {
         this.ajax.get(`m/x/kb/kitBuildApi/openConceptMap/${App.dialogOpen.cmid}`).then(conceptMap => { 
           console.log(conceptMap);
           conceptMap = Object.assign(conceptMap, this.decodeMap(conceptMap.data));
+          this.setConceptMap(conceptMap);
           this.showConceptMap(conceptMap);
           App.dialogOpen.hide();
         });

@@ -9,6 +9,8 @@ class KbKitBuildApiController extends CoreApi {
     try {
       $service = new KitBuildService();
       $result = $service->insertOrUpdate($id, $title, $data);
+      if ($result)
+        $result = $service->openConceptMap($id);
       CoreResult::instance($result)->show();    
     } catch(Exception $e) {
       CoreError::instance($e->getMessage())->show();
