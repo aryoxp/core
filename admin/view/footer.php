@@ -22,5 +22,3 @@
   <div class="status-control d-flex align-items-center me-2"></div>
 </div>
 </div>
-<?php $this->viewPlugin('core-ui'); ?>
-<?php $this->view('foot.php', null, CoreView::CORE); ?>

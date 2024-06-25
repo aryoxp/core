@@ -14,7 +14,9 @@ class HomeController extends CoreController {
         $error = null;
         $result = SSO::verify($token, $error);
         if ($result !== false) {
+          $rbac = new RBACService();
           $_SESSION['user'] = $result;
+          $_SESSION['authmenu'] = $rbac->getAuthorizedMenus($result->username);
           $this->ui->view('index.php');
         } else
           $this->ui->view('index.php', array('error' => 'SSO authentication failed. ' . $error));

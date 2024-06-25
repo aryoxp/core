@@ -1,0 +1,48 @@
+[
+  {
+    "id": "kb",
+    "label": "Kit-Build",
+    "url": "kb",
+    "icon": "diagram-2-fill",
+    "subs": [
+      {
+        "id": "kb-cmap",
+        "icon": "node-plus-fill",
+        "label": "Concept Map",
+        "url": "m/x/kb/cmap"
+      },
+      {
+        "id": "kb-kit",
+        "icon": "layout-wtf",
+        "label": "Kit",
+        "url": "m/x/kb/kit"
+      },
+      { "type": "separator" },
+      {
+        "id": "kb-analyzer-static",
+        "icon": "bar-chart-line",
+        "label": "Static Analyzer",
+        "url": "m/x/kb/analyzer/static"
+      },
+      {
+        "id": "kb-analyzer-dynamic",
+        "icon": "graph-up-arrow",
+        "label": "Dynamic Analyzer",
+        "url": "m/x/kb/analyzer/dynamic"
+      },
+      {
+        "id": "kb-analyzer",
+        "icon": "bar-chart-line",
+        "label": "Analyzer",
+        "url": "m/x/kb/analyzer"
+      },
+      { "type": "separator" },
+      {
+        "id": "kb-encode-decode",
+        "icon": "code-square",
+        "label": "Log Data Decoder",
+        "url": "m/x/kb/decode"
+      }
+    ]
+  }
+]
