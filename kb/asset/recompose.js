@@ -40,7 +40,7 @@ class L {
 }
 
 CDM = {};
-CDM.cookieid = 'CORESID-kb__kb';
+CDM.cookieid = 'CORESID-mgm__kb';
 CDM.options = {};
 
 class App {

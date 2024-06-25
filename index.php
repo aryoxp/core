@@ -5,7 +5,7 @@
  * will contain an app key
  */
 
-define('CORE_ENV', 'projectname'); // alphanumeric value only
+define('CORE_ENV', 'mgm'); // alphanumeric value only
 define('CORE_DIR', '.core');
 define('CORE_MULTI_APPS', true);
 
