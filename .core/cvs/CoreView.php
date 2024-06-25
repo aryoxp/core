@@ -261,6 +261,7 @@ class CoreView {
 
   public function useCoreLib(...$pluginKeys) {
     $this->usePlugin('core-client'); // core-client-min
+    $this->usePlugin('core-runtime');
 
     foreach ($pluginKeys as $pluginKey) $this->usePlugin($pluginKey);
 

@@ -46,6 +46,8 @@ class CoreWindow {
   }
 
   onNegative(e) {
+    e.preventDefault();
+    e.stopPropagation();
     let continueClose = true;
     if (this.options.negative != null 
       && typeof this.options.negative == "function") {
@@ -57,6 +59,8 @@ class CoreWindow {
   }
 
   onPositive(e) {
+    e.preventDefault();
+    e.stopPropagation();
     let continueClose = true;
     if (this.options.positive != null 
       && typeof this.options.positive == "function") {
@@ -106,10 +110,10 @@ class CoreWindow {
   }
 
   show() {
-    $(this.element).detach().appendTo('body').css('position', 'absolute').css('z-index', '2030');
+    $(this.element).detach().appendTo('body').css('position', 'fixed').css('z-index', '2030').css('top', 0).removeClass('d-none');
     this.center();
     if(this.options.backdrop) {
-      let backdrop = $('<div class="backdrop position-absolute" style="z-index: 2029; width: 100%; height: 100%; background-color:#0005"></div>').insertBefore(this.element);
+      let backdrop = $('<div class="backdrop position-fixed" style="z-index: 2029; width: 100%; height: 100%; background-color:#0005"></div>').insertBefore(this.element);
       if (!this.options.isModal)
         backdrop.on('click', this.onBackdrop.bind(this));
     }
@@ -150,5 +154,21 @@ class CoreConfirm extends CoreWindow {
   }
   show() {
     super.show();
+    return this;
+  }
+}
+
+class CoreError extends CoreWindow {
+  constructor(content = "Hello, world!", options) {
+    super('.app-dialog-info', Object.assign({
+      backdrop: true,
+      title: '<span class="text-danger">Error</span>'
+    }, options));
+    this.setContent(content);
+    if (this.options.title) this.title(this.options.title);
+  }
+  show() {
+    super.show();
+    return this;
   }
 }

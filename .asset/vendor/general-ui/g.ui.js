@@ -582,6 +582,39 @@ class Pagination {
     })
     return this;
   }
+  callback(callback) {
+    $(this.containerElement).off('click', '.pagination-next').on('click', '.pagination-next', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (this.pagination.page < this.pagination.maxpage) {
+        this.pagination.page++;
+        if (typeof callback == "function")
+          callback(this.pagination.page, this.pagination.perpage);
+        this.update();
+      }
+    })
+
+    $(this.containerElement).off('click', '.pagination-prev').on('click', '.pagination-prev', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (this.pagination.page > 1) {
+        this.pagination.page--
+        if (typeof callback == "function")
+          callback(this.pagination.page, this.pagination.perpage);
+        this.update()
+      }
+    })
+
+    $(this.containerElement).off('click', '.pagination-page').on('click', '.pagination-page', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.pagination.page = parseInt($(e.currentTarget).attr('data-page'))
+      if (typeof callback == "function")
+        callback(this.pagination.page, this.pagination.perpage);
+      this.update()
+    });
+    return this;
+  }
   update(count = null, perpage = null) { // console.warn(this.pagination)
     if (count !== null) this.pagination.count = parseInt(count);
     if (perpage !== null) this.pagination.perpage = parseInt(perpage);
@@ -627,7 +660,7 @@ class Pagination {
     html += `<li class="page-item disabled">`
     html += `  <a class="page-link pagination-next" href="#">Next</a>`
     html += `</li>`
-    $(this.containerElement).html(html)
+    $(this.containerElement).addClass('pagination').html(html)
   }
 }
 
@@ -687,10 +720,10 @@ class UI {
     let pw = parent.width()
     let ph = parent.innerHeight()
     // console.log(w, h, parent, pw, ph)
-    $(dialog).css("position", "absolute")
-    $(dialog).css("top", (ph-h)/2)
-    $(dialog).css("left", (pw-w)/2)
-    $(dialog).css("z-index", 11)
+    $(dialog).css("position", "absolute");
+    $(dialog).css("top", (ph-h)/2);
+    $(dialog).css("left", (pw-w)/2);
+    $(dialog).css("z-index", 1011);
   }
   static status(content) {
     StatusBar.instance().content(`<span class="mx-2"><small>${content}</small></span>`)

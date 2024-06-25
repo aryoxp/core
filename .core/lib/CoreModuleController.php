@@ -22,6 +22,7 @@ abstract class CoreModuleController extends CoreController {
   protected function menuId($menuId) {
     $config = Core::lib(Core::CONFIG);
     $config->set('menuid', $menuId, CoreConfig::CONFIG_TYPE_APP);
+    $config->set('menu', $menuId, CoreConfig::CONFIG_TYPE_CLIENT);
   }
 
 

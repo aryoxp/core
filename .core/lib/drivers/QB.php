@@ -47,7 +47,7 @@ class QBWhere {
     // if ($col instanceof QBRaw || $col == QB::OG || $col == QB::EG) {
     if ($col == QB::OG || $col == QB::EG || $col == QB::SG || $col == QB::CG) {
       $this->col = $col;
-      $this->con = $opVal; // QB::AND or QB::OR
+      $this->con = ($opVal === null) ? QB::AND : $opVal; // QB::AND or QB::OR
       return;
     }
     $this->col = $col;
@@ -134,6 +134,7 @@ abstract class QBBase {
   public const LIKE  = 'LIKE';
   public const NLIKE = 'NOT LIKE';
   public const NOT   = 'NOT';
+  public const NULL  = 'NULL';
 
   public const INNER = 'INNER JOIN';
   public const LEFT  = 'LEFT JOIN';
@@ -344,7 +345,8 @@ class QB extends QBBase {
   }
 
   public function update($key, $value = null) {
-    $this->_type = QB::T_UPDATE;
+    if ($this->_type != QB::T_INSERT) // if not update on duplicate key
+      $this->_type = QB::T_UPDATE;
     $this->_update = is_array($key) ? $key : array($key => $value);
     return $this;
   }

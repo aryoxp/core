@@ -22,8 +22,8 @@
   <div class="app-card-body px-4 py-0 mt-4"></div>
   <div class="app-card-footer p-4 mt-auto">
     <div class="text-center">
-      <a href="#" class="btn app-btn-secondary app-btn-close-dialog ps-5 pe-5">No</a>
-      <a href="#" class="btn app-btn-primary app-btn-positive-dialog ps-5 pe-5">Yes</a>
+      <a href="#" class="btn btn-outline-secondary app-btn-close-dialog ps-5 pe-5">No</a>
+      <a href="#" class="btn btn-primary app-btn-positive-dialog ps-5 pe-5">Yes</a>
     </div>
   </div>
 </div>

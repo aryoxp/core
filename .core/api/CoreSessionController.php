@@ -44,5 +44,6 @@ class CoreSessionController extends CoreApi {
   function dump() {
     header('Content-Type:text/plain');
     print_r($_SESSION);
+    echo session_id();
   }
 }

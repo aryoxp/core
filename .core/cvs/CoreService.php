@@ -18,10 +18,10 @@ class CoreService {
 
     if (!@$dbConfig[$configKey])
       throw CoreError::instance('Database configuration for key: \'' . $configKey . '\' does not exists.');
-    $driverId = $dbConfig[$configKey]['driver'];
-
+    $driverType = $dbConfig[$configKey]['driver'];
+    $driverId = $driverType."-".$configKey;
     if (!isset(CoreService::$connections[$driverId])) {
-      $dbDriverName = "CoreDB" . ucfirst($driverId);
+      $dbDriverName = "CoreDB" . ucfirst($driverType);
       if (!class_exists($dbDriverName))
         throw CoreError::instance('DB driver implementation for ' . $dbDriverName . ' does not exists.');
       CoreService::$connections[$driverId] = new $dbDriverName($dbConfig[$configKey]);

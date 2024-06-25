@@ -145,7 +145,7 @@ class CoreLanguage
     $i = count($args);
     while ($i--)
       $text = preg_replace('/\{' . $i . '\}/i', $args[$i], $content);
-    return $text;
+    return $text ?? $content;
   }
 
   public function dump() {
