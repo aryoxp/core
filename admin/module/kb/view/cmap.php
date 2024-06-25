@@ -12,7 +12,7 @@
     <button class="bt-save btn btn-outline-primary"><i class="bi bi-save"></i> Save</button>
     <button class="bt-save-as btn btn-outline-primary"><i class="bi bi-front"></i> Save As...</button>
   </div>
-  <button class="bt-compose-kit btn btn-warning btn-sm"><i class="bi bi-grid-1x2"></i><i
+  <button class="bt-compose-kit btn btn-warning btn-sm" disabled><i class="bi bi-grid-1x2"></i><i
     class="bi bi-arrow-right-short"></i><i class="bi bi-layout-wtf"></i> Compose Kit</button>
 </div>
 <div class="d-flex flex-fill align-items-stretch">
