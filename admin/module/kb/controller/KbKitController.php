@@ -8,7 +8,7 @@ class KbKitController extends CoreModuleController {
 
   function index() {
     $this->menuId('kb-kit');
-    $this->ui->usePlugin('kitbuild-ui', 'kitbuild', 'sortable', 'showdown');
+    $this->ui->usePlugin('kitbuild-ui', 'kitbuild', 'sortable', 'showdown', 'general-ui');
     // $this->ui->language('module/cmap/lang/kitbuild', CoreLanguage::LOCATION_APP_ROOT);
     $this->ui->useScript("makekit.js");
     $this->ui->useStyle("cmap.css");

@@ -397,7 +397,7 @@ class App {
     $('#concept-map-open-dialog').on('click', '.bt-new', (e) => {
       e.preventDefault()
       if (!openDialog.cmid) {
-        UI.dialog('Please select a concept map.').show();
+        (new CoreInfo('Please select a concept map.')).show();
         return
       }
       KitBuild.openConceptMap(openDialog.cmid).then(conceptMap => {

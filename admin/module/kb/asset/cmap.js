@@ -196,12 +196,57 @@ class App {
         height: '600px',
         closeBtn: '.bt-cancel'
       })).show();
+      $('.bt-refresh-cmap-list').trigger('click');
     });
+
+    $('.bt-refresh-cmap-list').on('click', (e) => {
+      this.ajax.get(`m/x/kb/kitBuildApi/searchConceptMaps/`).then(cmaps => { console.log(cmaps)
+        let conceptMapsHtml = '';
+        cmaps.forEach(t => { console.log(t);
+          conceptMapsHtml += `<span class="cmap list-item" data-cmid="${t.id}">`
+           + `<span class="d-flex align-items-center">`
+           + `<span class="text-truncate" style="font-size:0.9rem">${t.title}</span> <code class="bg-danger-subtle rounded mx-2 px-2 text-danger">${t.id}</code> <span class="badge text-bg-warning">${t.created}</span></span>`
+           + `<bi class="bi bi-check-lg text-primary d-none"></bi></span>`
+        });
+        $('#concept-map-open-dialog .list-concept-map').slideUp({
+          duration: 100,
+          complete: () => {
+            $('#concept-map-open-dialog .list-concept-map .list-item').not('.default').remove();
+            $('#concept-map-open-dialog .list-concept-map').append(conceptMapsHtml).slideDown({
+              duration: 100,
+              complete: () => {
+                if (this.conceptMap && this.conceptMap.map) {
+                  // console.log(this.conceptMap);
+                  $(`#concept-map-open-dialog .list-concept-map .list-item[data-cmid="${this.conceptMap.map.cmid}"]`).trigger('click');
+                }
+              }
+            });
+            $('#concept-map-open-dialog .list-kit').html('');
+            delete App.dialogOpen.kid;
+          }
+        });
+      });
+    });
+
+    $('#concept-map-open-dialog .list-concept-map').on('click', '.list-item', (e) => {
+      let cmid = $(e.currentTarget).attr('data-cmid');
+      App.dialogOpen.cmid = cmid;
+    });
+
     $("#concept-map-open-dialog").on("click", ".bt-paste", async (e) => {
       let encoded = await navigator.clipboard.readText();
       $('#decode-textarea').val(encoded);
     });
     $("#concept-map-open-dialog").on("click", ".bt-open", async (e) => {
+      if (App.dialogOpen.cmid) {
+        this.ajax.get(`m/x/kb/kitBuildApi/openConceptMap/${App.dialogOpen.cmid}`).then(conceptMap => { 
+          console.log(conceptMap);
+          conceptMap = Object.assign(conceptMap, this.decodeMap(conceptMap.data));
+          this.showConceptMap(conceptMap);
+          App.dialogOpen.hide();
+        });
+        return;
+      }
       this.decodeMap(App.dialogOpen, $('#decode-textarea').val());
     });
 
@@ -342,48 +387,82 @@ class App {
 
   }
 
-  decodeMap(importDialog, data) {
+  // decodeMap(importDialog, data) {
+  //   try {
+  //     let conceptMap = Core.decompress(data.replaceAll('"',''));
+  //     console.warn(conceptMap);
+  //     if (typeof conceptMap == "string")
+  //       conceptMap = JSON.parse(conceptMap);
+  //     // console.log(res);
+  //     // console.log(JSON.parse(conceptMap));
+  //     Object.assign(conceptMap, {
+  //       cyData: KitBuildUI.composeConceptMap(conceptMap.canvas),
+  //     });
+  //     // KitBuildUI.composeConceptMap(conceptMap);
+  //     // console.log(conceptMap);
+  //     let proceed = () => {
+  //       App.inst.setConceptMap(conceptMap);
+  //       this.canvas.cy.elements().remove();
+  //       this.canvas.cy.add(conceptMap.cyData);
+  //       this.canvas.applyElementStyle();
+  //       this.canvas.toolbar.tools
+  //         .get(KitBuildToolbar.CAMERA)
+  //         .fit(null, { duration: 0 });
+  //       this.canvas.toolbar.tools
+  //         .get(KitBuildToolbar.NODE_CREATE)
+  //         .setActiveDirection(conceptMap.map.direction);
+  //       this.canvas.canvasTool.clearCanvas().clearIndicatorCanvas();
+  //       KitBuildUI.showBackgroundImage(this.canvas);
+  //       UI.success("Concept map loaded.").show();
+  //       L.log("open-concept-map", conceptMap.map, null, {
+  //         cmid: conceptMap.map.cmid,
+  //         includeMapData: true,
+  //       });
+  //       importDialog.hide();
+  //     };
+  //     if (this.canvas.cy.elements().length) {
+  //       let confirm = new CoreConfirm(
+  //         "Do you want to open and replace current concept map on canvas?"
+  //       ).positive(() => {
+  //           confirm.hide();
+  //           proceed();
+  //         }).show();
+  //     } else
+  //       proceed();
+  //   } catch (error) {
+  //     console.error(error);
+  //     new CoreInfo("The concept map data is invalid.", {
+  //       icon: "exclamation-triangle",
+  //       iconStyle: "danger",
+  //     }).show();
+  //   }
+  // }
+
+  showConceptMap(conceptMap) {
+    // App.inst.setConceptMap(conceptMap);
+    this.canvas.cy.elements().remove();
+    this.canvas.cy.add(conceptMap.cyData);
+    this.canvas.applyElementStyle();
+    this.canvas.toolbar.tools
+      .get(KitBuildToolbar.CAMERA)
+      .fit(null, { duration: 0 });
+    this.canvas.toolbar.tools
+      .get(KitBuildToolbar.NODE_CREATE)
+      .setActiveDirection(conceptMap.map.direction);
+    this.canvas.canvasTool.clearCanvas().clearIndicatorCanvas();
+    KitBuildUI.showBackgroundImage(this.canvas);
+  }
+
+  decodeMap(data, dialog) {
     try {
       let conceptMap = Core.decompress(data.replaceAll('"',''));
-      console.warn(conceptMap);
-      if (typeof conceptMap == "string")
-        conceptMap = JSON.parse(conceptMap);
-      // console.log(res);
-      // console.log(JSON.parse(conceptMap));
+      console.log(data, conceptMap);
       Object.assign(conceptMap, {
         cyData: KitBuildUI.composeConceptMap(conceptMap.canvas),
       });
       // KitBuildUI.composeConceptMap(conceptMap);
-      // console.log(conceptMap);
-      let proceed = () => {
-        App.inst.setConceptMap(conceptMap);
-        this.canvas.cy.elements().remove();
-        this.canvas.cy.add(conceptMap.cyData);
-        this.canvas.applyElementStyle();
-        this.canvas.toolbar.tools
-          .get(KitBuildToolbar.CAMERA)
-          .fit(null, { duration: 0 });
-        this.canvas.toolbar.tools
-          .get(KitBuildToolbar.NODE_CREATE)
-          .setActiveDirection(conceptMap.map.direction);
-        this.canvas.canvasTool.clearCanvas().clearIndicatorCanvas();
-        KitBuildUI.showBackgroundImage(this.canvas);
-        UI.success("Concept map loaded.").show();
-        L.log("open-concept-map", conceptMap.map, null, {
-          cmid: conceptMap.map.cmid,
-          includeMapData: true,
-        });
-        importDialog.hide();
-      };
-      if (this.canvas.cy.elements().length) {
-        let confirm = new CoreConfirm(
-          "Do you want to open and replace current concept map on canvas?"
-        ).positive(() => {
-            confirm.hide();
-            proceed();
-          }).show();
-      } else
-        proceed();
+      console.log(conceptMap);
+      return conceptMap;
     } catch (error) {
       console.error(error);
       new CoreInfo("The concept map data is invalid.", {
