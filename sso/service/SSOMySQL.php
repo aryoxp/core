@@ -41,4 +41,14 @@ class SSOMySQL extends CoreService {
     return $db->query($qb->get());
   }
 
+  public static function signIn($username, $password) {
+    $db = self::instance('sso');
+    $qb = QB::instance('user')
+      ->select()
+      ->where('username', QB::esc($username))
+      ->where('password', QB::raw('MD5(\''.QB::esc($password).'\')'));
+    $user = $db->getRow($qb->get());
+    return $user;
+  }
+
 }

@@ -21,14 +21,23 @@ class HomeController extends CoreController {
 
     // TODO: Check Username and Password
     // TODO: Redirect to login page if failed
-    $auth = true;
+    // $userdata = true;
+    $sso = new SSOMySQL();
+    $userdata = $sso->signIn($username, $password);
 
-    if($auth) {
-      $userdata = new stdClass;
-      $userdata->username = $username;
+    if($userdata) {
+      // $userdata = new stdClass;
+      // $userdata->username = $username;
       // $sso = new SSORedis();
-      $sso = new SSOMySQL();
+      // $sso = new SSOMySQL();
+      // $rbac = new RBACService();
+      // $_SESSION['authmenu'] = $rbac->getAuthorizedMenus($userdata->username);
+      // $_SESSION['test'] = "Hello";
       $uuid = $sso->setSession($userdata);
+      // $_SESSION['user'] = $userdata;
+      // var_dump($_SESSION); exit;
+      // $sess = new CoreSession();
+      // $sess->set($userdata);
       if($uuid === false) {
         header('location: ' . $this->location() . '?e=2&redirect=' . urlencode($redirect));
       } else {
