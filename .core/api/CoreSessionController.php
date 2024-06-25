@@ -46,4 +46,48 @@ class CoreSessionController extends CoreApi {
     print_r($_SESSION);
     echo session_id();
   }
+
+  function regenerateid() {
+    if(session_regenerate_id()) CoreResult::instance(session_id())->show();
+    else CoreResult::instance(false)->show(); 
+  }
+
+  function getid() {
+    CoreResult::instance(session_id())->show();
+  }
+
+  function setCookie() {
+    $key = $this->postv('key');
+    $data = $this->postv('data'); 
+    $expire = $this->postv('expire', 30 * 24 * 60 * 60); 
+    $path = $this->postv('path', "/");
+    setcookie($key, $data, time() + $expire, $path);
+    CoreResult::instance(true)->show();
+  }
+
+  function getCookie() {
+    $key = self::postv('key');
+    $data = $key !== null ? (isset($_COOKIE[$key]) ? $_COOKIE[$key] : null) : $_COOKIE;
+    CoreResult::instance($data)->show();
+  }
+
+  function unsetCookie() {
+    $key = self::postv('key');
+    setcookie($key, null, time() - 60);
+    CoreResult::instance(true)->show();
+  }
+
+  function destroyCookie() {
+    foreach($_COOKIE as $name => $v) {
+      setcookie($name, '', time()-1000);
+      setcookie($name, '', time()-1000, '/');
+    }
+    CoreResult::instance(true)->show();
+  }
+
+  function dumpCookie() {
+    header('Content-Type:text/plain');
+    print_r($_COOKIE);
+  }
+
 }

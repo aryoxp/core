@@ -129,7 +129,8 @@ class Dialog {
     Dialog.inst = this;
     this.settings = Object.assign({}, this.settings, opts)
     if (this.settings.width) $('#modal-dialog .modal-dialog').css('max-width', this.settings.width)
-    $('#modal-dialog .modal-dialog').css('width', 'fit-content')
+    $('#modal-dialog .modal-dialog').css('width', 'fit-content');
+    $('#modal-dialog .modal-dialog').css('min-width', '200px');
     $('#modal-dialog .dialog-icon').removeClass(function (index, className) {
       return (className.match (/\b(bi-|text-)\S+/g) || []).join(' ');
      }).addClass(`bi bi-${this.settings.icon} text-${this.settings.iconStyle}`)

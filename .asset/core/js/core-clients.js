@@ -121,6 +121,26 @@ class Session {
     return document.cookie;
   }
 
+  getId() {
+    return new Promise((resolve, reject) => {
+      Core.instance()
+        .ajax()
+        .post("coreSession/getid")
+        .then(resolve)
+        .catch(reject);
+    });
+  }
+
+  regenerateId() {
+    return new Promise((resolve, reject) => {
+      Core.instance()
+        .ajax()
+        .post("coreSession/regenerateid")
+        .then(resolve)
+        .catch(reject);
+    });
+  }
+
   set(sessionKeyOrObject, sessionData = null) {
     let sessData =
       typeof sessionKeyOrObject === "object" &&
@@ -186,6 +206,90 @@ class Session {
   }
 }
 
+class Cookie {
+  constructor(options) {
+    let def = { baseUrl: "/" };
+    this.settings = Object.assign(def, options);
+    this.baseUrl = this.settings.baseUrl;
+    this.cookieData = null;
+  }
+
+  static instance(options) {
+    if (!Cookie.inst) Cookie.inst = new Cookie(options);
+    else if (options)
+      Cookie.inst.settings = Object.assign(Cookie.inst.settings, options);
+    return Cookie.inst;
+  }
+
+  cookie() {
+    return document.cookie;
+  }
+
+  set(cookieKeyOrObject, cookieData = null) {
+    let cookData =
+      typeof cookieKeyOrObject === "object" &&
+      !Array.isArray(cookieKeyOrObject) &&
+      cookieKeyOrObject !== null
+        ? cookieKeyOrObject
+        : {
+            key: cookieKeyOrObject,
+            data: cookieData,
+          };
+    return new Promise((resolve, reject) => {
+      Core.instance()
+        .ajax()
+        .post("coreSession/setCookie", cookData)
+        .then(resolve)
+        .catch(reject);
+    });
+  }
+
+  unset(cookieKey = null) {
+    return new Promise((resolve, reject) => {
+      if (cookieKey === null) reject("Cookie key is null");
+      Core.instance()
+        .ajax()
+        .post("coreSession/unsetCookie", {
+          key: cookieKey,
+        })
+        .then(resolve)
+        .catch(reject);
+    });
+  }
+
+  get(cookieKey = null) {
+    return new Promise((resolve, reject) => {
+      Core.instance()
+        .ajax()
+        .post("coreSession/getCookie", 
+          cookieKey ? { key: cookieKey } : null)
+        .then(resolve)
+        .catch(reject);
+    });
+  }
+
+  getAll() {
+    return new Promise((resolve, reject) => {
+      this.get()
+        .then(cookData => {
+          this.cookieData = cookData;
+          resolve(cookData);
+        })
+        .catch(reject);
+    });
+  }
+
+  destroy() {
+    return new Promise((resolve, reject) => {
+      Core.instance()
+        .ajax()
+        .post("coreSession/destroyCookie")
+        .then(resolve)
+        .catch(reject);
+    });
+  }
+}
+
 class Core {
 
   constructor(options = {}) {
@@ -224,6 +328,13 @@ class Core {
       Object.assign({ baseUrl: Core.instance().config("baseurl") }, options)
     );
     return Core.session;
+  }
+
+  cookie(options) {
+    Core.cookie = Cookie.instance(
+      Object.assign({ baseUrl: Core.instance().config("baseurl") }, options)
+    );
+    return Core.cookie;
   }
 
   language(options) {

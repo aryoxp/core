@@ -163,12 +163,6 @@ class KitBuildCanvas {
       case KitBuildCanvasTool.PROPAUTHOR:
         this.canvasTool.addTool(what, new KitBuildPropositionAuthorTool(this, settings))
         break;
-      case KitBuildCanvasTool.IMAGE:
-        this.canvasTool.addTool(what, new KitBuildImageTool(this, settings))
-        break;
-      case KitBuildCanvasTool.REMOVE_IMAGE:
-        this.canvasTool.addTool(what, new KitBuildRemoveImageTool(this, settings))
-        break;        
       case KitBuildCanvasTool.LOCK:
         this.canvasTool.addTool(what, new KitBuildLockTool(this, settings))
         break;
@@ -632,46 +626,22 @@ class KitBuildUI {
     this.canvases = new Map()
     if (canvasId)
       this.canvases.set(canvasId, KitBuildCanvas.instance(canvasId, options));
-    UI.addListener((evt, data) => { console.error("UI EVENT", evt, data)
+    UI.addListener((evt, data) => { // console.error("UI EVENT", evt, data)
       switch(evt) {
         case "window-resize":
         case "sidebar-toggle":
         case "toolbar-render":
-          setTimeout(() => {
-            this.canvases.forEach(canvas => {
-              // console.error(evt, canvas.cy)
-              $(`#${canvasId} > div`).css('height', 0).css('width', 0);
-              setTimeout(() => {
-                $(`#${canvasId} > div`)
-                  .css('height', $(`#${canvasId}`).height() | 0)
-                  .css('width', $(`#${canvasId}`).width() | 0);
-                $(`#${canvasId} > canvas`)
-                  .css('height', $(`#${canvasId}`).height() | 0)
-                  .css('width', $(`#${canvasId}`).width() | 0);
-              }, 5) 
-              // canvas.cy.resize()
-              // canvas.cy.forceRender()
-            });
-            
-            // $(`.konvajs-content`).css('height', 0).css('width', 0);
+          this.canvases.forEach(canvas => {
+            // console.error(evt, canvas.cy)
+            $(`#${canvasId} > div`).css('height', 0).css('width', 0)
             setTimeout(() => {
-              try {
-                // console.log(canvasId, $(`#${canvasId}`).width(), $(`#${canvasId}`).height());
-                $('.konvajs-content')
-                  .css('width', $(`#${canvasId}`).width() | 0)
-                  .css('height', $(`#${canvasId}`).height() | 0)
-                $('.konvajs-content > canvas')
-                  .attr('width', $(`#${canvasId}`).width() | 0)
-                  .attr('height', $(`#${canvasId}`).height() | 0)
-                  .css('height', $(`#${canvasId}`).height() | 0)
-                  .css('width', $(`#${canvasId}`).width() | 0)
-                KitBuildCanvasKonva.instance.stage.height($(`#${canvasId}`).height());
-                KitBuildCanvasKonva.instance.stage.width($(`#${canvasId}`).width());
-                // console.log(KitBuildCanvasKonva.instance.stage.height(), $(`#${canvasId}`).height());
-              } catch(e) {}
-            }, 10); 
-          }, 100);
-          
+              $(`#${canvasId} > div`)
+                .css('height', $(`#${canvasId}`).height() | 0)
+                .css('width', $(`#${canvasId}`).width() | 0)
+            }, 5) 
+            // canvas.cy.resize()
+            // canvas.cy.forceRender()
+          })
           break;
       }
     })    
@@ -815,7 +785,7 @@ class KitBuildUI {
     }
     return elements;
   }
-  static composeConceptMap(conceptMapData) { console.warn(conceptMapData);
+  static composeConceptMap(conceptMapData) {
     if(!conceptMapData.concepts || !conceptMapData.links || !conceptMapData.linktargets)
       throw "Invalid concept map data.";
     try {
@@ -862,30 +832,26 @@ class KitBuildUI {
     } catch (error) { throw error }
   }
   static composeKitMap(kitMapData) {
-    console.error(kitMapData);
-    if(!kitMapData) throw "Invalid kit map data: " + typeof kitMapData;
     if(!kitMapData.conceptMap || !kitMapData.concepts 
       || !kitMapData.links || !kitMapData.linktargets)
       throw "Invalid kit data.";
     try {
-      let kitMap = []
+      let kitMap = [];
+      let conceptsMap = new Map();
+      let linksMap = new Map();
+      for(let c of kitMapData.concepts) conceptsMap.set(c.cid, c);
+      for(let l of kitMapData.links) linksMap.set(l.lid, l);
       let getConceptPosition = (cid) => {
-        for(let c of kitMapData.concepts) {
-          if (c.cid == cid) return {x: parseInt(c.x), y: parseInt(c.y)};
-        }
-        return false;
+        let c = conceptsMap.get(cid);
+        return c ? {x: parseInt(c.x), y: parseInt(c.y)} : false;
       }
       let getLinkPosition = (lid) => {
-        for(let l of kitMapData.links) {
-          if (l.lid == lid) return {x: parseInt(l.x), y: parseInt(l.y)};
-        }
-        return false;
+        let l = linksMap.get(lid);
+        return l ? {x: parseInt(l.x), y: parseInt(l.y)} : false;
       }
       let getLink = (lid) => {
-        for(let l of kitMapData.links) {
-          if (l.lid == lid) return l
-        }
-        return false;
+        let l = linksMap.get(lid);
+        return l ? linksMap.get(lid) : false;
       }
       let countLinkTargets = (lid) => {
         let count = 0
@@ -899,7 +865,7 @@ class KitBuildUI {
         kitMap.push({
           group: 'nodes',
           position: position === false ? {x: parseInt(c.x), y: parseInt(c.y)} : position,
-          data: Object.assign(JSON.parse(c.data), { 
+          data: Object.assign(JSON.parse(c.data), JSON.parse(conceptsMap.get(c.cid).data), { 
             id: c.cid,
             label: c.label,
           }),
@@ -911,13 +877,13 @@ class KitBuildUI {
         kitMap.push({
           group: 'nodes',
           position: position === false ? {x: parseInt(l.x), y: parseInt(l.y)} : position,
-          data: Object.assign(JSON.parse(l.data), { 
+          data: Object.assign(JSON.parse(l.data), JSON.parse(linksMap.get(l.lid).data), { 
             id: l.lid,
             label: l.label,
             limit: countLinkTargets(l.lid)
           }),
           invalid: position === false ? true : undefined
-        });
+        })
         let link = getLink(l.lid)
         if (link && link.source_cid) {
           kitMap.push({
@@ -926,9 +892,9 @@ class KitBuildUI {
               source: link.lid,
               target: link.source_cid,
             }),
-          });
+          })
         }
-      });
+      })
       kitMapData.linktargets.forEach(lt => {
         kitMap.push({
           group: 'edges',
@@ -936,10 +902,10 @@ class KitBuildUI {
             source: lt.lid,
             target: lt.target_cid,
           }),
-        });
-      });
+        })
+      })
       return kitMap;  
-    } catch (error) { console.error(error); throw error; }
+    } catch (error) { throw error }
   }
   static composeExtendedKitMap(kitMapData, kitSet, order = 1) {
     if(!kitMapData.conceptMap || !kitMapData.concepts 
@@ -950,26 +916,27 @@ class KitBuildUI {
       // console.log(kitSet);
       let kitMap = [];
       let setids = [];
+      
+      let conceptsMap = new Map();
+      let linksMap = new Map();
+      for(let c of kitMapData.concepts) conceptsMap.set(c.cid, c);
+      for(let l of kitMapData.links) linksMap.set(l.lid, l);
+
       kitSet.sets.forEach(set => {
         if (parseInt(set.order) <= order) setids.push(set.setid);
       })
+
       let getConceptPosition = (cid) => {
-        for(let c of kitMapData.concepts) {
-          if (c.cid == cid) return {x: parseInt(c.x), y: parseInt(c.y)};
-        }
-        return false;
+        let c = conceptsMap.get(cid);
+        return c ? {x: parseInt(c.x), y: parseInt(c.y)} : false;
       }
       let getLinkPosition = (lid) => {
-        for(let l of kitMapData.links) {
-          if (l.lid == lid) return {x: parseInt(l.x), y: parseInt(l.y)};
-        }
-        return false;
+        let l = linksMap.get(lid);
+        return l ? {x: parseInt(l.x), y: parseInt(l.y)} : false;
       }
       let getLink = (lid) => {
-        for(let l of kitMapData.links) {
-          if (l.lid == lid) return l
-        }
-        return false;
+        let l = linksMap.get(lid);
+        return l ? linksMap.get(lid) : false;
       }
       let countLinkTargets = (lid) => {
         let count = 0
@@ -992,7 +959,7 @@ class KitBuildUI {
         kitMap.push({
           group: 'nodes',
           position: position === false ? {x: parseInt(c.x), y: parseInt(c.y)} : position,
-          data: Object.assign(JSON.parse(c.data), { 
+          data: Object.assign(JSON.parse(c.data), JSON.parse(conceptsMap.get(c.cid).data), { 
             id: c.cid,
             label: c.label,
           }),
@@ -1012,7 +979,7 @@ class KitBuildUI {
         kitMap.push({
           group: 'nodes',
           position: position === false ? {x: parseInt(l.x), y: parseInt(l.y)} : position,
-          data: Object.assign(JSON.parse(l.data), { 
+          data: Object.assign(JSON.parse(l.data), JSON.parse(linksMap.get(l.lid).data), { 
             id: l.lid,
             label: l.label,
             limit: countLinkTargets(l.lid)
@@ -1071,6 +1038,12 @@ class KitBuildUI {
       // console.log(kitSet);
       let kitMap = [];
       let setids = [];
+
+      let conceptsMap = new Map();
+      let linksMap = new Map();
+      for(let c of kitMapData.concepts) conceptsMap.set(c.cid, c);
+      for(let l of kitMapData.links) linksMap.set(l.lid, l);
+
       for (let set of kitSet.sets) {
         if (parseInt(set.order) == order) {
           setids.push(set.setid);
@@ -1078,22 +1051,16 @@ class KitBuildUI {
         }
       }
       let getConceptPosition = (cid) => {
-        for(let c of kitMapData.concepts) {
-          if (c.cid == cid) return {x: parseInt(c.x), y: parseInt(c.y)};
-        }
-        return false;
+        let c = conceptsMap.get(cid);
+        return c ? {x: parseInt(c.x), y: parseInt(c.y)} : false;
       }
       let getLinkPosition = (lid) => {
-        for(let l of kitMapData.links) {
-          if (l.lid == lid) return {x: parseInt(l.x), y: parseInt(l.y)};
-        }
-        return false;
+        let l = linksMap.get(lid);
+        return l ? {x: parseInt(l.x), y: parseInt(l.y)} : false;
       }
       let getLink = (lid) => {
-        for(let l of kitMapData.links) {
-          if (l.lid == lid) return l
-        }
-        return false;
+        let l = linksMap.get(lid);
+        return l ? linksMap.get(lid) : false;
       }
       let countLinkTargets = (lid) => {
         let count = 0
@@ -1116,7 +1083,7 @@ class KitBuildUI {
         kitMap.push({
           group: 'nodes',
           position: position === false ? {x: parseInt(c.x), y: parseInt(c.y)} : position,
-          data: Object.assign(JSON.parse(c.data), { 
+          data: Object.assign(JSON.parse(c.data), JSON.parse(conceptsMap.get(c.cid).data), { 
             id: c.cid,
             label: c.label,
           }),
@@ -1136,7 +1103,7 @@ class KitBuildUI {
         kitMap.push({
           group: 'nodes',
           position: position === false ? {x: parseInt(l.x), y: parseInt(l.y)} : position,
-          data: Object.assign(JSON.parse(l.data), { 
+          data: Object.assign(JSON.parse(l.data), JSON.parse(linksMap.get(l.lid).data), { 
             id: l.lid,
             label: l.label,
             limit: countLinkTargets(l.lid)
@@ -1193,8 +1160,8 @@ class KitBuildUI {
     try {
       let cids = new Set();
       let lids = new Set();
-      for(let c of learnerMapData.conceptMap.canvas.concepts) cids.add(c.cid);
-      for(let l of learnerMapData.conceptMap.canvas.links) lids.add(l.lid);
+      for(let c of learnerMapData.conceptMap.concepts) cids.add(c.cid);
+      for(let l of learnerMapData.conceptMap.links) lids.add(l.lid);
 
       let kitMap = []
       let getConceptPosition = (cid) => {
@@ -1232,14 +1199,14 @@ class KitBuildUI {
       }
       let countLinkTargets = (lid) => {
         let count = 0
-        for(let l of learnerMapData.conceptMap.canvas.linktargets) {
+        for(let l of learnerMapData.conceptMap.linktargets) {
           if (l.lid == lid) count++
         }
         return count;
       }
 
       // console.error(learnerMapData)
-      learnerMapData.conceptMap.canvas.concepts.forEach(c => {
+      learnerMapData.conceptMap.concepts.forEach(c => {
         let position = getConceptPosition(c.cid)
         kitMap.push({
           group: 'nodes',
@@ -1268,7 +1235,7 @@ class KitBuildUI {
         })
       }
 
-      learnerMapData.conceptMap.canvas.links.forEach(l => {
+      learnerMapData.conceptMap.links.forEach(l => {
         let position = getLinkPosition(l.lid)
         kitMap.push({
           group: 'nodes',
@@ -1299,7 +1266,7 @@ class KitBuildUI {
         });
       }
 
-      learnerMapData.conceptMap.canvas.links.forEach(l => {
+      learnerMapData.conceptMap.links.forEach(l => {
         let link = getLink(l.lid)
         if (link && link.source_cid) {
           if (lids.has(link.lid) && cids.has(link.source_cid))
