@@ -64,6 +64,56 @@ class LearnerMapService extends CoreService {
     }
   }
 
+  function getLearnerMapsOfConceptMap($cmid) {
+    try {
+      $db = self::instance();
+      $qb = QB::instance('learnermap l');
+      $qb->select('l.id AS id', 'l.userid AS userid', 'l.cmid', 'l.kid', 'l.data', 'l.created')
+        ->where('l.cmid', $cmid)
+        ->orderBy('l.userid')
+        ->orderBy('l.kid')
+        ->orderBy('l.created');
+      $learnerMaps = $db->query($qb->get());
+      return $learnerMaps;
+    } catch (Exception $ex) {
+      throw CoreError::instance($ex->getMessage());
+    }
+  }
+
+  function searchLearnermaps($keyword, $page = 1, $perpage = 10) {
+    try {
+      $db = self::instance();
+      $qb = QB::instance('learnermap l')
+        ->select(QB::raw('l.*'), 'u.name AS creator', 'k.name AS kit')
+        ->leftJoin('user u', 'u.username', 'l.author')
+        ->leftJoin('kit k', 'k.kid', 'l.kid')
+        ->where('u.username', QB::LIKE, "%$keyword%")
+        ->where('u.name', QB::LIKE, "%$keyword%", QB::OR)
+        ->where('k.name', QB::LIKE, "%$keyword%", QB::OR)
+        ->orderBy('l.author')
+        ->orderBy('l.create_time', QB::DESC)
+        ->limit(($page-1)*$perpage, $perpage);
+      $learnerMaps = $db->query($qb->get());
+      return $learnerMaps;
+    } catch (Exception $ex) {
+      throw CoreError::instance($ex->getMessage());
+    }
+  }
+
+  function searchLearnermapsCount($keyword) {
+    try {
+      $db = self::instance();
+      $qb = QB::instance('learnermap l')
+        ->select(QB::raw('COUNT(*) AS count'))
+        ->where('u.username', QB::LIKE, "%$keyword%")
+        ->where('u.name', QB::LIKE, "%$keyword%", QB::OR)
+        ->where('k.name', QB::LIKE, "%$keyword%", QB::OR);
+      return $db->getVar($qb->get());
+    } catch (Exception $ex) {
+      throw CoreError::instance($ex->getMessage());
+    }
+  }
+
   // function insert($kid, $author, $type, $cmid, $concepts = [], $links = [], $linktargets = [], $create_time = null, $data = null) {
   //   /**
   //    * $kid: auto

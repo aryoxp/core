@@ -287,13 +287,17 @@ class App {
 
     $('#concept-map-open-dialog .bt-refresh-cmap-list').on('click', () => {
       let keyword = $('#form-search-concept-map input[name="keyword"]').val();
-      this.ajax.get(`m/x/kb/kitBuildApi/searchConceptMaps/${keyword}`).then(cmaps => { console.log(cmaps)
+      this.ajax.get(`m/x/kb/kitBuildApi/searchConceptMaps/${keyword}`).then(cmaps => { 
+        // console.log(cmaps)
         let conceptMapsHtml = '';
-        cmaps.forEach(t => { console.log(t);
+        cmaps.forEach(t => { 
+          // console.log(t);
           conceptMapsHtml += `<span class="cmap list-item" data-cmid="${t.id}">`
            + `<span class="d-flex align-items-center">`
-           + `<span class="text-truncate" style="font-size:0.9rem">${t.title}</span> <code class="bg-danger-subtle rounded mx-2 px-2 text-danger">${t.id}</code> <span class="badge text-bg-warning">${t.created}</span></span>`
-           + `<bi class="bi bi-check-lg text-primary d-none"></bi></span>`
+           + `<span class="text-truncate" style="font-size:0.9rem">${t.title}</span>`
+           + `<code class="bg-danger-subtle rounded mx-2 px-2 text-danger text-nowrap text-truncate">${t.id}</code>`
+           + `<span class="badge text-bg-warning">${t.created}</span></span>`
+           + `<bi class="bi bi-check-lg text-primary d-none"></bi></span>`;
         });
         $('#concept-map-open-dialog .list-concept-map').slideUp({
           duration: 100,
@@ -339,9 +343,12 @@ class App {
       }
       KitBuild.openConceptMap(openDialog.cmid)
         .then((conceptMap) => {
-          console.log(conceptMap, this);
-          conceptMap = Object.assign(conceptMap, App.inst.decodeMap(conceptMap.data, openDialog));
-          console.log(conceptMap);
+          // console.log(conceptMap);
+          conceptMap = Object.assign(conceptMap, Core.decompress(conceptMap.data));
+          conceptMap.cyData = KitBuildUI.composeConceptMap(conceptMap.canvas);
+          // console.log(x);
+          // conceptMap = Object.assign(conceptMap, App.inst.decodeMap(conceptMap.data, openDialog));
+          // console.log(conceptMap);
           this.showConceptMap(conceptMap);
           this.setConceptMap(conceptMap);
           openDialog.hide();
@@ -400,7 +407,7 @@ class App {
       }
       KitBuild.openLearnerMap(lmid).then((learnerMap) => {
         learnerMap = Object.assign(learnerMap, Core.decompress(learnerMap.data));
-        learnerMap.canvas.conceptMap = App.inst.conceptMap;
+        learnerMap.canvas.conceptMap = App.inst.conceptMap.canvas;
         let cyData = KitBuildUI.composeLearnerMap(learnerMap.canvas);
         this.canvas.cy.elements().remove();
         this.canvas.cy.add(cyData);
@@ -449,9 +456,9 @@ class App {
         .filter(`[data-lmid="${learnerMap.map.id}"]`)
         .addClass("active");
 
+      // console.log(App.inst.conceptMap);
+      learnerMap.canvas.conceptMap = App.inst.conceptMap.canvas;
       // console.log(learnerMap);
-      learnerMap.canvas.conceptMap = App.inst.conceptMap;
-
       let cyData = KitBuildUI.composeLearnerMap(learnerMap.canvas);
       this.canvas.cy.elements().remove();
       this.canvas.cy.add(cyData);
@@ -464,14 +471,14 @@ class App {
       
       let compare = Analyzer.compare(
         learnerMap.canvas,
-        learnerMap.canvas.conceptMap.map.direction
+        App.inst.conceptMap.map.direction
       );
-      console.log(compare);
+      // console.log(compare);
       // console.error(compare, this.canvas, learnerMap.conceptMap.map.direction)
       Analyzer.showCompareMap(
         compare,
         this.canvas.cy,
-        learnerMap.canvas.conceptMap.map.direction,
+        App.inst.conceptMap.map.direction,
         Analyzer.MATCH | Analyzer.MISS | Analyzer.EXCESS
       );
       KitBuildUI.showBackgroundImage(this.canvas);
@@ -586,7 +593,7 @@ class App {
       let kid = $(e.currentTarget).val();
       // console.log(kid);
       $('#list-learnermap .learnermap').each((i, e) => {
-        console.log(e, $(e), $(e).data('kid'), index, $(e).data('kid') == kid);
+        // console.log(e, $(e), $(e).data('kid'), index, $(e).data('kid') == kid);
         $(e).find('.cb-learnermap').prop('checked', false);
         switch(index) {
           case 0: $(e).removeClass('d-none'); break;
@@ -627,10 +634,10 @@ class App {
 
       let learnerMaps = [];
       App.inst.learnerMaps.forEach((lm, k) => {
-        lm.canvas.conceptMap = App.inst.conceptMap;
-        console.log(lm);
+        lm.canvas.conceptMap = App.inst.conceptMap.canvas;
+        // console.log(lm);
         Analyzer.composePropositions(lm.canvas);
-        let direction = lm.canvas.conceptMap.map.direction;
+        let direction = App.inst.conceptMap.map.direction;
         lm.compare = Analyzer.compare(lm.canvas, direction);
         if (lmids.includes(k)) learnerMaps.push(lm);
       });
@@ -693,6 +700,7 @@ class App {
       let lmid = sessions.lmid;
       if (cmid) {
         KitBuild.openConceptMap(cmid).then((conceptMap) => {
+          conceptMap = Object.assign(conceptMap, Core.decompress(conceptMap.data));
           canvas.direction = conceptMap.map.direction;
           canvas.cy.elements().remove();
           canvas.cy.add(KitBuildUI.composeConceptMap(conceptMap));
@@ -841,12 +849,12 @@ class App {
   decodeMap(data) {
     try {
       let conceptMap = Core.decompress(data.replaceAll('"',''));
-      console.log(data, conceptMap);
+      // console.log(data, conceptMap);
       Object.assign(conceptMap, {
         cyData: KitBuildUI.composeConceptMap(conceptMap.canvas),
       });
       // KitBuildUI.composeConceptMap(conceptMap);
-      console.log(conceptMap);
+      // console.log(conceptMap);
       return conceptMap;
     } catch (error) {
       console.error(error);
@@ -868,23 +876,25 @@ App.populateLearnerMaps = (cmid, kid = null, type = null) => {
       .ajax()
       .get(`m/x/kb/analyzerApi/getLearnerMapsOfConceptMap/${cmid}${kid ? "/" + kid : ""}`)
       .then((learnerMaps) => {
+        // console.log(learnerMaps);
         learnerMaps = Core.decompress(learnerMaps);
-        console.log(learnerMaps);
-        let list = "";
+        // console.log(learnerMaps);
         App.inst.learnerMaps = new Map(
           learnerMaps.map((obj) => [obj.id, Core.decompress(obj.data)])
         );
-
+        // console.log(App.inst.conceptMap);
         learnerMaps.map((learnerMap) => {
-          console.log(learnerMap);
-          // let lmap = Core.decompress(learnerMap.data);
+        //   console.log(learnerMap);
+        //   // let lmap = Core.decompress(learnerMap.data);
           Object.assign(learnerMap, Core.decompress(learnerMap.data));
-          learnerMap.canvas.conceptMap = App.inst.conceptMap;
-          console.log(learnerMap);
+          delete learnerMap.data;
+          learnerMap.canvas.conceptMap = App.inst.conceptMap.canvas;
+        //   console.log(learnerMap);
           Analyzer.composePropositions(learnerMap.canvas);
-          let direction = learnerMap.canvas.conceptMap.map.direction;
+          let direction = App.inst.conceptMap.map.direction;
           learnerMap.compare = Analyzer.compare(learnerMap.canvas, direction);
         });
+        // console.log(learnerMaps);
 
         let fbSet = new Set();
         let dSet  = new Set();
@@ -896,8 +906,9 @@ App.populateLearnerMaps = (cmid, kid = null, type = null) => {
         let fxLastMap = new Map();
         let aLastMap = new Map();
 
+        let list = "";
         learnerMaps.forEach((lm, i) => {
-          console.log(lm);
+          // console.log(lm);
           let isFirst =
             i == 0 || (i > 0 && learnerMaps[i - 1].map.userid != lm.map.userid);
           let isLast =

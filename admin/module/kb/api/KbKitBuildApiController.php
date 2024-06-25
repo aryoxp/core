@@ -104,7 +104,7 @@ class KbKitBuildApiController extends CoreApi {
   function openLearnerMap($lmid = null) {
     try {
       $service = new LearnerMapService();
-      $learnerMap = $service->getLearnerMap($lmid);
+      $learnerMap = $service->get($lmid);
       CoreResult::instance($learnerMap)->show();
     } catch (Exception $ex) {
       CoreError::instance($ex->getMessage())->show();

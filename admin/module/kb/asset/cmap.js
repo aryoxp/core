@@ -126,7 +126,7 @@ class App {
         (new CoreInfo('Please open a concept map to save')).show();
         return;
       }
-      console.log(this.conceptMap);
+      // console.log(this.conceptMap);
       $('input[name="fid"]').val(this.conceptMap.map.id);
       $('input[name="title"]').val(this.conceptMap.map.title);
       let mapdata = {};
@@ -139,11 +139,11 @@ class App {
         id: this.conceptMap.map.cmid,
         title: this.conceptMap.title,
         data: Core.compress(mapdata)
-      }; console.log(data, mapdata);
+      }; // console.log(data, mapdata);
       // return;
       (new CoreConfirm("Save concept map?")).positive(() => {
         this.ajax.post('m/x/kb/kitBuildApi/save', data).then(conceptMap => { 
-          console.warn(conceptMap);
+          // console.warn(conceptMap);
           conceptMap = Object.assign(conceptMap, Core.decompress(conceptMap.data));
           new CoreInfo('Concept map has been saved.').show();
           this.setConceptMap(conceptMap);
@@ -198,7 +198,7 @@ class App {
           conceptMap = Object.assign(conceptMap, Core.decompress(conceptMap.data));
           this.setConceptMap(conceptMap);
         } 
-        console.warn(conceptMap);
+        // console.warn(conceptMap);
         new CoreInfo('Concept map has been saved.').show();
         App.saveAsDialog.hide();
       }, error => {
@@ -213,7 +213,7 @@ class App {
      *
      **/
 
-    $(".app-navbar .bt-open").on("click", (e) => { console.log(e);
+    $(".app-navbar .bt-open").on("click", (e) => { // console.log(e);
       App.dialogOpen = (new CoreWindow('#concept-map-open-dialog', {
         draggable: true,
         width: '650px',
@@ -223,9 +223,9 @@ class App {
       $('.bt-refresh-cmap-list').trigger('click');
     });
     $('.bt-refresh-cmap-list').on('click', (e) => {
-      this.ajax.get(`m/x/kb/kitBuildApi/searchConceptMaps/`).then(cmaps => { console.log(cmaps)
+      this.ajax.get(`m/x/kb/kitBuildApi/searchConceptMaps/`).then(cmaps => { // console.log(cmaps)
         let conceptMapsHtml = '';
-        cmaps.forEach(t => { console.log(t);
+        cmaps.forEach(t => { // console.log(t);
           conceptMapsHtml += `<span class="cmap list-item" data-cmid="${t.id}">`
            + `<span class="d-flex align-items-center">`
            + `<span class="text-truncate" style="font-size:0.9rem">${t.title}</span> <code class="bg-danger-subtle rounded mx-2 px-2 text-danger">${t.id}</code> <span class="badge text-bg-warning">${t.created}</span></span>`
@@ -264,7 +264,7 @@ class App {
     $("#concept-map-open-dialog").on("click", ".bt-open", async (e) => {
       if (App.dialogOpen.cmid) {
         this.ajax.get(`m/x/kb/kitBuildApi/openConceptMap/${App.dialogOpen.cmid}`).then(conceptMap => { 
-          console.log(conceptMap);
+          // console.log(conceptMap);
           conceptMap = Object.assign(conceptMap, this.decodeMap(conceptMap.data));
           this.setConceptMap(conceptMap);
           this.showConceptMap(conceptMap);
@@ -301,7 +301,7 @@ class App {
       })).show();
     });
 
-    $("#concept-map-export-dialog").on("click", ".bt-clipboard", async (e) => { console.log(e);
+    $("#concept-map-export-dialog").on("click", ".bt-clipboard", async (e) => { // console.log(e);
       navigator.clipboard.writeText(
         $("#concept-map-export-dialog .encoded-data").val().trim()
       );
@@ -481,12 +481,12 @@ class App {
   decodeMap(data, dialog) {
     try {
       let conceptMap = Core.decompress(data.replaceAll('"',''));
-      console.log(data, conceptMap);
+      // console.log(data, conceptMap);
       Object.assign(conceptMap, {
         cyData: KitBuildUI.composeConceptMap(conceptMap.canvas),
       });
       // KitBuildUI.composeConceptMap(conceptMap);
-      console.log(conceptMap);
+      // console.log(conceptMap);
       return conceptMap;
     } catch (error) {
       console.error(error);

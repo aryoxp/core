@@ -71,9 +71,11 @@ class App {
   
     $('#concept-map-open-dialog .bt-refresh-cmap-list').on('click', () => {
       let keyword = $('#form-search-concept-map input[name="keyword"]').val();
-      this.ajax.get(`m/x/kb/kitBuildApi/searchConceptMaps/${keyword}`).then(cmaps => { console.log(cmaps)
+      this.ajax.get(`m/x/kb/kitBuildApi/searchConceptMaps/${keyword}`).then(cmaps => { 
+        // console.log(cmaps)
         let conceptMapsHtml = '';
-        cmaps.forEach(t => { console.log(t);
+        cmaps.forEach(t => { 
+          // console.log(t);
           conceptMapsHtml += `<span class="cmap list-item" data-cmid="${t.id}">`
            + `<span class="d-flex align-items-center">`
            + `<span class="text-truncate" style="font-size:0.9rem">${t.title}</span>`
@@ -254,7 +256,7 @@ class App {
       let log = CDM.sessions.get(lid);
       CDM.log = log;
       CDM.propLength = CDM.conceptMap.canvas.linktargets.length;
-      console.log(CDM);
+      // console.log(CDM);
       // console.log(log, lid);
       this.ajax.get(`m/x/kb/analyzerApi/getSessionLogs/${log.sessid}`).then(logs => {
         CDM.logs = new Map(); 
@@ -263,7 +265,7 @@ class App {
         // console.log(logs);
         let index = 0;
         logs.map(log => {
-          console.log(log);
+          // console.log(log);
           let canvas = log.canvas ? Core.decompress(log.canvas) : null;
           let compare = log.compare ? Core.decompress(log.compare) : null;
           // console.log(canvas, compare);
@@ -289,7 +291,7 @@ class App {
           index++;
         });
         
-        console.log(logs, CDM.logs);
+        // console.log(logs, CDM.logs);
         this.canvas.cy.elements().remove();
         this.showStateMap(CDM.logs.get(0).canvas, CDM.conceptMap.map.direction);
 
@@ -304,6 +306,7 @@ class App {
         tinfo += `<span class="ms-1">duration: ${App.duration(log.duration)}</span>`;
         $('.timeline-info').html(tinfo);
         $('#timeline-range').attr('min', 0).attr('max', logs.length-1);
+        $('#timeline-range').val(0);
         $('#timeline-max-val-label').html(logs.length);
 
         $('#list-session .session').removeClass('active');
@@ -456,8 +459,9 @@ class App {
           },
           plugins: {
             tooltip: {
-              yAlign: (e) => { console.log(e);
-                if (e.tooltipItems[0].datasetIndex == 6) return 'bottom';
+              yAlign: (e) => { 
+                // console.log(e);
+                if (e.tooltipItems.length > 0 && e.tooltipItems[0].datasetIndex == 6) return 'bottom';
                 return;
               },
               callbacks: {
@@ -676,12 +680,12 @@ class App {
   decodeMap(data) {
     try {
       let conceptMap = Core.decompress(data.replaceAll('"',''));
-      console.log(data, conceptMap);
+      // console.log(data, conceptMap);
       Object.assign(conceptMap, {
         cyData: KitBuildUI.composeConceptMap(conceptMap.canvas),
       });
       // KitBuildUI.composeConceptMap(conceptMap);
-      console.log(conceptMap);
+      // console.log(conceptMap);
       return conceptMap;
     } catch (error) {
       console.error(error);
@@ -705,17 +709,17 @@ App.populateLearnerMaps = (cmid) => {
       );
       
       learnerMaps.map((learnerMap) => {
-        console.log(learnerMap);
+        // console.log(learnerMap);
         Object.assign(learnerMap, Core.decompress(learnerMap.data));
         learnerMap.canvas.conceptMap = App.inst.conceptMap;
-        console.log(learnerMap);
+        // console.log(learnerMap);
         Analyzer.composePropositions(learnerMap.canvas);
         let direction = learnerMap.canvas.conceptMap.map.direction;
         learnerMap.compare = Analyzer.compare(learnerMap.canvas, direction);
       });
 
       learnerMaps.forEach((lm, i) => {
-        console.log(lm);
+        // console.log(lm);
         let isFirst = i == 0 || i > 0 && learnerMaps[i-1].map.userid != lm.map.userid
         let isLast = (learnerMaps[i+1] && learnerMaps[i+1].map.userid != lm.map.userid) || !learnerMaps[i+1]
         let score = (lm.compare.score * 1000 | 0) / 10 + '%' 
@@ -778,7 +782,7 @@ App.populateSessions = (cmid) => {
         list += `</span>`;
         list += `</div>`;
       })
-      $('#list-session').html(list == '' ? '<em class="text-secondary">No sessions.</em>' : list)
+      $('#list-session').html(list == '' ? '<p><em class="text-smaller text-secondary mx-2">No sessions.</em></p>' : list)
       new bootstrap.Tooltip("body", {
         selector: "[data-bs-toggle='tooltip']"
       });
@@ -803,7 +807,7 @@ App.onCheckBoxChanged = (e) => { // onsole.log(e)
 }
 
 App.updateStatus = (learnerMap, compare) => {
-  console.log(learnerMap);
+  // console.log(learnerMap);
   if (learnerMap) {
     let statusLearnerMap = `<span class="mx-2 d-flex align-items-center status-learnermap">`
       + `<span class="badge rounded-pill bg-warning text-dark ms-1">ID: ${learnerMap.map.id}</span> `

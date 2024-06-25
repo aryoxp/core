@@ -67,7 +67,7 @@ class App {
       let data = Core.decompress(kitMap.data);
       kitMap.options = JSON.parse(kitMap.options);
       kitMap = Object.assign(kitMap, data);
-      console.warn(kitMap);
+      // console.warn(kitMap);
     } catch(e) {}
     this.kitMap = kitMap;
     CDM.options = kitMap.options;
@@ -148,7 +148,7 @@ class App {
       return optionDialog
     }
     optionDialog.setDefault = () => {
-      console.error(CDM.options);
+      // console.error(CDM.options);
       let layout = $('#kit-option-dialog input[name="layout"][value="preset"]'); 
       let feedbackleveldefault = $('#kit-option-dialog select[name="feedbacklevel"] option.default');
       let fullfeedback = $('#kit-option-dialog input[name="fullfeedback"]');
@@ -268,9 +268,11 @@ class App {
 
     $('#concept-map-open-dialog .bt-refresh-cmap-list').on('click', () => {
       let keyword = $('#form-search-concept-map input[name="keyword"]').val();
-      this.ajax.get(`m/x/kb/kitBuildApi/searchConceptMaps/${keyword}`).then(cmaps => { console.log(cmaps)
+      this.ajax.get(`m/x/kb/kitBuildApi/searchConceptMaps/${keyword}`).then(cmaps => { 
+        // console.log(cmaps)
         let conceptMapsHtml = '';
-        cmaps.forEach(t => { console.log(t);
+        cmaps.forEach(t => { 
+          // console.log(t);
           conceptMapsHtml += `<span class="cmap list-item" data-cmid="${t.id}">`
            + `<span class="d-flex align-items-center">`
            + `<span class="text-truncate" style="font-size:0.9rem">${t.title}</span>`
@@ -299,7 +301,7 @@ class App {
     });
     
     $('#concept-map-open-dialog .list-concept-map').on('click', '.list-item', (e) => {
-      console.log($(e.currentTarget).attr('data-cmid'));
+      // console.log($(e.currentTarget).attr('data-cmid'));
       if (openDialog.cmid != $(e.currentTarget).attr('data-cmid')) // different concept map?
         openDialog.id = null; // reset selected kit id.
       openDialog.cmid = $(e.currentTarget).attr('data-cmid');
@@ -308,7 +310,8 @@ class App {
       $(e.currentTarget).find('.bi-check-lg').removeClass('d-none');
       $(e.currentTarget).addClass('active');
   
-      this.ajax.get(`m/x/kb/kitBuildApi/getKitListByConceptMap/${openDialog.cmid}`).then(kits => { console.log(kits)
+      this.ajax.get(`m/x/kb/kitBuildApi/getKitListByConceptMap/${openDialog.cmid}`).then(kits => { 
+        // console.log(kits)
         let kitsHtml = '';
         kits.forEach(k => {
           kitsHtml += ``
@@ -364,13 +367,13 @@ class App {
       }
       KitBuild.openKitMap(openDialog.kid).then(kitMap => {
         try {
-          console.warn(kitMap);
+          // console.warn(kitMap);
           App.inst.setKitMap(kitMap);
           kitMap.conceptMap = Object.assign(kitMap.conceptMap, App.inst.decodeMap(kitMap.conceptMap.data));
           App.inst.setConceptMap(kitMap.conceptMap);
           kitMap.canvas.conceptMap = kitMap.conceptMap.canvas;
           let cyData = KitBuildUI.composeKitMap(kitMap.canvas);
-          console.log(cyData);
+          // console.log(cyData);
           if (this.canvas.cy.elements().length) {
             let confirm = (new CoreConfirm("Open the kit replacing the current kit on Canvas?")).positive(() => {
               this.canvas.cy.elements().remove();
@@ -403,7 +406,7 @@ class App {
         return
       }
       KitBuild.openConceptMap(openDialog.cmid).then(conceptMap => {
-        console.log(conceptMap);
+        // console.log(conceptMap);
         try {
           conceptMap = Object.assign(conceptMap, App.inst.decodeMap(conceptMap.data, openDialog));
 
@@ -455,7 +458,7 @@ class App {
     $('.app-navbar .bt-close-kit').on('click', () => {
       if (App.inst.conceptMap)
         (new CoreConfirm('Close this kit?')).positive(() => {
-          console.log(this.canvas);
+          // console.log(this.canvas);
           this.canvas.reset();
           App.inst.setConceptMap();
           App.inst.setKitMap();
@@ -510,7 +513,7 @@ class App {
         countsubmit: $('#kit-option-dialog input[name="countsubmit"]').prop('checked') ? 1 : 0,
         log: $('#kit-option-dialog input[name="log"]').prop('checked') ? 1 : 0,
       }
-      console.log(option);
+      // console.log(option);
       // only store information, when it is not default
       if (option.layout == 'preset') delete option.layout;
       if (option.feedbacklevel == 2) delete option.feedbacklevel;
@@ -526,7 +529,7 @@ class App {
 
       CDM.options = option;
       UI.success("Kit options applied.").show();
-      console.log(CDM.options);
+      // console.log(CDM.options);
   
       // KitBuild.updateKitOption(optionDialog.kitMap.map.kid, 
       //   $.isEmptyObject(option) ? null : JSON.stringify(option)).then((kitMap) => { // console.log(result);
@@ -589,7 +592,8 @@ class App {
       this.ajax.post(`contentApi/assignTextToKitMap`, {
         tid: tid,
         kid: textDialog.kitMap.map.kid
-      }).then(kitMap => { console.log(kitMap)
+      }).then(kitMap => { 
+        // console.log(kitMap)
         this.ajax.get(`contentApi/getText/${kitMap.map.text}`).then(text => {
           let assignedTextHtml = `<span class="text-danger">Text:</span> ${text.title} <span class="badge rounded-pill bg-danger bt-unassign px-3 ms-3" role="button" data-text="${text.tid}" data-kid="${textDialog.kitMap.map.kid}">Unassign</span>`
           $("#assigned-text").html(assignedTextHtml)
@@ -603,7 +607,8 @@ class App {
       let kid = $(e.currentTarget).attr('data-kid')
       this.ajax.post(`contentApi/unassignTextFromKitMap`, {
         kid: kid,
-      }).then(kitMap => { console.log(kitMap)
+      }).then(kitMap => { 
+        // console.log(kitMap)
         $("#assigned-text").html('<em class="text-danger px-3">This kit has no text assigned.</em>')
         App.inst.setKitMap(kitMap)
       }).catch(error => console.error(error))
@@ -714,18 +719,18 @@ class App {
       if (saveAsDialog.kitMap) {
         data.newid = id;   
         data.id = saveAsDialog.kitMap.id;
-        console.warn(data);
+        // console.warn(data);
         this.ajax.post("m/x/kb/kitBuildApi/updateKitMap", data).then(kitMap => { 
-          console.log(kitMap);
+          // console.log(kitMap);
           App.inst.setKitMap(kitMap);
           UI.success("Kit has been updated successfully.").show(); 
           saveAsDialog.hide(); 
         })
         .catch(error => { UI.error(error).show(); })
       } else {
-        console.warn(data);
+        // console.warn(data);
         this.ajax.post("m/x/kb/kitBuildApi/saveKitMap", data).then(kitMap => { 
-            console.log(kitMap);
+            // console.log(kitMap);
             App.inst.setKitMap(kitMap);
             UI.success("Kit has been saved successfully.").show(); 
             saveAsDialog.hide(); 
@@ -750,7 +755,7 @@ class App {
     $('.app-navbar .bt-toggle-left').on('click', () => {
       if (!App.inst.conceptMap) return
       if (this.canvas.cy.edges('[type="left"]').length)
-      this.canvas.cy.edges('[type="left"]').remove();
+        this.canvas.cy.edges('[type="left"]').remove();
       else {
         console.error(App.inst.conceptMap);
         App.inst.conceptMap.canvas.links.forEach(link => {
@@ -838,7 +843,7 @@ class App {
   }
 
   populateOptions(kitMapOptions) {
-    console.warn(kitMapOptions);
+    // console.warn(kitMapOptions);
     let feedbacklevel = $('#kit-option-dialog select[name="feedbacklevel"]');
     let feedbackleveldefault = $('#kit-option-dialog select[name="feedbacklevel"] option.default');
     let fullfeedback = $('#kit-option-dialog input[name="fullfeedback"]');
@@ -918,12 +923,12 @@ class App {
   decodeMap(data, dialog) {
     try {
       let conceptMap = Core.decompress(data.replaceAll('"',''));
-      console.log(data, conceptMap);
+      // console.log(data, conceptMap);
       Object.assign(conceptMap, {
         cyData: KitBuildUI.composeConceptMap(conceptMap.canvas),
       });
       // KitBuildUI.composeConceptMap(conceptMap);
-      console.log(conceptMap);
+      // console.log(conceptMap);
       return conceptMap;
     } catch (error) {
       console.error(error);

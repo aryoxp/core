@@ -22,18 +22,18 @@ class L {
         if (el.data.image) delete el.data[attr];
       }
     }
-    console.log(canvas);
+    // console.log(canvas);
     dataMap.set('canvas', Core.compress(canvas));
     return dataMap;
   }
   static compare(dataMap, appCanvas, conceptMap) {
     let learnerMapData = KitBuildUI.buildConceptMapData(appCanvas);
     learnerMapData.conceptMap = conceptMap;
-    console.log(learnerMapData);
+    // console.log(learnerMapData);
     Analyzer.composePropositions(learnerMapData);
-    let direction = learnerMapData.conceptMap.map.direction;
+    let direction = CDM.conceptMap.map.direction;
     let compare = Analyzer.compare(learnerMapData, direction);
-    console.warn(compare);
+    // console.warn(compare);
     dataMap.set('compare', Core.compress(compare));
     return dataMap; 
   }
@@ -498,7 +498,7 @@ class App {
       let userid = $('#concept-map-open-dialog input[name="userid"]').val().trim();
       let url = Core.instance().config('baseurl') + "mapApi/get/";
       url += $('#concept-map-open-dialog input[name="mapid"]').val().trim();
-      console.log(url, remember, userid);
+      // console.log(url, remember, userid);
       Core.instance().ajax().post(url, {
         remember: remember ? 1 : 0,
         userid: userid
@@ -507,7 +507,7 @@ class App {
         try {
           let conceptMap = Core.decompress(data.conceptMap.replaceAll('"',''));
           let kit = Core.decompress(data.kit.replaceAll('"',''));
-          console.log(conceptMap, kit);
+          // console.log(conceptMap, kit);
           CDM.conceptMap = conceptMap;
           CDM.kitId = kit.map.id;
           CDM.conceptMapId = kit.map.cmid;
@@ -639,7 +639,7 @@ class App {
         UI.success("Concept map has been saved successfully.").show();
         let dataMap = L.dataMap(CDM.kitId, CDM.conceptMapId);
         L.canvas(dataMap, App.inst.canvas);
-        L.compare(dataMap, App.inst.canvas, CDM.conceptMap);
+        L.compare(dataMap, App.inst.canvas, CDM.conceptMap.canvas);
         L.log('save-draft', {
           id: data.id,
           cmid: data.cmid,
@@ -689,7 +689,7 @@ class App {
 
             let dataMap = L.dataMap(CDM.kitId, CDM.conceptMapId);
             L.canvas(dataMap, App.inst.canvas);
-            L.compare(dataMap, App.inst.canvas, CDM.conceptMap);
+            L.compare(dataMap, App.inst.canvas, CDM.conceptMap.canvas);
             L.log('load-draft', {
               sessid: sessid,
               psessid: lmapdata.sessid
@@ -850,15 +850,15 @@ class App {
 
       let learnerMapData = KitBuildUI.buildConceptMapData(this.canvas);
       feedbackDialog.learnerMapEdgesData = this.canvas.cy.edges().jsons();
-      learnerMapData.conceptMap = CDM.conceptMap;
-      console.log(CDM);
-      console.log(learnerMapData);
+      learnerMapData.conceptMap = CDM.conceptMap.canvas;
+      // console.log(CDM);
+      // console.log(learnerMapData);
       Analyzer.composePropositions(learnerMapData);
-      let direction = learnerMapData.conceptMap.map.direction;
-      console.warn(CDM.kit, CDM.kit.map);
+      let direction = CDM.conceptMap.map.direction;
+      // console.warn(CDM.kit, CDM.kit.map);
       let feedbacklevel = CDM.kit.parsedOptions.feedbacklevel;
       let compare = Analyzer.compare(learnerMapData, direction);
-      console.log(compare);
+      // console.log(compare);
       let level = Analyzer.NONE;
       let dialogLevel = Analyzer.NONE;
       switch (feedbacklevel) {
@@ -952,7 +952,7 @@ class App {
             data.created = learnerMap.created;
             let dataMap = L.dataMap(CDM.kitId, CDM.conceptMapId);
             L.canvas(dataMap, App.inst.canvas);
-            L.compare(dataMap, App.inst.canvas, CDM.conceptMap);
+            L.compare(dataMap, App.inst.canvas, CDM.conceptMap.canvas);
             L.log('submit', data, dataMap);
             UI.dialog('Your final concept map has been submitted. You now may close this window.').show();
           }).catch((error) => {
@@ -1000,11 +1000,11 @@ class App {
 
   handleRefresh() {
     this.session.getAll().then((sessions) => {
-      console.log(sessions, document.cookie);
+      // console.log(sessions, document.cookie);
       Logger.userid = sessions.userid;
       Logger.sessid = App.getCookie(CDM.cookieid);
       Logger.canvasid = App.canvasId;
-      console.log(Logger.userid, Logger.sessid);
+      // console.log(Logger.userid, Logger.sessid);
       this.canvas.on("event", App.onCanvasEvent);
     });
     // let stateData = JSON.parse(localStorage.getItem(App.name));
@@ -1157,7 +1157,7 @@ App.onCanvasEvent = (canvasId, event, data) => {
   if (!skip.includes(event))
     L.canvas(dataMap, App.inst.canvas);
   if (event.includes("connect"))
-    L.compare(dataMap, App.inst.canvas, CDM.conceptMap);
+    L.compare(dataMap, App.inst.canvas, CDM.conceptMap.canvas);
   L.log(event, data, dataMap);
   // App.collab("command", event, canvasId, data);
 };
@@ -1173,9 +1173,9 @@ App.openKit = () => {
       CDM.kit.canvas = CDM.conceptMap.canvas;
     }
   
-    console.log(CDM);
+    // console.log(CDM);
     CDM.kit.canvas.conceptMap = CDM.conceptMap.canvas;
-    console.log(Logger);
+    // console.log(Logger);
     if (typeof Logger != undefined) Logger.userid = CDM.userid;
 
     let canvas = App.inst.canvas;
@@ -1208,10 +1208,11 @@ App.openKit = () => {
     ]);
 
     let learnerMapData = KitBuildUI.buildConceptMapData(App.inst.canvas);
-    learnerMapData.conceptMap = CDM.conceptMap;
+    learnerMapData.conceptMap = CDM.conceptMap.canvas;
     console.log(learnerMapData);
-    Analyzer.composePropositions(learnerMapData);
-    let direction = learnerMapData.conceptMap.map.direction;
+    let result = Analyzer.composePropositions(learnerMapData);
+    console.log(result, learnerMapData);
+    let direction = CDM.conceptMap.map.direction;
     let compare = Analyzer.compare(learnerMapData, direction);
     console.warn(compare);
     dataMap.set('compare', Core.compress(compare));  
@@ -1304,9 +1305,10 @@ App.parseIni = (data) => {
   return value;
 }
 
-App.parseKitMapOptions = (kit) => { console.log(kit);
+App.parseKitMapOptions = (kit) => { 
+  // console.log(kit);
   if (!kit) return;
-  console.error(kit, kit.map.options);
+  // console.error(kit, kit.map.options);
   kit.parsedOptions = App.parseOptions(kit.map.options, {
     layout: "preset",
     feedbacklevel: 2,
@@ -1320,7 +1322,7 @@ App.parseKitMapOptions = (kit) => { console.log(kit);
     countsubmit: 0,
     log: 0,
   });
-  console.log(kit);
+  // console.log(kit);
 };
 
 App.resetMapToKit = (kit, canvas) => {

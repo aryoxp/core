@@ -6,15 +6,15 @@ class Analyzer {
     let cMap = conceptMap;
     let gMap = conceptMap.conceptMap ? conceptMap.conceptMap : conceptMap;
 
-    console.warn(cMap, gMap);
+    // console.warn(cMap, gMap);
 
     let concepts = new Map(
-      gMap.canvas.concepts.map((concept) => [concept.cid, concept])
+      gMap.concepts.map((concept) => [concept.cid, concept])
     );
-    let links = new Map(gMap.canvas.links.map((link) => [link.lid, link]));
+    let links = new Map(gMap.links.map((link) => [link.lid, link]));
 
     if (!gMap.propositions) {
-      gMap.canvas.linktargets.forEach((linktarget) => {
+      gMap.linktargets.forEach((linktarget) => {
         let prop = {
           source: concepts.get(links.get(linktarget.lid).source_cid),
           link: links.get(linktarget.lid),
@@ -32,7 +32,7 @@ class Analyzer {
     // according to the goal map.
     propositions = [];
     if (!cMap.propositions) {
-      console.log(cMap);
+      // console.log(cMap);
       let lLinks = new Map(cMap.links.map((link) => [link.lid, link]));
       let concepts_ext = cMap.concepts_ext
         ? new Map(cMap.concepts_ext.map((concept) => [concept.cid, concept]))
@@ -292,7 +292,7 @@ class Analyzer {
       leaves = new Map(),
       abandons = new Map();
     learnerMaps.forEach((lm) => {
-      console.log(lm);
+      // console.log(lm);
       lm.compare.matchg.forEach((m) => {
         if (!m) return;
         let key = `${m.sid}|${m.link}|${m.tid}`;
