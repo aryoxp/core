@@ -863,8 +863,9 @@ class KitBuildUI {
         }
         return count;
       }
-      kitMapData.conceptMap.concepts.forEach(c => {
-        let position = getConceptPosition(c.cid)
+      for (let c of kitMapData.conceptMap.concepts) {
+        if (conceptsMap.get(c.cid) == undefined) break;
+        let position = getConceptPosition(c.cid);
         kitMap.push({
           group: 'nodes',
           position: position === false ? {x: parseInt(c.x), y: parseInt(c.y)} : position,
@@ -873,9 +874,10 @@ class KitBuildUI {
             label: c.label,
           }),
           invalid: position === false ? true : undefined
-        })
-      })
-      kitMapData.conceptMap.links.forEach(l => {
+        });
+      }
+      for (let l of kitMapData.conceptMap.links) {
+        if (linksMap.get(l.lid) == undefined) break;
         let position = getLinkPosition(l.lid)
         kitMap.push({
           group: 'nodes',
@@ -886,7 +888,7 @@ class KitBuildUI {
             limit: countLinkTargets(l.lid)
           }),
           invalid: position === false ? true : undefined
-        })
+        });
         let link = getLink(l.lid)
         if (link && link.source_cid) {
           kitMap.push({
@@ -897,7 +899,7 @@ class KitBuildUI {
             }),
           })
         }
-      })
+      }
       kitMapData.linktargets.forEach(lt => {
         kitMap.push({
           group: 'edges',
@@ -906,7 +908,7 @@ class KitBuildUI {
             target: lt.target_cid,
           }),
         })
-      })
+      });
       return kitMap;  
     } catch (error) { throw error }
   }
