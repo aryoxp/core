@@ -775,7 +775,7 @@ App.populateSessions = (cmid) => {
       sessions.forEach((s, i) => {
         // console.log(s);
         list += `<div class="d-flex py-1 mx-1 list-item session" data-id="${s.id}" role="button">`;
-        list += `<span class="userid me-1" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="${s.sessid} / ${s.tstamp}">${s.userid}</span>`;
+        list += `<span class="userid me-1 text-truncate" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="${s.sessid} / ${s.tstamp}">${s.userid}</span>`;
         list += `<span class="d-flex text-nowrap ms-1">`;
         list += `<span class="tstamp badge text-bg-primary text-nowrap text-truncate me-1">${s.tstamp.substring(0,10)}</span>`;
         list += `<span class="duration badge text-bg-warning d-flex align-items-center"><i class="bi bi-clock-fill me-1"></i> ${App.duration(s.duration)}</span>`;

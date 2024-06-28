@@ -136,6 +136,7 @@ KitBuildCanvasTool.PROPOSITION    = "proposition";
 KitBuildCanvasTool.PROPAUTHOR     = "propauthor";
 KitBuildCanvasTool.IMAGE          = "image";
 KitBuildCanvasTool.REMOVE_IMAGE   = "remove-image";
+KitBuildCanvasTool.DISTANCECOLOR  = "distance-color";
 
 KitBuildCanvasTool.SH_NONE        = 0;
 KitBuildCanvasTool.SH_CONCEPT     = 1;
@@ -1161,6 +1162,194 @@ class KitBuildRemoveImageTool extends KitBuildCanvasTool {
       KitBuildUI.removeNodeBackgroundImage(nodes[0], this.canvas);
     return;
   }
+}
+
+class KitBuildDistanceColorTool extends KitBuildCanvasTool {
+  constructor(canvas, options) {
+    super(
+      canvas,
+      Object.assign(
+        {
+          showOn: KitBuildCanvasTool.SH_CONCEPT,
+          color: "#e23d66",
+          nearColor: "#16f77b",
+          farColor: "#f02255",
+          range: 500,
+          distanceReference: 300,
+          useDistanceReference: true,
+          useMagnet: true,
+          // icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-input-cursor-text" viewBox="-6 -6 28 28"><path d="M15 12h-4v3h4v-3ZM5 12H1v3h4v-3ZM0 8a8 8 0 1 1 16 0v8h-6V8a2 2 0 1 0-4 0v8H0V8Z"/></svg>',
+          icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-question" viewBox="0 0 16 16"><path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286m1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94"/></svg>',
+          gridPos: { x: 1, y: -1 },
+        },
+        options
+      )
+    );
+    console.log('X');
+    canvas.cy.on('drag', 'node', (e) => { console.log(e);
+      let node = e.target;
+      if (node.data('type') != 'concept') return;
+      if (this.conceptMap) {
+        this.showColor(node, this.conceptMap, canvas);
+      }
+    });
+    canvas.cy.on('tap dragfree', 'node', (e) => { console.log(e); 
+      e.target.style('border-color', 'rgb(255,0,0)');
+      e.target.style('border-opacity', 0.5);
+    });
+  }
+
+  showOn(what, node) {
+    return super.showOn(what, node) & this.settings.useMagnet;
+  }
+
+  action(event, e, nodes) {
+    // console.error(event, e, nodes, nodes[0].data());
+    this.broadcastEvent(`distance-feedback`, nodes[0].data());
+    return;
+  }
+
+  setConceptMap(conceptMap) {
+    this.conceptMap = conceptMap;
+  }
+
+  distance(posA, posB) {
+    return parseInt(Math.sqrt(Math.pow((posA.x - posB.x), 2) + Math.pow((posA.y - posB.y), 2)));
+  }
+
+  hexToRgb(hex) {
+    // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+    var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+    hex = hex.replace(shorthandRegex, function(m, r, g, b) {
+      return r + r + g + g + b + b;
+    });
+  
+    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    } : null;
+  }
+
+  rgbToHex(r, g, b) {
+    return "#" + (1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1);
+  }
+
+  getColor(distanceCurrent, distanceReference, colorRange) {
+
+    // get near and far color
+    let near = colorRange ? colorRange.nearColor : this.settings.nearColor;
+    let far = colorRange ? colorRange.farColor : this.settings.farColor;
+    near = this.hexToRgb(near);
+    far = this.hexToRgb(far);
+
+    // normalize range value to 0~255 
+    let distance = parseInt(((distanceCurrent - distanceReference) / this.settings.range) * 255);
+
+    // truncate invalid distance
+    if (distance < 0) distance = 0;
+    if (distance > 255) distance = 255;
+
+    // console.log(distance, distanceCurrent, distanceReference);
+    let r = near.r + (distance * (far.r - near.r))/255;
+    let g = near.g + (distance * (far.g - near.g))/255;
+    let b = near.b + (distance * (far.b - near.b))/255;
+    return this.rgbToHex(r, g, b);
+
+  }
+
+  showColor(node, conceptMap, canvas) {
+    // get associated link of this concept.
+    let cid = node.id();
+    let lid = null;
+    for(let lt of conceptMap.linktargets) {
+      if (lt.target_cid == cid) lid = lt.lid;
+    }
+    if (lid == null) {
+      for(let l of conceptMap.links) {
+        if (l.source_cid == cid) lid = l.lid;
+      } 
+    }
+
+    let distanceReference = 0; 
+    if (this.settings.useDistanceReference) 
+      distanceReference = this.settings.distanceReference;
+    else {
+      //calculate distance reference from goalmap
+      let refLink = null;
+      for(let l of conceptMap.links) {
+        // console.warn(l, lid);
+        if (l.lid == lid) refLink = l;
+      }
+      let refConcept = null;
+      for(let c of conceptMap.concepts) {
+        if (c.cid == cid) refConcept = c;
+      }
+      // console.error(refLink, refConcept);
+      distanceReference = this.distance({
+        x: parseInt(refLink.x),
+        y: parseInt(refLink.y)
+      },{
+        x: parseInt(refConcept.x),
+        y: parseInt(refConcept.y)
+      });
+    }
+
+    let link = canvas.cy.nodes(`#${lid}`);
+    let concept = node;
+    let distance = this.distance({
+      x: link.position().x,
+      y: link.position().y
+    },{
+      x: concept.position().x,
+      y: concept.position().y
+    });
+    let color = this.getColor(distance, distanceReference);
+    // console.warn(node, color, distance, distanceReference);
+    node.style('border-color', color);
+    node.style('border-opacity', 1.0);
+  }
+
+  showNearby(node) {
+    let cid = node.data().id;
+    let lids = new Set();
+    let cids = new Set();
+    cids.add(cid);
+
+    // find connected links
+    for(let lt of this.conceptMap.linktargets) {
+      if (lt.target_cid == cid) lids.add(lt.lid);
+    }
+    for(let l of this.conceptMap.links) {
+      if (l.source_cid == cid) lids.add(l.lid);
+    } 
+
+    // find all concepts connected to the link
+    for(let l of this.conceptMap.links) {
+      if (lids.has(l.lid)) cids.add(l.source_cid);
+    }
+    for(let l of this.conceptMap.linktargets) {
+      if (lids.has(l.lid)) cids.add(l.target_cid);
+    }
+    
+    // build selection filter
+    let filter = ''
+    cids.forEach(x => filter += filter ? `,[id="${x}"]`: `[id="${x}"]`);
+    let concepts = this.canvas.cy.nodes().filter(filter);
+
+    // select all related concepts.
+    setTimeout(() => {
+      concepts.select().trigger("select");
+      concepts.selectify();
+      if (this.canvas.cy.nodes(":selected").length > 1) {
+        this.canvas.canvasTool.activeTools = [];
+        this.canvas.canvasTool.clearCanvas();
+        this.canvas.canvasTool.drawSelectedNodesBoundingBox();
+      }
+    }, 50);
+  }
+
 }
 
 class KitBuildCanvasToolCanvas {

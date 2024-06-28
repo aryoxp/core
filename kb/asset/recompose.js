@@ -58,6 +58,7 @@ class App {
     canvas.toolbar.render();
 
     canvas.addCanvasTool(KitBuildCanvasTool.CENTROID);
+    canvas.addCanvasTool(KitBuildCanvasTool.DISTANCECOLOR);
 
     this.canvas = canvas;
     this.session = Core.instance().session();
@@ -429,6 +430,16 @@ class App {
       },
     });
 
+    this.feedbackNearbyDialog = UI.modal('#feedback-nearby-dialog', {
+      hideElement: ".bt-close",
+      width: 575,
+      onShow: () => {
+        $('#feedback-nearby-dialog .inputinformation').prop('checked', false);
+        $('#feedback-nearby-dialog .inputunderstand').prop('checked', false);
+        $('#feedback-nearby-dialog .inputotherreason').val('');
+      },
+    });
+
     let feedbackDialog = UI.modal("#feedback-dialog", {
       hideElement: ".bt-close",
       backdrop: false,
@@ -514,7 +525,7 @@ class App {
           CDM.kit = kit;
           // console.error(CDM);
         } catch(e) { console.error(e); }
-        if (!CDM.conceptMap) { console.error('X');
+        if (!CDM.conceptMap) {
           UI.errorDialog("Invalid concept map data.").show();
           return;
         }
@@ -530,8 +541,8 @@ class App {
         // console.log(data);
         // console.warn("Log status: ", result);
       }).catch(error => {
-        console.error("Log error: ", error);
-        UI.errorDialog("Invalid concept map data.").show();
+        console.error(error);
+        UI.errorDialog(error).show();
         return;
       });
     });
@@ -929,6 +940,50 @@ class App {
       $(".app-navbar .bt-feedback").prop('disabled', false);
       $(".app-navbar .bt-clear-feedback").prop('disabled', true);
     });
+    $('#feedback-nearby-dialog').on('click', '.bt-get-feedback', e => {
+      let inf = $('#feedback-nearby-dialog .inputinformation').prop('checked');
+      let und = $('#feedback-nearby-dialog .inputunderstand').prop('checked');
+      let oth = $('#feedback-nearby-dialog .inputotherreason').val().trim();
+      console.log(inf, und, oth);
+
+      let reason = [];
+      if (inf) reason.push('inf');
+      if (und) reason.push('und');
+      if (oth.length != 0) reason.push($('#feedback-nearby-dialog .inputotherreason').val().trim());
+
+      if (!(inf || und || oth.length != 0)) {
+        UI.dialog('Please provide a reason for feedback.').show();
+        return;
+      } 
+
+      this.feedbackNearbyDialog.hide();
+
+      let learnerMapData = KitBuildUI.buildConceptMapData(this.canvas);
+      feedbackDialog.learnerMapEdgesData = this.canvas.cy.edges().jsons();
+      learnerMapData.conceptMap = CDM.conceptMap.canvas;
+      Analyzer.composePropositions(learnerMapData);
+      let direction = CDM.conceptMap.map.direction;
+      let compare = Analyzer.compare(learnerMapData, direction);
+      
+      this.canvas.canvasTool
+        .enableIndicator(false)
+        .enableConnector(false)
+        .clearCanvas()
+        .clearIndicatorCanvas();
+
+      let dataMap = L.dataMap(CDM.kitId, CDM.conceptMapId);
+      dataMap.set('compare', Core.compress(compare));
+      L.canvas(dataMap, App.inst.canvas);
+      L.log("feedback-distance", {
+        compare: compare,
+        reason: reason
+      }, dataMap);
+      $(".app-navbar .bt-feedback").prop('disabled', true);
+      $(".app-navbar .bt-clear-feedback").prop('disabled', false);
+      let disTool = this.canvas.canvasTool.tools.get(KitBuildCanvasTool.DISTANCECOLOR);
+      let node = this.canvas.cy.nodes('#'+this.feedbackNearbyDialog.nodeId);
+      disTool.showNearby(node);
+    });
 
     /**
      *
@@ -1129,29 +1184,12 @@ App.onCanvasEvent = (canvasId, event, data) => {
     'camera-zoom-in', 
     'camera-zoom-out'
   ];
-  // let dataMap = new Map([["cmapid", CDM.kitId]]);
-  // if (!skip.includes(event)) {
-  //   // Remove attribute of image binary data 
-  //   let attrs = ['image', 'bug'];
-  //   let canvas = App.inst.canvas.cy.elements().jsons(); // console.log(canvas);
-  //   for(let el of canvas) {
-  //     for (let attr of attrs) { // console.log(el, el.data[attr])
-  //       if (el.data.image) delete el.data[attr];
-  //     }
-  //   }
-  //   console.log(canvas);
-  //   dataMap.set('canvas', Core.compress(JSON.stringify(canvas)));
-  // }
-  // if (event.includes("connect")) {
-  //   let learnerMapData = KitBuildUI.buildConceptMapData(App.inst.canvas);
-  //   learnerMapData.conceptMap = CDM.conceptMap;
-  //   console.log(learnerMapData);
-  //   Analyzer.composePropositions(learnerMapData);
-  //   let direction = learnerMapData.conceptMap.map.direction;
-  //   let compare = Analyzer.compare(learnerMapData, direction);
-  //   console.warn(compare);
-  //   dataMap.set('compare', Core.compress(JSON.stringify(compare)));  
-  // }
+
+  if (event == 'distance-feedback') {
+    App.inst.feedbackNearbyDialog.nodeId = data.id;
+    App.inst.feedbackNearbyDialog.show();
+    return;
+  }
 
   let dataMap = L.dataMap(CDM.kitId, CDM.conceptMapId);
   if (!skip.includes(event))
@@ -1189,6 +1227,9 @@ App.openKit = () => {
     canvas.toolbar.tools
       .get(KitBuildToolbar.NODE_CREATE)
       .setActiveDirection(CDM.conceptMap.map.direction);
+    canvas.canvasTool.tools
+      .get(KitBuildCanvasTool.DISTANCECOLOR)
+      .setConceptMap(CDM.conceptMap.canvas);
     canvas.applyElementStyle();
     canvas.cy.animate(Object.assign({
       center: { eles: canvas.cy.elements() },

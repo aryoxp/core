@@ -168,7 +168,10 @@ class KitBuildCanvas {
         break;
       case KitBuildCanvasTool.UNLOCK:
         this.canvasTool.addTool(what, new KitBuildUnlockTool(this, settings))
-        break;        
+        break;  
+      case KitBuildCanvasTool.DISTANCECOLOR:
+        this.canvasTool.addTool(what, new KitBuildDistanceColorTool(this, settings));
+        break;      
     }
     return this;
   }

@@ -174,6 +174,39 @@
   </div>
 </div>
 
+<div id="feedback-nearby-dialog" class="card d-none">
+  <h6 class="card-header d-flex">
+    <span class="drag-handle flex-fill"><i class="dialog-icon bi bi-file-text"></i> 
+    <span class="dialog-title">Get Feedback for This Node?</span></span>
+    <i class="bi bi-x-lg bt-close bt-x" role="button"></i>
+  </h6>
+  <div class="card-body position-relative d-flex flex-column flex-fill">
+    <p>Why do you need feedback for this node?</p>
+    <div class="form-check">
+      <input class="form-check-input inputinformation" type="checkbox" value="" id="inputinformationnearby">
+      <label class="form-check-label" for="inputinformationnearby">
+        I need more information regarding this node
+      </label>
+    </div>
+    <div class="form-check">
+      <input class="form-check-input inputunderstand" type="checkbox" value="" id="inputunderstandnearby">
+      <label class="form-check-label" for="inputunderstandnearby">
+        I don't understand about this node
+      </label>
+    </div>
+    <div class="">
+      <label for="inputotherreasonnearby" class="form-label">Other</label>
+      <input type="text" class="form-control inputotherreason" id="inputotherreasonnearby" placeholder="write other reason...">
+    </div>
+  </div>
+  <div class="card-footer d-flex justify-content-end align-items-center">
+    <span>
+      <button class="btn btn-sm btn-secondary bt-close px-3">Close</button>
+      <button class="btn btn-sm btn-primary bt-get-feedback"><i class="bi bi-eye-fill"></i> Get Feedback</button>
+    </span>
+  </div>
+</div>
+
 <div id="feedback-dialog" class="card d-none">
   <h6 class="card-header d-flex">
     <span class="drag-handle flex-fill"><i class="dialog-icon bi bi-eye-fill me-2"></i> <span class="dialog-title">Quick Feedback</span></span>

@@ -945,7 +945,7 @@ App.populateLearnerMaps = (cmid, kid = null, type = null) => {
           list += `<div data-lmid="${lm.id}" data-type="${lm.map.type}" data-kid="${lm.map.kid}" data-first="${isFirst}" data-last="${isLast}"`;
           list += ` data-tfirst="${isTFirst}" data-tlast="${isTLast}"`
           list += ` class="py-1 mx-1 d-flex justify-content-between border-bottom learnermap list-item fs-6" role="button">`;
-          list += `<span class="d-flex align-items-center">`;
+          list += `<span class="d-flex align-items-center text-truncate">`;
           list += `<input type="checkbox" class="cb-learnermap" id="cb-lm-${lm.id}">`;
           list += `<label class="text-truncate ms-1" title="Author: ${lm.userid}; Map ID: ${lm.id}"><small>${lm.map.userid}</small></label>`;
           list += `</span>`;

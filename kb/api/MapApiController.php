@@ -6,7 +6,9 @@ class MapApiController extends CoreApi {
     try {
       $service = new KitService();
       $kit = $service->getKit($mapid);
+      if (!$kit) throw new CoreError('Kit not found.');
       $conceptMap = $service->getConceptMap($kit->cmid);
+      if (!$conceptMap) throw new CoreError('Concept map information not found.');
       // $result = CoreApi::decompress($kit->data);
       $result = new stdClass;
       $result->id = $mapid;
