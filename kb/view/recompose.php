@@ -2,7 +2,8 @@
   <!-- <a class="position-absolute d-flex align-items-center text-white px-3 text-decoration-none" href="<?php echo $this->location('../home'); ?>">
     <i class="bi bi-house pe-2" style="font-size: 1.8rem;"></i> <span>Home</span>
   </a> -->
-  <div class="app-navbar d-flex p-2 ps-4">
+  <div class="app-navbar d-flex align-items-center p-2 ps-4">
+    <div class="timer position-absolute h4 m-0 text-secondary">00:00:00</div>
     <div class="flex-fill">&nbsp;</div>
     <button class="bt-open-kit btn btn-sm btn-primary"><i class="bi bi-folder2-open"></i> Open Kit</button>
     <div class="btn-group btn-group-sm ms-2" id="recompose-readcontent">

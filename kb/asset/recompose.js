@@ -39,6 +39,37 @@ class L {
   }
 }
 
+class Timer {
+  constructor(element) {
+    this.element = element;
+    this.startTimestamp = Math.floor(Date.now()/1000);
+    this.ts = 0;
+    
+    this.off();
+  }
+
+  on() {
+    Timer.interval = setInterval(() => {
+      let ts = Math.floor(Date.now()/1000) - this.startTimestamp;
+      let duration = App.time(ts);
+      $(this.element).html(duration);
+      this.ts = ts;
+    }, 1000);
+    return this;
+  }
+
+  off() {
+    if (Timer.interval) clearInterval(Timer.interval);
+    Timer.interval = null;
+
+    let ts = Math.floor(Date.now()/1000) - this.startTimestamp;
+    let duration = App.time(ts);
+    $(this.element).html(duration);
+    
+    return this; 
+  }
+}
+
 CDM = {};
 CDM.cookieid = 'CORESID-mgm__kb';
 CDM.options = {};
@@ -106,6 +137,9 @@ class App {
 
   static instance() {
     App.inst = new App();
+    App.timer = new Timer('.app-navbar .timer');
+    // App.timer.on();
+    App.feedbackDelay = 30;
     return App.inst;
   }
 
@@ -537,6 +571,9 @@ class App {
           if (remember) Core.instance().cookie().set('userid', userid);
           else Core.instance().cookie().unset('userid');
           openDialog.hide();
+          // console.log('new timer');
+          App.timer = new Timer('.app-navbar .timer');
+          App.timer.on();
         });
         // console.log(data);
         // console.warn("Log status: ", result);
@@ -834,6 +871,23 @@ class App {
         UI.dialog('Please open a kit.').show();
         return;
       } 
+
+      // console.log(App.timer, App.timer.ts, App.lastFeedback);
+      if (!App.lastFeedback) {
+        if (App.timer.ts < App.feedbackDelay) {
+          let timeleft = App.feedbackDelay - (App.timer.ts - (App.lastFeedback ?? 0));
+          UI.dialog(`Feedback is not available right now. Please wait for ${timeleft} seconds`).show();
+          return;
+        }
+        // App.lastFeedback = App.timer.ts;
+      } else {
+        if (App.timer.ts - App.lastFeedback < App.feedbackDelay || App.timer.ts < App.feedbackDelay) {
+          let timeleft = App.feedbackDelay - (App.timer.ts - App.lastFeedback);
+          UI.dialog(`Feedback is not available right now. Please wait for ${timeleft} seconds`).show();
+          return;
+        }
+      }
+
       if (feedbackDialog.learnerMapEdgesData)
         $(".app-navbar .bt-clear-feedback").trigger("click");
       feedbackReasonDialog.show();
@@ -923,6 +977,7 @@ class App {
       }, dataMap);
       $(".app-navbar .bt-feedback").prop('disabled', true);
       $(".app-navbar .bt-clear-feedback").prop('disabled', false);
+      App.lastFeedback = App.timer.ts;
     });
     $(".app-navbar").on("click", ".bt-clear-feedback", () => {
       if (!feedbackDialog.learnerMapEdgesData) return;
@@ -983,6 +1038,7 @@ class App {
       let disTool = this.canvas.canvasTool.tools.get(KitBuildCanvasTool.DISTANCECOLOR);
       let node = this.canvas.cy.nodes('#'+this.feedbackNearbyDialog.nodeId);
       disTool.showNearby(node);
+      App.lastFeedback = App.timer.ts;
     });
 
     /**
@@ -1005,6 +1061,7 @@ class App {
           .then(learnerMap => { console.log(learnerMap);
             data.id = learnerMap.id;
             data.created = learnerMap.created;
+            data.duration = App.timer.ts;
             let dataMap = L.dataMap(CDM.kitId, CDM.conceptMapId);
             L.canvas(dataMap, App.inst.canvas);
             L.compare(dataMap, App.inst.canvas, CDM.conceptMap.canvas);
@@ -1186,6 +1243,23 @@ App.onCanvasEvent = (canvasId, event, data) => {
   ];
 
   if (event == 'distance-feedback') {
+
+    // console.log(App.timer, App.timer.ts, App.lastFeedback);
+    if (!App.lastFeedback) {
+      if (App.timer.ts < App.feedbackDelay) {
+        let timeleft = App.feedbackDelay - (App.timer.ts - (App.lastFeedback ?? 0));
+        UI.dialog(`Feedback is not available right now. Please wait for ${timeleft} seconds`).show();
+        return;
+      }
+      // App.lastFeedback = App.timer.ts;
+    } else {
+      if (App.timer.ts - App.lastFeedback < App.feedbackDelay || App.timer.ts < App.feedbackDelay) {
+        let timeleft = App.feedbackDelay - (App.timer.ts - App.lastFeedback);
+        UI.dialog(`Feedback is not available right now. Please wait for ${timeleft} seconds`).show();
+        return;
+      }
+    }
+
     App.inst.feedbackNearbyDialog.nodeId = data.id;
     App.inst.feedbackNearbyDialog.show();
     return;
@@ -1250,12 +1324,12 @@ App.openKit = () => {
 
     let learnerMapData = KitBuildUI.buildConceptMapData(App.inst.canvas);
     learnerMapData.conceptMap = CDM.conceptMap.canvas;
-    console.log(learnerMapData);
+    // console.log(learnerMapData);
     let result = Analyzer.composePropositions(learnerMapData);
-    console.log(result, learnerMapData);
+    // console.log(result, learnerMapData);
     let direction = CDM.conceptMap.map.direction;
     let compare = Analyzer.compare(learnerMapData, direction);
-    console.warn(compare);
+    // console.warn(compare);
     dataMap.set('compare', Core.compress(compare));  
 
     App.inst.session.regenerateId().then(sessid => {
@@ -1267,49 +1341,6 @@ App.openKit = () => {
     resolve();
   });
 }
-
-// generate/apply map state
-// App.generateMapState = () => {
-//   return new Promise((resolve, reject) => {
-//     let mapState = {
-//       kit: null,
-//       cyData: [],
-//     };
-//     if (CDM.kit) {
-//       CDM.kit.conceptMap.map.direction =
-//         App.inst.canvas.direction;
-//       mapState = {
-//         kit: CDM.kit,
-//         cyData: App.inst.canvas.cy.elements().jsons(),
-//       };
-//     }
-//     resolve(mapState);
-//   });
-// };
-// App.applyMapState = (mapState) => {
-//   return new Promise((resolve, reject) => {
-//     let kit = mapState.kit;
-//     let cyData = mapState.cyData;
-//     App.inst.setKitMap(kit);
-//     App.inst.canvas.cy.elements().remove();
-//     if (!kit || !cyData) {
-//       // console.log(mapState)
-//     } else {
-//       App.inst.canvas.cy.add(cyData ? cyData : {}).unselect();
-//       App.inst.canvas.applyElementStyle();
-//       App.inst.canvas.toolbar.tools
-//         .get(KitBuildToolbar.CAMERA)
-//         .fit(null, { duration: 0 });
-//       // App.inst.canvas.toolbar.tools.get(KitBuildToolbar.NODE_CREATE).setActiveDirection(conceptMap.map.direction)
-//       App.inst.canvas.toolbar.tools
-//         .get(KitBuildToolbar.UNDO_REDO)
-//         .clearStacks()
-//         .updateStacksStateButton();
-//     }
-//     App.inst.canvas.canvasTool.clearCanvas().clearIndicatorCanvas();
-//     resolve(mapState);
-//   });
-// };
 
 /**
  *
@@ -1464,20 +1495,35 @@ App.getCookie = (cname) => {
   return "";
 }
 
-// App.updateSignInOutButton = () => {
-//   Core.instance().session().getAll().then(sessions => { 
-//     // console.log(sessions)
-//     if (sessions.user) {
-//       $('.bt-sign-in').addClass('d-none');
-//       $('.bt-logout').removeClass('d-none');
-//       $('.bt-profile').removeClass('d-none');
-//     } else {
-//       $('.bt-sign-in').removeClass('d-none');
-//       $('.bt-logout').addClass('d-none');
-//       $('.bt-profile').addClass('d-none')
-//     }
-//   });
-// };
+App.duration = (seconds) => {
+  let d = Number(seconds);
+  if (d <= 0) return '00:00:00';
+  else {
+    let h = Math.floor(d / 3600);
+    let m = Math.floor(d % 3600 / 60);
+    let s = Math.floor(d % 3600 % 60);
+    let hDisplay = h == 0 ? null : (h <= 9 ? '0'+h+'°' : h+'°');
+    let mDisplay = m == 0 ? null : (m <= 9 ? '0'+m+'\'' : m+'\'');
+    let sDisplay = s == s <= 9 ? '0'+s : s;
+    return `${hDisplay ?? ""}${mDisplay ?? ""}${sDisplay}"`; 
+  }
+}
+
+App.time = (seconds) => {
+  let d = Number(seconds);
+  if (d <= 0) return '00:00:00';
+  else {
+    let h = Math.floor(d / 3600);
+    let m = Math.floor(d % 3600 / 60);
+    let s = Math.floor(d % 3600 % 60);
+    let hDisplay = h <= 9 ? '0'+h : h;
+    let mDisplay = m <= 9 ? '0'+m : m;
+    let sDisplay = s <= 9 ? '0'+s : s;
+    return `${hDisplay}:${mDisplay}:${sDisplay}`; 
+  }
+}
+
+
 
 // App.enableNavbarButton = (enabled = true) => {
 //   $("#recompose-readcontent button").prop("disabled", !enabled);
