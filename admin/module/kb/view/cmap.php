@@ -57,71 +57,31 @@
 
 
 <div id="concept-map-save-as-dialog" class="card d-none">
-  <h6 class="card-header"><i class="bi bi-file-earmark-plus dialog-icon"></i> <span class="dialog-title"><?php echo Lang::l("cmap-save-cmap-as"); ?></span></h6>
+  <h6 class="card-header"><i class="bi bi-file-earmark-plus dialog-icon"></i> <span class="dialog-title">Save Concept Map As...</span></h6>
   <div class="card-body">
     <div class="row mb-1 align-items-center">
-      <label for="input-fid" class="col-sm-3 col-form-label"><?php echo Lang::l("cmap-id"); ?></label>
-      <div class="col-sm-9">
+      <label for="input-fid" class="col-sm-2 col-form-label">ID</label>
+      <div class="col-sm-10">
         <div class="input-group">
-          <input type="text" class="form-control input-fid form-control-sm" placeholder="Concept Map ID" name="fid" id="input-fid" style="text-transform: uppercase;">
+          <input type="text" class="form-control input-fid form-control-sm" placeholder="Concept Map ID" name="fid" id="input-fid" style="text-transform: lowercase;" required>
           <button class="bt-generate-fid btn btn-warning btn-sm"><i class="bi bi-magic"></i></button>
         </div>
+        <small class="text-secondary">Required for identifying the concept map.<br>Do not include whitespace character on ID.</small>
       </div>
     </div>
-    <div class="row mb-1 align-items-center">
-      <label for="input-title" class="col-sm-3 col-form-label"><?php echo Lang::l("cmap-title"); ?></label>
-      <div class="col-sm-9">
-        <input type="text" name="title" class="form-control input-title" placeholder="Concept Map Title" id="input-title">
+    <div class="row align-items-center mb-1 mt-3">
+      <label for="input-title" class="col-sm-2 col-form-label">Title</label>
+      <div class="col-sm-10">
+        <input type="text" name="title" class="form-control input-title" placeholder="Concept Map Title" id="input-title" required>
+        <small class="text-secondary">Required for displaying the name of concept map.</small>
       </div>
     </div>
-    <!-- <div class="row mb-1 align-items-center border-bottom">
-      <div class="form-check form-switch col-sm-9 m-3">
-        <input class="form-check-input" type="checkbox" role="switch" id="input-type" checked>
-        <label class="form-check-label" for="input-type"><?php echo Lang::l("cmap-teacher-map"); ?></label>
-      </div>
-    </div> -->
-    <!-- <div class="row my-2"><small class="col-sm-12 text-center text-secondary fst-italic"><?php echo Lang::l("cmap-opt-assign-topic"); ?></small></div>
-    <div class="row mb-1 align-items-center">
-      <div class="col-sm-12">
-        <div class="input-group input-group-sm">
-          <select class="form-select form-control-sm" id="select-topic" name="topic" disabled>
-            <option value="" selected><?php echo Lang::l("cmap-no-topic-associated"); ?></option>
-          </select>
-          <button class="btn btn-secondary bt-new-topic-form bt-sm" disabled><i class="bi bi-plus-lg"></i></button>
-        </div>
-      </div>
-    </div>
-    <div class="row my-2"><small class="col-sm-12 text-center text-secondary fst-italic"><?php echo Lang::l("cmap-opt-assign-text"); ?></small></div>
-    <div class="row mb-1 align-items-center">
-      <div class="col-sm-12">
-        <select class="form-select form-select-sm" id="select-text" name="text" disabled>
-          <option value="" selected><?php echo Lang::l("cmap-no-text-associated"); ?></option>
-        </select>
-      </div>
-    </div> -->
-      
-      <!-- <div class="row mb-1 align-items-center form-new-topic" style="display: none;">
-        <div class="col-sm-12">
-          <div class="card">
-            <div class="card-body">
-              <input type="text" class="form-control mb-1" placeholder="New Topic Name" aria-label="New Topic Name" aria-describedby="button-create-new-topic">
-              <select class="form-select mb-1" id="select-grup" aria-label="Default select example">
-                  <option selected>No group assigned</option>
-                  <option value="1">One</option>
-                  <option value="2">Two</option>
-                  <option value="3">Three</option>
-              </select>
-              <button class="bt-quick-create-topic btn btn-secondary" type="button" id="button-create-new-topic"><i class="bi bi-plus-lg"></i> Create Topic</button>
-            </div>
-          </div>
-        </div>
-      </div> -->
   </div>
   <div class="card-footer">
     <div class="row">
       <div class="col text-end">
-        <button class="bt-cancel btn btn-sm btn-secondary" style="min-width: 6rem;"><?php echo Lang::l('cancel'); ?></button>
-        <button class="bt-save btn btn-sm btn-primary ms-1" style="min-width: 6rem;"><?php echo Lang::l('save'); ?></button>
+        <button class="bt-cancel btn btn-sm btn-secondary" style="min-width: 6rem;">Cancel</button>
+        <button class="bt-save btn btn-sm btn-primary ms-1" style="min-width: 6rem;">Save</button>
       </div>
     </div>
   </div>
