@@ -325,7 +325,7 @@ class App {
             + `  <bi class="bi bi-check-lg text-primary d-none"></bi>`
             + `</span>`;
         });
-        if (kits.length == 0) kitsHtml += `<span><em class="text-muted">No registered kits</em></span>`;
+        if (kits.length == 0) kitsHtml += `<span><em class="text-muted text-center d-block p-1" style="font-size:0.9rem">No registered kits</em></span>`;
         $('#concept-map-open-dialog .list-kit').slideUp({
           duration: 100,
           complete: () => {
