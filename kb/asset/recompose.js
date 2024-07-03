@@ -139,7 +139,7 @@ class App {
     App.inst = new App();
     App.timer = new Timer('.app-navbar .timer');
     // App.timer.on();
-    App.feedbackDelay = 30;
+    App.feedbackDelay = 50;
     return App.inst;
   }
 
