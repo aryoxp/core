@@ -574,6 +574,7 @@ class App {
           // console.log('new timer');
           App.timer = new Timer('.app-navbar .timer');
           App.timer.on();
+          App.lastFeedback = App.timer.ts;
         });
         // console.log(data);
         // console.warn("Log status: ", result);
@@ -742,7 +743,7 @@ class App {
               sessid: sessid,
               psessid: lmapdata.sessid
             }, dataMap);
-
+            App.lastFeedback = App.timer.ts;
           }).show();
       });
 
@@ -857,6 +858,7 @@ class App {
           if (undoRedo) undoRedo.clearStacks().updateStacksStateButton();
           confirm.hide();
           UI.info("Concept map has been reset.").show();
+          App.lastFeedback = App.timer.ts;
           return;
         })
         .show();
@@ -994,6 +996,7 @@ class App {
       L.log("resume-feedback", undefined, dataMap);
       $(".app-navbar .bt-feedback").prop('disabled', false);
       $(".app-navbar .bt-clear-feedback").prop('disabled', true);
+      App.lastFeedback = App.timer.ts;
     });
     $('#feedback-nearby-dialog').on('click', '.bt-get-feedback', e => {
       let inf = $('#feedback-nearby-dialog .inputinformation').prop('checked');
