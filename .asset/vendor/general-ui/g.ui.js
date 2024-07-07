@@ -78,14 +78,16 @@ $(window).resize((e) => {
 
 class Dialog {
   constructor(content, opts) {
-    this.settings = Object.assign({}, Dialog.default, opts)
-    this.content = content
-    this.negCallback = null
-    this.posCallback = null
-    this.positiveLabel = this.settings.positiveLabel
+    this.settings = Object.assign({
+      zIndex: 2030 
+    }, Dialog.default, opts);
+    this.content = content;
+    this.negCallback = null;
+    this.posCallback = null;
+    this.positiveLabel = this.settings.positiveLabel;
     this.negativeLabel = this.settings.negativeLabel
-    this.emphasized = false
-    this.titleText = null
+    this.emphasized = false;
+    this.titleText = null;
     this.eventListeners = new Set();
     this.dismissListeners = new Set();
   }
@@ -128,53 +130,57 @@ class Dialog {
   show(opts) {
     Dialog.inst = this;
     this.settings = Object.assign({}, this.settings, opts)
-    if (this.settings.width) $('#modal-dialog .modal-dialog').css('max-width', this.settings.width)
-    $('#modal-dialog .modal-dialog').css('width', 'fit-content');
-    $('#modal-dialog .modal-dialog').css('min-width', '200px');
+
+    let d = $('#modal-dialog').detach();
+    $('body').append(d);
+    if (this.settings.width) $('#modal-dialog .modal-dialog').css('max-width', this.settings.width);
+      $('#modal-dialog .modal-dialog').css('width', 'fit-content');
+      $('#modal-dialog .modal-dialog').css('min-width', '200px');
+      $('#modal-dialog').css('z-index', this.settings.zIndex);
     $('#modal-dialog .dialog-icon').removeClass(function (index, className) {
       return (className.match (/\b(bi-|text-)\S+/g) || []).join(' ');
-     }).addClass(`bi bi-${this.settings.icon} text-${this.settings.iconStyle}`)
-    $('#modal-dialog .bt-positive').html(this.positiveLabel)
-    $('#modal-dialog .bt-negative').html(this.negativeLabel)
+     }).addClass(`bi bi-${this.settings.icon} text-${this.settings.iconStyle}`);
+    $('#modal-dialog .bt-positive').html(this.positiveLabel);
+    $('#modal-dialog .bt-negative').html(this.negativeLabel);
     if (this.negCallback) {
       $('#modal-dialog .bt-negative').show();
-      $('#modal-dialog .bt-negative').off('click').on('click', this.negCallback)
+      $('#modal-dialog .bt-negative').off('click').on('click', this.negCallback);
       if (!this instanceof Confirm)
-        $('#modal-dialog .dialog-foot').removeClass('text-center').addClass('text-end')
-      else $('#modal-dialog .dialog-foot').removeClass('text-end').addClass('text-center')
+        $('#modal-dialog .dialog-foot').removeClass('text-center').addClass('text-end');
+      else $('#modal-dialog .dialog-foot').removeClass('text-end').addClass('text-center');
     } else {
       setTimeout(() => { $('#modal-dialog .bt-positive').focus(); }, 200);
-      $('#modal-dialog .bt-negative').hide()
-      $('#modal-dialog .bt-negative').off('click').on('click', this.hide.bind(this))
-      $('#modal-dialog .dialog-foot').removeClass('text-end').addClass('text-center')
+      $('#modal-dialog .bt-negative').hide();
+      $('#modal-dialog .bt-negative').off('click').on('click', this.hide.bind(this));
+      $('#modal-dialog .dialog-foot').removeClass('text-end').addClass('text-center');
 
     }
     if (this.emphasized) {
       $("#modal-dialog .bt-positive")
         .removeClass("btn-primary")
-        .addClass("btn-danger")
-      $('#modal-dialog').addClass("animate__animated animate__fast animate__headShake")
+        .addClass("btn-danger");
+      $('#modal-dialog').addClass("animate__animated animate__fast animate__headShake");
     } else
       $("#modal-dialog .bt-positive")
         .removeClass("btn-danger")
-        .addClass("btn-primary")
+        .addClass("btn-primary");
 
     if (this.posCallback) {
-      $('#modal-dialog .bt-positive').show()
+      $('#modal-dialog .bt-positive').show();
       $('#modal-dialog .bt-positive').off('click').on('click', () => {
         this.hide();
         this.posCallback();
       })
     } else {
-      $('#modal-dialog .bt-positive').off('click').on('click', this.hide.bind(this))
+      $('#modal-dialog .bt-positive').off('click').on('click', this.hide.bind(this));
     }
     if (this.titleText) {
-      $('#modal-dialog .dialog-title').html(this.titleText)
-      $('#modal-dialog .dialog-head').show()
+      $('#modal-dialog .dialog-title').html(this.titleText);
+      $('#modal-dialog .dialog-head').show();
     } else {
-      $('#modal-dialog .dialog-head').hide()
+      $('#modal-dialog .dialog-head').hide();
     }
-    $('#modal-dialog .dialog-content').html(this.content)
+    $('#modal-dialog .dialog-content').html(this.content);
     Dialog.modal = new bootstrap.Modal($('#modal-dialog'), this.settings);
     var myModalEl = document.querySelector('#modal-dialog');
     myModalEl.removeEventListener('hidden.bs.modal', Dialog.dismissListener);
@@ -182,12 +188,12 @@ class Dialog {
       for(let listener of this.dismissListeners) listener();
     }
     myModalEl.addEventListener('hidden.bs.modal', Dialog.dismissListener);
-    if (this.settings.toggle) Dialog.modal.toggle()
-    else Dialog.modal.show()
+    if (this.settings.toggle) Dialog.modal.toggle();
+    else Dialog.modal.show();
     return Dialog.modal;
   }
   toggle(opts) {
-    this.show(Object.assign({toggle: true, opts}))
+    this.show(Object.assign({toggle: true, opts}));
     this.broadcast('toggle');
   }
   hide() {
@@ -206,8 +212,8 @@ Dialog.default = {
   keyboard: true,
   focus: true,
   width: '400px',
-  negativeLabel: Lang.l('cancel'),
-  positiveLabel: Lang.l('ok'),
+  negativeLabel: 'Cancel',
+  positiveLabel: 'OK',
   icon: 'info-circle',
   iconStyle: 'primary'
 }
@@ -223,10 +229,10 @@ class Confirm extends Dialog {
 }
 
 Confirm.default = {
-  negativeLabel: Lang.l('no'),
-  positiveLabel: Lang.l('yes'),
-  icon: 'question-diamond-fill',
-  iconStyle: 'warning'
+  negativeLabel: 'No',
+  positiveLabel: 'Yes',
+  icon: 'question-circle-fill',
+  iconStyle: 'danger'
 }
 
 class Loading {
@@ -732,11 +738,12 @@ class UI {
   static makeDraggable(el, opt) {
     opt = Object.assign({ handle: null, cursor: "move" }, opt);
     var handle = $(el).find(opt.handle);
+    console.log(handle);
     if (!opt.handle || handle.length == 0) {
       console.warn("Invalid drag handle")
       return
     }
-    handle.css("cursor", opt.cursor)
+    $(handle).css("cursor", opt.cursor)
       .off("mousedown").on("mousedown", function (e) {
         var z_idx = $(el).css("z-index"),
           drg_h = $(el).outerHeight(),

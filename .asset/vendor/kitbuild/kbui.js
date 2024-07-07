@@ -527,12 +527,12 @@ KitBuildCanvas.MULTIDIRECTIONAL = 'multi'
 class KitBuildUIDialog {
   constructor(content, canvasId, options) {
     this.settings = Object.assign({
-      okLabel: Lang.l('ok'),
-      cancelLabel: Lang.l('cancel'),
+      okLabel: 'OK',
+      cancelLabel: 'Cancel',
       canvas: canvasId ? canvasId : KitBuildUI.canvas().canvasId,
       backdrop: true,
       icon: 'info-circle-fill',
-      iconColor: 'info'
+      iconColor: 'primary'
     }, options)
     this.positive = null
     this.promise = new Promise((resolve, reject) => {
@@ -541,15 +541,17 @@ class KitBuildUIDialog {
           ? `justify-content-end`
           : `justify-content-center`;
         let cancelButton = this.positive
-          ? `<a class="bt-cancel btn btn-sm btn-secondary" style="min-width: 5rem">${this.settings.cancelLabel}</a>`
+          ? `<a class="bt-cancel btn btn-secondary" style="min-width: 5rem">${this.settings.cancelLabel}</a>`
           : ``;
-        let dialogIcon = `<span class="me-4"><i class="bi bi-${this.settings.icon} display-4 text-${this.settings.iconColor}"></i></span>`
+        let dialogIcon = `<span class="me-4"><i class="bi bi-${this.settings.icon} display-5 text-${this.settings.iconColor}"></i></span>`
         let backdrop = `<div class="kb-dialog-backdrop w-100 h-100 position-fixed top-0 start-0" style="background-color:#00000088"></div>`
         let dialogHtml = `<div class="card border-secondary kb-dialog shadow" style="min-width: 15rem; max-width: 52rem; position: absolute; top: 0; display: none">
-          <div class="card-body text-center scroll-y px-5 py-4 d-flex align-items-center">${dialogIcon} <span class="text-start">${content}</span></div>
-          <div class="card-footer d-flex ${cardClass} align-items-center">
-            ${cancelButton}
-            <a class="bt-ok btn btn-sm btn-primary mx-2" style="min-width: 5rem">${this.settings.okLabel}</a>
+          <div class="card-body text-center scroll-y px-5 py-4 d-flex flex-column align-items-center">
+            <div class="d-flex align-items-center">${dialogIcon} <span class="text-start">${content}</span></div>
+            <div class="d-flex ${cardClass} align-items-center mt-3">
+              ${cancelButton}
+              <a class="bt-ok btn btn-primary mx-2" style="min-width: 5rem">${this.settings.okLabel}</a>
+            </div>
           </div>
         </div>`
         $('.kb-dialog').hide().remove()
@@ -678,8 +680,8 @@ class KitBuildUI {
   }
   static confirm(question, canvasId, options) {
     return KitBuildUI.dialog(question, canvasId, Object.assign({
-      okLabel: Lang.l('yes'),
-      cancelLabel: Lang.l('no'),
+      okLabel: 'Yes',
+      cancelLabel: 'No',
       backdrop: true,
       icon: "question-diamond-fill",
       iconColor: "warning"
