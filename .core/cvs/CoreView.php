@@ -7,11 +7,12 @@ class CoreView {
   private static $instance;
   private const PLUGIN_DEF_FILE = 'plugins.ini';
 
-  protected $styles  = array();
-  protected $scripts = array();
-  protected $heads   = array();
-  protected $foots   = array();
-  protected $plugins = array();
+  protected $styles        = array();
+  protected $scripts       = array();
+  protected $modulescripts = array();
+  protected $heads         = array();
+  protected $foots         = array();
+  protected $plugins       = array();
 
   public const NONE     = 0;
   public const RETURN   = 1;
@@ -188,6 +189,29 @@ class CoreView {
     return false;
   }
 
+  public function useModuleScript($path, $pad = null, $assetPath = null) {
+
+    /**
+     * Is the path starts with http?
+     * Then include the script as it is...
+     */
+    if (preg_match("/^http(s?)\:\/\//i", $path)) {
+      $script = $path . ($pad ? $pad : '');
+      if (in_array($script, $this->modulescripts)) return true;
+      $this->modulescripts[] = $script;
+      return true;
+    }
+
+    $scriptPath = ($assetPath ? CORE_ROOT_PATH . $assetPath : CORE_APP_PATH . CORE_APP_ASSET) . $path;
+    if (file_exists($scriptPath)) {
+      $script = $this->asset($path, $assetPath) . ($pad ? $pad : '');
+      if (!in_array($script, $this->modulescripts))
+        $this->modulescripts[] = $script;
+      return true;
+    } else echo '<!-- Invalid: ' . $scriptPath . '-->';
+    return false;
+  }
+
   public function useStyle($path, $pad = null, $assetPath = null) {
 
     /**
@@ -230,6 +254,7 @@ class CoreView {
     // var_dump(CORE_ASSET_PATH);
     foreach ($key as $k) {
       if (isset($this->plugins[$k]) && $p = $this->plugins[$k]) {
+        // var_dump($this->plugins[$k]);
         if (isset($p['dependencies'])) {
           foreach ($p['dependencies'] as $dep) {
             $this->usePlugin($dep);
@@ -238,6 +263,11 @@ class CoreView {
         if (isset($p['scripts'])) {
           foreach ($p['scripts'] as $s) {
             $this->useScript($s, null, isset($p['path']) ? $p['path'] . DS : null);
+          }
+        }
+        if (isset($p['modulescripts'])) {
+          foreach ($p['modulescripts'] as $s) {
+            $this->useModuleScript($s, null, isset($p['path']) ? $p['path'] . DS : null);
           }
         }
         if (isset($p['styles'])) {
@@ -308,6 +338,7 @@ class CoreView {
   }
 
   private function footScript() {
+    foreach($this->modulescripts as $s) echo '  <script type="module" src="'.$s.'"></script>' . "\n";
     foreach($this->scripts as $s) echo '  <script type="text/javascript" src="'.$s.'"></script>' . "\n";
   }
 

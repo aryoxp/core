@@ -117,6 +117,13 @@ class KitBuildCanvasTool {
 
   onMount(e) {}
   preRender(e) {}
+
+  enable(enable = true) {
+    this.settings.enabled = enable;
+  }
+  disable() {
+    this.enable(false);
+  }
 }
 
 KitBuildCanvasTool.LEFT_HANDLE    = "left-handle";
@@ -2083,6 +2090,7 @@ class KitBuildCanvasToolCanvas {
       // tapHold on nothing
       this.activeTools = [];
       this.tools.forEach((t) => {
+        if(!t.settings.enabled) return;
         if (t.showOn(KitBuildCanvasTool.SH_CONTEXT)) {
           t.toolPos = this.getToolPositionOfNode(t, {
             position: e.renderedPosition,

@@ -58,4 +58,31 @@ class LogApiController extends CoreApi {
     return CoreResult::instance($lid)->show();   
   }
 
+  function logsc() {
+
+    $tstampc     = $this->postv('tstampc');
+    $userid      = $this->postv('userid');
+    $cmid        = $this->postv('cmid');
+    $sessid      = $this->postv('sessid');
+    $action      = $this->postv('action');
+    $canvasid    = $this->postv('canvasid');
+    $seq         = $this->postv('seq');
+    $data        = $this->postv('data');
+    $canvas      = $this->postv('canvas');
+    $concept     = $this->postv('concept');
+    $link        = $this->postv('link');
+    $proposition = $this->postv('proposition');
+    $nc          = $this->postv('nc');
+    $nl          = $this->postv('nl');
+    $np          = $this->postv('np');
+    
+    $logService = new LogService();
+    $lid = $logService->logsc(
+      $tstampc, $userid, $cmid, $sessid, $action, $canvasid, $seq,
+      $data, $canvas, $concept, $link, $proposition, $nc, $nl, $np
+    );
+
+    return CoreResult::instance($lid)->show();   
+  }
+
 }
