@@ -2,7 +2,7 @@
 
 class LogService extends CoreService {
   function log($tstampc, $userid, $cmid, $kid, $sessid, $action, $canvasid, $seq,
-  $data, $canvas, $compare) {
+      $data, $canvas, $compare) {
     try {
       $log             = [];
       $log['tstampc']  = QB::esc($tstampc);
@@ -18,6 +18,35 @@ class LogService extends CoreService {
       $log['compare']  = QB::esc($compare);
       $db = self::instance();
       $qb = QB::instance('log')->insert($log);
+      $result = $db->query($qb->get());
+      $lid = $db->getInsertId();
+      return $lid;
+    } catch (Exception $ex) {
+      throw CoreError::instance($ex->getMessage());
+    } 
+  }
+
+  function logsc($tstampc, $userid, $cmid, $sessid, $action, $canvasid, $seq,
+      $data, $canvas, $concept, $link, $proposition, $nc, $nl, $np) {
+    try {
+      $log                = [];
+      $log['tstampc']     = QB::esc($tstampc);
+      $log['userid']      = QB::esc($userid);
+      $log['cmid']        = QB::esc($cmid);
+      $log['sessid']      = QB::esc($sessid);
+      $log['action']      = QB::esc($action);
+      $log['canvasid']    = QB::esc($canvasid);
+      $log['seq']         = QB::esc($seq);
+      $log['data']        = QB::esc($data);
+      $log['canvas']      = QB::esc($canvas);
+      $log['concept']     = QB::esc($concept);
+      $log['link']        = QB::esc($link);
+      $log['proposition'] = QB::esc($proposition);
+      $log['nc']          = QB::esc($nc);
+      $log['nl']          = QB::esc($nl);
+      $log['np']          = QB::esc($np);
+      $db = self::instance();
+      $qb = QB::instance('logsc')->insert($log);
       $result = $db->query($qb->get());
       $lid = $db->getInsertId();
       return $lid;
