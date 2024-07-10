@@ -1,13 +1,13 @@
 <div class="d-flex flex-column vh-100">
-  <!-- <a class="position-absolute d-flex align-items-center text-white px-3 text-decoration-none" href="<?php echo $this->location('../home'); ?>">
-    <i class="bi bi-house pe-2" style="font-size: 1.8rem;"></i> <span>Home</span>
-  </a> -->
   <div class="app-navbar d-flex align-items-center p-2 ps-4">
     <div class="timer position-absolute h4 m-0 text-secondary">00:00:00</div>
     <div class="flex-fill">&nbsp;</div>
     <button class="bt-open-kit btn btn-sm btn-primary"><i class="bi bi-folder2-open"></i> Open Kit</button>
     <div class="btn-group btn-group-sm ms-2" id="recompose-readcontent">
       <button class="bt-content btn btn-sm btn-secondary" disabled><i class="bi bi-file-text-fill"></i> Contents</button>
+    </div>
+    <div class="btn-group btn-group-sm ms-2" id="recompose-importexport">
+      <button class="bt-export btn btn-secondary"><i class="bi bi-send"></i> Export</button>
     </div>
     <div class="btn-group btn-group-sm ms-2" id="recompose-saveload">
       <button class="bt-save btn btn-secondary"><i class="bi bi-download"></i> <?php echo Lang::l('save'); ?></button>
@@ -106,14 +106,16 @@
   </div> -->
 </form>
 
-<div id="kit-export-dialog" class="card d-none">
+<div id="concept-map-export-dialog" class="card d-none">
   <h6 class="card-header"><i class="bi bi-send"></i> Export</h6>
   <div class="card-body">
     <textarea class="form-control encoded-data" rows="5"></textarea>
   </div>
   <div class="card-footer text-end">
-    <button class="btn btn-sm btn-secondary bt-cancel px-3"><?php echo Lang::l('cancel'); ?></button>
-    <button class="btn btn-sm btn-primary ms-1 bt-clipboard px-3"><i class="bi bi-clipboard"></i> Copy to Clipboard</button>
+    <button class="btn btn-sm btn-secondary bt-cancel px-3">Cancel</button>
+    <button class="btn btn-sm btn-primary ms-1 bt-clipboard px-3"><i class="bi bi-clipboard"></i> Copy to
+      Clipboard</button>
+    <button class="btn btn-sm btn-success ms-1 bt-download-cmap px-3"><i class="bi bi-download"></i> Download CMAP File</button>
   </div>
 </div>
 

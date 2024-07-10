@@ -148,13 +148,56 @@ class App {
 
   handleEvent() {
 
-    // let exportDialog = UI.modal("#concept-map-export-dialog", {
-    //   hideElement: ".bt-cancel",
-    // });
+    /**
+     * Concept Map reader 
+     * */
 
-    // let importDialog = UI.modal("#concept-map-import-dialog", {
-    //   hideElement: ".bt-cancel",
-    // });
+    const fileInput = $('.file-input');
+    const droparea = $('.file-drop-area');
+    const deleteButton = $('.item-delete');
+    
+    fileInput.on('dragenter focus click', () => { droparea.addClass('is-active') });
+    fileInput.on('dragleave blur drop', () => { droparea.removeClass('is-active') });
+    fileInput.on('change', () => {
+      let filesCount = $(fileInput)[0].files.length;
+      let textContainer = $(fileInput).prev();
+      if (filesCount === 1) {
+        let file = $(fileInput)[0].files[0];
+        let reader = new FileReader();
+        reader.onload = (event) => {
+          let content = event.target.result;
+          console.log(content);
+          let data = App.parseIni(content);
+          console.log(data);
+          try {
+            $('textarea.encoded-data').val(data.conceptMap);
+            let conceptMap = Core.decompress(data.conceptMap.replaceAll('"',''));
+            console.log(conceptMap);
+            CDM.conceptMap = conceptMap;
+            CDM.conceptMapId = conceptMap.map.cmid;
+          } catch(e) {
+            textContainer.html(fileName + ' <strong class="text-danger">File is invalid.</strong>');
+            return;
+          }
+        };
+        // console.log(file);
+        reader.readAsText(file);
+        let fileName = $(fileInput).val().split('\\').pop();
+        textContainer.html(fileName);
+        $('.item-delete').css('display', 'inline-block');
+      } else if (filesCount === 0) {
+        textContainer.text('or drop files here');
+        $('.item-delete').css('display', 'none');
+      } else {
+        textContainer.text(filesCount + ' files selected');
+        $('.item-delete').css('display', 'inline-block');
+      }
+    });
+    deleteButton.on('click', () => {
+      $('.file-input').val(null);
+      $('.file-msg').text('or drop files here');
+      $('.item-delete').css('display', 'none');
+    });
 
     /**
      *
@@ -578,6 +621,7 @@ class App {
       // console.log(conceptMap, prevMap);
       let proceed = () => {
         this.showConceptMap(conceptMap);
+        this.canvas.cy.elements('node[type="link"]').data('limit', 9);
         App.dialogImport.hide();
         let dataMap = L.dataMap(CDM.conceptMapId);
         L.canvas(dataMap, App.inst.canvas);
@@ -647,7 +691,7 @@ class App {
             L.canvas(dataMap, this.canvas);
             L.proposition(dataMap, this.canvas);
             L.log('submit', data, dataMap);
-            UI.dialog('Your final concept map has been submitted.').show();
+            UI.dialog('Your concept map has been submitted.').show();
           }).catch((error) => {
             console.error(error);
           });
@@ -680,7 +724,7 @@ class App {
             L.canvas(dataMap, this.canvas);
             L.proposition(dataMap, this.canvas);
             L.log('finalized', data, dataMap);
-            UI.dialog('Your final concept map has been finalized.').show();
+            UI.dialog('Your concept map has been finalized.').show();
           }).catch((error) => {
             console.error(error);
           });

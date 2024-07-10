@@ -641,6 +641,53 @@ class App {
     });
 
     /**
+     *
+     * Export
+     * 
+     **/
+
+    $(".app-navbar .bt-export").on("click", (e) => {
+      // console.log(this.conceptMap);
+      let data = {};
+      data.canvas = KitBuildUI.buildConceptMapData(this.canvas);
+      data.map = {
+        cmid: this.conceptMap ? this.conceptMap.map.cmid : App.uuidv4(),
+        direction: this.canvas.direction,
+      };
+      console.log(data);
+      $("#concept-map-export-dialog .encoded-data").val(
+        `conceptMap=${Core.compress(data)}`
+      );
+      App.dialogExport = (new CoreWindow('#concept-map-export-dialog', {
+        draggable: true,
+        width: '650px',
+        height: '600px',
+        closeBtn: '.bt-cancel'
+      })).show();
+    });
+
+    $("#concept-map-export-dialog").on("click", ".bt-clipboard", async (e) => { // console.log(e);
+      navigator.clipboard.writeText($("#concept-map-export-dialog .encoded-data").val().trim());
+      $(e.currentTarget).html('<i class="bi bi-clipboard"></i> Data has been copied to Clipboard!');
+      setTimeout(() => {
+        $(e.currentTarget).html('<i class="bi bi-clipboard"></i> Copy to Clipboard');
+      }, 3000);
+      // let dataMap = L.dataMap(CDM.conceptMapId);
+      // L.canvas(dataMap, App.inst.canvas);
+      // L.proposition(dataMap, App.inst.canvas);
+      // L.log('concept-map-export', {duration: App.timer.ts}, dataMap);
+    });
+
+    $("#concept-map-export-dialog").on("click", ".bt-download-cmap", async (e) => { // console.log(e);
+      let cmapdata = $("#concept-map-export-dialog .encoded-data").val().trim();
+      App.download(`${CDM.conceptMapId ?? 'untitled'}.cmap`, cmapdata);
+      let dataMap = L.dataMap(CDM.conceptMapId);
+      // L.canvas(dataMap, App.inst.canvas);
+      // L.proposition(dataMap, App.inst.canvas);
+      // L.log('concept-map-download-cmap', {duration: App.timer.ts}, dataMap);
+    });
+
+    /**
      * Content
      * */
 
@@ -701,7 +748,7 @@ class App {
     });
     $(".app-navbar").on("click", ".bt-load", () => {
 
-      if(!CDM.kit) new CoreDialog('Please open a kit').show();
+      if(!CDM.kit) UI.dialog('Please open a kit').show();
       this.session.get('draft-map').then(result => {
         let lmapdata = Core.decompress(result);
 
@@ -1350,6 +1397,12 @@ App.openKit = () => {
  * Helpers
  */
 
+App.uuidv4 = () => {
+  return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+    (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+  );
+}
+
 App.parseIni = (data) => {
   var regex = {
     section: /^\s*\[\s*([^\]]*)\s*\]\s*$/,
@@ -1526,6 +1579,15 @@ App.time = (seconds) => {
   }
 }
 
+App.download = (filename, text) => {
+  var element = document.createElement('a');
+  element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+  element.setAttribute('download', filename);
+  element.style.display = 'none';
+  document.body.appendChild(element);
+  element.click();
+  document.body.removeChild(element);
+}
 
 
 // App.enableNavbarButton = (enabled = true) => {

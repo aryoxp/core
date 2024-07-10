@@ -338,7 +338,16 @@ class App {
     $('#concept-map-import-dialog').on("click", ".bt-decode", async (e) => {
       let data = $('#concept-map-import-dialog .encoded-data').val().trim();
       let parsedData = App.parseIni(data);
-      this.decodeMap(App.dialogImport, (parsedData.conceptMap ? parsedData.conceptMap : data));
+      let conceptMap = this.decodeMap((parsedData.conceptMap ? parsedData.conceptMap : data));
+      if (this.canvas.cy.elements().length > 0) {
+        (new CoreConfirm('Do you want to replace current concept map in canvas?')).positive(() => {
+          this.showConceptMap(conceptMap);
+          App.dialogImport.hide();
+        }).show();
+      } else {
+        this.showConceptMap(conceptMap);
+        App.dialogImport.hide();
+      }
     });
   
     /**

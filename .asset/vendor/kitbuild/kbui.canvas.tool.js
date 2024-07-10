@@ -1192,7 +1192,6 @@ class KitBuildDistanceColorTool extends KitBuildCanvasTool {
         options
       )
     );
-    console.log('X');
     canvas.cy.on('drag', 'node', (e) => { console.log(e);
       let node = e.target;
       if (node.data('type') != 'concept') return;
