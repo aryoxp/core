@@ -64,6 +64,14 @@
     <h6 class="card-header"><i class="bi bi-arrow-right-short"></i><i class="bi bi-code-square"></i> Import</h6>
     <div class="card-body">
       <textarea class="form-control encoded-data" rows="5"></textarea>
+      <div class="my-2">
+        <div class="file-drop-area">
+          <span class="fake-btn btn btn-primary me-3">Choose file</span>
+          <span class="file-msg">or drop file here</span>
+          <input class="file-input" type="file" multiple="">
+          <div class="item-delete me-4"></div>
+        </div>
+      </div>
     </div>
     <div class="card-footer d-flex text-end">
       <button class="btn btn-sm btn-secondary bt-cancel px-3">Cancel</button>
