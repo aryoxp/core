@@ -186,15 +186,15 @@
   <div class="card-body position-relative d-flex flex-column flex-fill">
     <p>Why do you need feedback for this node?</p>
     <div class="form-check">
-      <input class="form-check-input inputinformation" type="checkbox" value="" id="inputinformationnearby">
+      <input name="reason" class="form-check-input inputinformation" type="radio" value="" id="inputinformationnearby">
       <label class="form-check-label" for="inputinformationnearby">
-        I need more information regarding this node
+        I need more information regarding this node proposition
       </label>
     </div>
     <div class="form-check">
-      <input class="form-check-input inputunderstand" type="checkbox" value="" id="inputunderstandnearby">
+      <input name="reason" class="form-check-input inputunderstand" type="radio" value="" id="inputunderstandnearby">
       <label class="form-check-label" for="inputunderstandnearby">
-        I don't understand about this node
+        I don't understand about this node, so I want to get references
       </label>
     </div>
     <div class="">
@@ -222,4 +222,63 @@
     <button class="btn btn-sm btn-secondary bt-cancel bt-close px-3"><?php echo Lang::l('ok'); ?></button>
     <button class="btn btn-sm btn-primary bt-modify px-3 ms-1">Modify My Map</button>
   </div>
+</div>
+
+<div id="pdf-dialog" class="card d-none rounded rounded-3 p-1">
+  <div class="toolbar p-1 d-flex align-items-center justify-content-between bg-light border-bottom">
+    <span class="left-stack"></span>
+    <span class="drag-handle flex-fill">&nbsp;</span>
+    <span class="center-stack">
+      <span id="pdf-dialog-camera">
+        <div class="btn-group ms-2">
+          <button class="btn btn-sm btn-outline-secondary" disabled="">
+            <i class="bi bi-camera-video"></i></button>
+          <button class="bt-zoom-in btn btn-sm btn-outline-primary" data-tippy-content="">
+            <i class="bi bi-zoom-in"></i></button>
+          <button class="bt-zoom-out btn btn-sm btn-outline-primary" data-tippy-content="">
+            <i class="bi bi-zoom-out"></i></button>
+          <button class="bt-page-width btn btn-sm btn-outline-primary" data-tippy-content="">
+            <i class="bi bi-arrows"></i></button>
+          <button class="bt-page-height btn btn-sm btn-outline-primary" data-tippy-content="">
+            <i class="bi bi-arrows-vertical"></i></button>
+          <button class="bt-zoom-auto btn btn-sm btn-outline-primary" data-tippy-content="">
+            <i class="bi bi-arrow-counterclockwise"></i></button>
+        </div>
+      </span><span id="pdf-dialog-utility">
+        <div class="btn-group ms-2">
+          <button class="btn btn-sm btn-outline-secondary" disabled="">
+            <i class="bi bi-tools"></i>
+          </button>
+          <button class="bt-search btn btn-sm btn-outline-primary" data-tippy-content="Search" data-bs-auto-close="outside" data-bs-toggle="dropdown">
+            <i class="bi bi-search"></i>
+          </button>
+          <div class="dropdown-menu kb-search-toolbar p-2" tabindex="-1" role="dialog" aria-hidden="true" style="width: 450px">
+            <div class="input-group input-group-sm d-flex align-items-center">
+              <input type="text" class="form-control form-control-sm input-keyword" value="" placeholder="">
+              <button class="bt-find btn btn-sm btn-primary"><i class="bi bi-search"></i></button>
+              <btn class="search-status btn btn-sm btn-outline-secondary">No results</btn>
+              <button class="bt-next btn btn-sm btn-outline-secondary" disabled=""><i class="bi bi-chevron-down"></i></button>
+              <button class="bt-prev btn btn-sm btn-outline-secondary" disabled=""><i class="bi bi-chevron-up"></i></button>
+              <button class="bt-close-search btn btn-sm btn-outline-danger"><i class="bi bi-x-lg"></i></button>
+            </div>
+          </div>
+          <button class="bt-print btn btn-sm btn-outline-primary" data-tippy-content="">
+            <i class="bi bi-printer"></i></button>
+          <button class="bt-download btn btn-sm btn-outline-primary" data-tippy-content="">
+            <i class="bi bi-download"></i></button>
+        </div>
+      </span>
+    </span>
+    <span class="drag-handle flex-fill">&nbsp;</span>
+    <span class="right-stack">
+      <button class="bt-close btn btn-sm" style="right:0;"><i class="bi bi-x-lg"></i></button>
+    </span>
+  </div>
+  <div class="card-body d-flex align-items-stretch" style="height: 500px;">
+    <div id="viewerContainer" class="overflow-auto position-absolute bg-secondary" style="width: calc(100% - 42px); height: calc(100% - 100px);">
+      <div id="viewer" class="pdfViewer"></div>
+    </div>
+    <span class="pdf-info position-absolute pb-1 text-secondary" style="bottom:0; font-size:0.9rem;"><span class="page-info"></span></span>
+    <button class="bt-resize btn btn-sm position-absolute" style="bottom:0; right:0;"><i class="bi bi-arrows-angle-expand"></i></button>
+  </div>  
 </div>

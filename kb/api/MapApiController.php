@@ -53,4 +53,34 @@ class MapApiController extends CoreApi {
     }
   }
 
+  function getConceptMapReferenceList($cmid) {
+    try {
+      $service = new KitBuildService();
+      $references = $service->getConceptMapReferenceList($cmid);
+      CoreResult::instance($references)->show();
+    } catch (Exception $ex) {
+      CoreError::instance($ex->getMessage())->show();
+    }
+  }
+
+  function getConceptMapReferences($cmid) {
+    try {
+      $service = new KitBuildService();
+      $references = $service->getConceptMapReferences($cmid);
+      CoreResult::instance($references)->show();
+    } catch (Exception $ex) {
+      CoreError::instance($ex->getMessage())->show();
+    }
+  }
+
+  function getConceptMapReference($id, $cmid) {
+    try {
+      $service = new KitBuildService();
+      $references = $service->getConceptMapReference($id, $cmid);
+      CoreResult::instance($references)->show();
+    } catch (Exception $ex) {
+      CoreError::instance($ex->getMessage())->show();
+    }
+  }
+
 }

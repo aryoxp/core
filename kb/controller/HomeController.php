@@ -11,7 +11,7 @@ class HomeController extends CoreController {
     $this->ui->useCoreLib('core-ui');
     // $this->ui->useCoreClients();
     $this->ui->usePlugin('core-runtime');
-    $this->ui->usePlugin('kitbuild-ui', 'kitbuild', 'kitbuild-analyzer', 'kitbuild-logger', 'kitbuild-collab', 'general-ui', 'highlight', 'showdown');
+    $this->ui->usePlugin('kitbuild-ui', 'kitbuild', 'kitbuild-analyzer', 'kitbuild-logger', 'general-ui', 'highlight', 'showdown', 'pdfjs');
     $this->ui->useScript("recompose.js");
     $this->ui->useStyle("recompose.css");
 
@@ -32,6 +32,20 @@ class HomeController extends CoreController {
       'conceptMapUrl' => $mapid ? $this->location('mapApi/get/'.$mapid) : null
     ));
     $this->ui->viewPlugin("general-ui", null);
+    $this->ui->view('foot.php', null, CoreView::CORE);
+  }
+
+  function test() {
+    $this->ui->useCoreLib('core-ui');
+    $this->ui->usePlugin('pdfjs');
+    $this->ui->view('head.php', null, CoreView::CORE);
+    $this->ui->view('test.php');
+    // $this->ui->view("recompose.php", array(
+    //   'conceptMap' => $kit, 
+    //   'conceptMapId' => $mapid,
+    //   'conceptMapUrl' => $mapid ? $this->location('mapApi/get/'.$mapid) : null
+    // ));
+    // $this->ui->viewPlugin("general-ui", null);
     $this->ui->view('foot.php', null, CoreView::CORE);
   }
 

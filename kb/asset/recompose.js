@@ -73,6 +73,7 @@ class Timer {
 CDM = {};
 CDM.cookieid = 'CORESID-mgm__kb';
 CDM.options = {};
+CDM.references = new Map();
 
 class App {
   constructor() {
@@ -96,6 +97,11 @@ class App {
     this.ajax = Core.instance().ajax();
     this.runtime = Core.instance().runtime();
     this.config = Core.instance().config();
+
+    canvas.canvasTool.addTool("ref", new KitBuildReferenceTool(canvas, {
+      ajax: this.ajax, 
+      actionCallback: this
+    }));
 
     // Hack for sidebar-panel show/hide
     // To auto-resize the canvas.
@@ -139,7 +145,7 @@ class App {
     App.inst = new App();
     App.timer = new Timer('.app-navbar .timer');
     // App.timer.on();
-    App.feedbackDelay = 50;
+    App.feedbackDelay = 10;
     return App.inst;
   }
 
@@ -1063,32 +1069,87 @@ class App {
 
       this.feedbackNearbyDialog.hide();
 
-      let learnerMapData = KitBuildUI.buildConceptMapData(this.canvas);
-      feedbackDialog.learnerMapEdgesData = this.canvas.cy.edges().jsons();
-      learnerMapData.conceptMap = CDM.conceptMap.canvas;
-      Analyzer.composePropositions(learnerMapData);
-      let direction = CDM.conceptMap.map.direction;
-      let compare = Analyzer.compare(learnerMapData, direction);
-      
-      this.canvas.canvasTool
-        .enableIndicator(false)
-        .enableConnector(false)
-        .clearCanvas()
-        .clearIndicatorCanvas();
+      if (inf) {
+        let learnerMapData = KitBuildUI.buildConceptMapData(this.canvas);
+        feedbackDialog.learnerMapEdgesData = this.canvas.cy.edges().jsons();
+        learnerMapData.conceptMap = CDM.conceptMap.canvas;
+        Analyzer.composePropositions(learnerMapData);
+        let direction = CDM.conceptMap.map.direction;
+        let compare = Analyzer.compare(learnerMapData, direction);
+        
+        this.canvas.canvasTool
+          .enableIndicator(false)
+          .enableConnector(false)
+          .clearCanvas()
+          .clearIndicatorCanvas();
+  
+        let dataMap = L.dataMap(CDM.kitId, CDM.conceptMapId);
+        dataMap.set('compare', Core.compress(compare));
+        L.canvas(dataMap, App.inst.canvas);
+        L.compare(dataMap, App.inst.canvas, CDM.conceptMap.canvas);
+        L.log("feedback-distance", {
+          compare: compare,
+          reason: reason,
+          timestamp: App.timer.ts
+        }, dataMap);
+        $(".app-navbar .bt-feedback").prop('disabled', true);
+        $(".app-navbar .bt-clear-feedback").prop('disabled', false);
+        let disTool = this.canvas.canvasTool.tools.get(KitBuildCanvasTool.DISTANCECOLOR);
+        let node = this.canvas.cy.nodes('#'+this.feedbackNearbyDialog.nodeId);
+        disTool.showNearby(node);
+        App.lastFeedback = App.timer.ts;
+      }
 
-      let dataMap = L.dataMap(CDM.kitId, CDM.conceptMapId);
-      dataMap.set('compare', Core.compress(compare));
-      L.canvas(dataMap, App.inst.canvas);
-      L.log("feedback-distance", {
-        compare: compare,
-        reason: reason
-      }, dataMap);
-      $(".app-navbar .bt-feedback").prop('disabled', true);
-      $(".app-navbar .bt-clear-feedback").prop('disabled', false);
-      let disTool = this.canvas.canvasTool.tools.get(KitBuildCanvasTool.DISTANCECOLOR);
-      let node = this.canvas.cy.nodes('#'+this.feedbackNearbyDialog.nodeId);
-      disTool.showNearby(node);
-      App.lastFeedback = App.timer.ts;
+      if (und) {
+        let nodes = App.inst.feedbackNearbyDialog.nodes;
+        let id = nodes[0].data().resid;
+        let page = nodes[0].data().respage;
+        let keyword = nodes[0].data().reskeyword;
+        let cmid = CDM.kit.map.cmid;
+
+        var showReference = (result) => {
+          let pdfData = atob(result.data.split(',')[1]);
+          if (PDFApp.modal) {
+            PDFApp.modal.show();
+            PDFApp.app.search('');
+            PDFApp.app.goToPage(page);
+            PDFApp.app.search(keyword);
+          } else {
+            PDFApp.app = PDFApp.instance('#pdf-dialog', {
+              width: '800px',
+              height: '550px',
+              pdfData: pdfData,
+              page: page,
+              keyword: keyword,
+              fileName: id
+            });
+            PDFApp.app.load();
+          }
+
+          App.lastFeedback = App.timer.ts;
+
+          let data = Object.assign({
+            type: result.type,
+            reason: reason,
+            timestamp: App.timer.ts
+          }, nodes[0].data());
+          let dataMap = L.dataMap(CDM.kitId, CDM.conceptMapId);
+          L.canvas(dataMap, App.inst.canvas);
+          L.compare(dataMap, App.inst.canvas, CDM.conceptMap.canvas);
+          L.log('get-reference', data, dataMap);
+        }
+
+        let ref = CDM.references.get(`${id}/${cmid}`);
+        if (!ref) {
+          this.ajax.get(`mapApi/getConceptMapReference/${id}/${cmid}`).then(result => {
+            CDM.references.set(`${id}/${cmid}`, result);
+            showReference(result);
+          });  
+        } else showReference(ref);
+
+      }
+
+
     });
 
     /**
@@ -1116,7 +1177,7 @@ class App {
             L.canvas(dataMap, App.inst.canvas);
             L.compare(dataMap, App.inst.canvas, CDM.conceptMap.canvas);
             L.log('submit', data, dataMap);
-            UI.dialog('Your final concept map has been submitted. You now may close this window.').show();
+            UI.dialog('Your final concept map has been submitted. You may now close this window.').show();
           }).catch((error) => {
             console.error(error);
           });
@@ -1169,86 +1230,36 @@ class App {
       // console.log(Logger.userid, Logger.sessid);
       this.canvas.on("event", App.onCanvasEvent);
     });
-    // let stateData = JSON.parse(localStorage.getItem(App.name));
-    // console.warn("RESTORE STATE:", stateData)
-    // this.session.getAll().then((sessions) => {
-    //   // console.log(sessions)
 
-    //   try {
-    //     if (stateData && stateData.logger) {
-    //       // restore previous logger data and sequence
-    //       // console.log(this.logger.seq);
-    //       this.logger.username = sessions.user ? sessions.user.username : null;
-    //       this.logger.seq = this.logger.seq == 1 ? stateData.logger.seq : this.logger.seq;
-    //       this.logger.sessid = Core.instance().config().get("sessid");
-    //       this.logger.canvas = this.canvas;
-    //       this.logger.enable();
-    //       L.log('restore-logger-state');
-    //       // reattach logger
-    //       if (App.loggerListener)
-    //         this.canvas.off("event", App.loggerListener);
-    //       App.loggerListener =
-    //         App.inst.logger.onCanvasEvent.bind(App.inst.logger);
-    //       this.canvas.on("event", App.onCanvasEvent);
-    //     }
-    //   } catch (error) {
-    //     console.warn(error);
-    //   }
+    // console.log(this, CDM);
 
-    //   let kid = sessions.kid;
-    //   let lmid = sessions.lmid;
-    //   let promises = [];
-    //   if (kid) promises.push(KitBuild.openKitMap(kid));
-    //   if (lmid) promises.push(KitBuild.openLearnerMap(lmid));
-    //   Promise.all(promises).then((maps) => {
-    //     let [kit, learnerMap] = maps;
-    //     // console.error(kit, learnerMap);
-    //     App.parseKitMapOptions(kit);
-    //     if (kit && !learnerMap)
-    //       App.resetMapToKit(kit, this.canvas).then(() => {
-    //         L.log("reset-map-to-kit", kit.map);
-    //       });
-    //     if (sessions.user && sessions.kid)
-    //       this.getFeedbackAndSubmitCount(sessions.user.username, sessions.kid, kit.parsedOptions);
-    //     if (learnerMap) {
-    //       // console.log(learnerMap, this.logger)
-    //       App.inst.setKitMap(kit);
-    //       App.inst.setLearnerMap(learnerMap);
-    //       learnerMap.kit = kit;
-    //       learnerMap.conceptMap = kit.conceptMap;
-    //       this.canvas.cy.elements().remove();
-    //       this.canvas.cy.add(KitBuildUI.composeLearnerMap(learnerMap));
-    //       this.canvas.applyElementStyle();
-    //       this.canvas.toolbar.tools
-    //         .get(KitBuildToolbar.CAMERA)
-    //         .fit(null, { duration: 0 });
-    //       this.logger.setLearnerMapId(learnerMap.map.lmid);
-    //       this.logger.setConceptMap(kit.conceptMap);
-    //       L.log("restore-kit", kit.map);
-    //       L.log("restore-learner-map", learnerMap.map, null, {
-    //         lmid: learnerMap.map.lmid,
-    //         includeMapData: true,
-    //       });
-    //     } // else UI.warning('Unable to display kit.').show()
-    //   });
 
-    //   App.enableNavbarButton(false);
-    //   if (sessions.user) {
-    //     this.setUser(sessions.user);
-    //     this.initCollab(sessions.user);
-    //     App.enableNavbarButton(true);
-    //     KitBuildCollab.enableControl();
-    //     let status =
-    //       `<span class="mx-2 d-flex align-items-center status-user" style="white-space: nowrap;">` +
-    //       `<small class="text-dark fw-bold">${sessions.user.name}</small>` +
-    //       `</span>`;
-    //     StatusBar.instance().remove(".status-user").prepend(status);
-    //     this.logger.username = sessions.user.username;
-    //   } else $(".app-navbar .bt-sign-in").trigger("click");
 
-    //   // listen to events for broadcast to collaboration room as commands
-    //   this.canvas.on("event", App.onCanvasEvent);
-    // });
+  }
+
+  onReferenceAction(nodes) {
+
+    if (!App.lastFeedback) {
+      if (App.timer.ts < App.feedbackDelay) {
+        let timeleft = App.feedbackDelay - (App.timer.ts - (App.lastFeedback ?? 0));
+        UI.dialog(`Feedback is not available right now. Please wait for ${timeleft} seconds`).show();
+        return;
+      }
+      // App.lastFeedback = App.timer.ts;
+    } else {
+      if (App.timer.ts - App.lastFeedback < App.feedbackDelay || App.timer.ts < App.feedbackDelay) {
+        let timeleft = App.feedbackDelay - (App.timer.ts - App.lastFeedback);
+        UI.dialog(`Feedback is not available right now. Please wait for ${timeleft} seconds`).show();
+        return;
+      }
+    }
+
+    App.inst.feedbackNearbyDialog.nodeId = nodes[0].data().id;
+    App.inst.feedbackNearbyDialog.nodes = nodes;
+    App.inst.feedbackNearbyDialog.show();
+
+    // console.warn(nodes);    
+    // console.log(this);
   }
 
 }
@@ -1282,7 +1293,7 @@ App.onBrowserStateChange = (event) => {
 };
 
 App.onCanvasEvent = (canvasId, event, data) => {
-  console.log(canvasId, event, data);
+  // console.log(canvasId, event, data);
   Logger.canvasid = canvasId;
   let skip = [ // for canvas data
     'camera-reset', 
@@ -1589,6 +1600,283 @@ App.download = (filename, text) => {
   document.body.removeChild(element);
 }
 
+class PDFApp {
+  constructor(container, options) {
+    PDFApp.currentPage = 3,
+    PDFApp.pdf = null,
+    PDFApp.zoom = 1
+    this.container = container;
+    this.settings = Object.assign({
+      pdfData: atob(
+        'JVBERi0xLjcKCjEgMCBvYmogICUgZW50cnkgcG9pbnQKPDwKICAvVHlwZSAvQ2F0YWxvZwog' +
+        'IC9QYWdlcyAyIDAgUgo+PgplbmRvYmoKCjIgMCBvYmoKPDwKICAvVHlwZSAvUGFnZXMKICAv' +
+        'TWVkaWFCb3ggWyAwIDAgMjAwIDIwMCBdCiAgL0NvdW50IDEKICAvS2lkcyBbIDMgMCBSIF0K' +
+        'Pj4KZW5kb2JqCgozIDAgb2JqCjw8CiAgL1R5cGUgL1BhZ2UKICAvUGFyZW50IDIgMCBSCiAg' +
+        'L1Jlc291cmNlcyA8PAogICAgL0ZvbnQgPDwKICAgICAgL0YxIDQgMCBSIAogICAgPj4KICA+' +
+        'PgogIC9Db250ZW50cyA1IDAgUgo+PgplbmRvYmoKCjQgMCBvYmoKPDwKICAvVHlwZSAvRm9u' +
+        'dAogIC9TdWJ0eXBlIC9UeXBlMQogIC9CYXNlRm9udCAvVGltZXMtUm9tYW4KPj4KZW5kb2Jq' +
+        'Cgo1IDAgb2JqICAlIHBhZ2UgY29udGVudAo8PAogIC9MZW5ndGggNDQKPj4Kc3RyZWFtCkJU' +
+        'CjcwIDUwIFRECi9GMSAxMiBUZgooSGVsbG8sIHdvcmxkISkgVGoKRVQKZW5kc3RyZWFtCmVu' +
+        'ZG9iagoKeHJlZgowIDYKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDEwIDAwMDAwIG4g' +
+        'CjAwMDAwMDAwNzkgMDAwMDAgbiAKMDAwMDAwMDE3MyAwMDAwMCBuIAowMDAwMDAwMzAxIDAw' +
+        'MDAwIG4gCjAwMDAwMDAzODAgMDAwMDAgbiAKdHJhaWxlcgo8PAogIC9TaXplIDYKICAvUm9v' +
+        'dCAxIDAgUgo+PgpzdGFydHhyZWYKNDkyCiUlRU9G')
+    }, options);
+    this.init();
+    this.handleEvent();
+  }
+
+  static instance(container, options) {
+    if (!PDFApp.inst)
+      PDFApp.inst = new PDFApp(container, options);
+    return PDFApp.inst;
+  }
+  
+  init() {
+    if (!pdfjsLib.getDocument || !pdfjsViewer.PDFViewer) {
+      // eslint-disable-next-line no-alert
+      alert("Please build the pdfjs-dist library using\n `gulp dist-install`");
+    }
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "pdf.worker.min.mjs";
+  
+    const container = $('#viewerContainer').get(0);
+    const CMAP_URL = "cmaps/";
+    const CMAP_PACKED = true;
+  
+    const DEFAULT_URL = Core.instance().config('basefileurl') + 'files/helloworld.pdf';
+  
+    const ENABLE_XFA = true;
+    const SEARCH_FOR = "x86"; // try "Mozilla";
+  
+    const SANDBOX_BUNDLE_SRC = new URL(
+      "pdf.sandbox.min.mjs",
+      window.location
+    );
+    const eventBus = new pdfjsViewer.EventBus();
+    // eventBus._dispatchToDOM = true;
+  
+    // (Optionally) enable hyperlinks within PDF files.
+    this.pdfLinkService = new pdfjsViewer.PDFLinkService({
+      eventBus,
+    });
+  
+    // (Optionally) enable find controller.
+    this.pdfFindController = new pdfjsViewer.PDFFindController({
+      eventBus,
+      linkService: this.pdfLinkService,
+      updateMatchesCountOnProgress: false
+    });
+  
+    // (Optionally) enable scripting support.
+    this.pdfScriptingManager = new pdfjsViewer.PDFScriptingManager({
+      eventBus,
+      sandboxBundleSrc: SANDBOX_BUNDLE_SRC,
+    });
+  
+    this.pdfViewer = new pdfjsViewer.PDFViewer({
+      container,
+      eventBus,
+      linkService: this.pdfLinkService,
+      findController: this.pdfFindController,
+      scriptingManager: this.pdfScriptingManager,
+    });
+  
+    this.pdfLinkService.setViewer(this.pdfViewer);
+    this.pdfScriptingManager.setViewer(this.pdfViewer);
+    this.downloadManager = new pdfjsViewer.DownloadManager();
+    // console.log(new pdfjsViewer.DownloadManager);
+
+    eventBus.on("pagesinit", () => {
+      // We can use pdfViewer now, e.g. let's change default scale.
+      this.pdfViewer.currentScaleValue = "page-width";
+      $(`${this.container} .page-info`).html(`${this.pdfViewer.currentPageNumber}/${this.pdfViewer.pdfDocument.numPages}`);
+      // this.pdfViewer.currentScaleValue = 2;
+      // console.log(this.settings);
+      this.pdfViewer.currentPageNumber = Number(this.settings.page) ?? 1;
+      this.query = this.settings.keyword;
+      this.dispatchEvent("again", false);
+      // console.log(this.pdfViewer, this.pdfLinkService);
+      // this.pdfViewer.scrollPageIntoView({
+      //   pageNumber: 3
+      // });
+      // this.pdfViewer.nextPage();
+      // this.pdfLinkService.goToPage(2);
+      // console.log("X");
+      // We can try searching for things.
+      // if (SEARCH_FOR) {
+      //   eventBus.dispatch("find", { type: "VM", query: SEARCH_FOR });
+      // }
+      // setTimeout(() => {
+      //   this.pdfLinkService.goToPage(2);
+      //   console.warn("X");
+      //   // $("#viewerContainer").scrollTop = 100;
+      //   // $("#viewer").scrollTop = 300;
+      // }, 1500);
+      // // this.pdfViewer.scrollPageIntoView({pageNumber: 4});
+      // console.log(this.pdfViewer);
+    });
+
+    eventBus.on("pagechanging", (e) => { // console.log(e);
+      $(`${this.container} .page-info`).html(`${e.pageNumber}/${this.pdfViewer.pdfDocument.numPages}`);
+    });
+
+    eventBus.on("updatefindcontrolstate", (e) => { console.log(e, $(`${this.container} .bt-next`), $(`${this.container} .bt-prev`));
+      $(`${this.container} .search-status`).html(`${e.matchesCount.current}/${e.matchesCount.total}`);
+      if (e.matchesCount.current < e.matchesCount.total) $(`${this.container} .bt-next`).prop('disabled', false);
+      else $(`${this.container} .bt-next`).prop('disabled', true);
+      if (e.matchesCount.current > 1) $(`${this.container} .bt-prev`).prop('disabled', false);
+      else $(`${this.container} .bt-prev`).prop('disabled', true);
+    })
+
+    eventBus.on("updatefindmatchescount", (e) => { // console.log(e);
+      $(`${this.container} .search-status`).html(`${e.matchesCount.current}/${e.matchesCount.total}`);
+      if (e.matchesCount.total > 1) $(`${this.container} .bt-next`).prop('disabled', false);
+      else $(`${this.container} .bt-next`).prop('disabled', true);
+      $(`${this.container} .bt-prev`).prop('disabled', true);
+    });
+
+
+    
+    // Loading document.
+    this.loadingTask = pdfjsLib.getDocument({
+      // url: DEFAULT_URL,
+      data: this.settings.pdfData,
+      // cMapUrl: CMAP_URL,
+      // cMapPacked: CMAP_PACKED,
+      // enableXfa: ENABLE_XFA,
+    });
+
+    this.eventBus = eventBus;
+  
+    PDFApp.modal = UI.modal(this.container, {width: this.settings.width, height: this.settings.height, hideElement: '.bt-close'}).show();
+    UI.makeResizable(this.container, {handle: '.bt-resize'});
+    UI.makeDraggable(this.container, {handle: '.drag-handle'});
+  };
+
+  async load() {
+    const pdfDocument = await this.loadingTask.promise;
+    // Document loaded, specifying document for the viewer and
+    // the (optional) linkService.
+    this.pdfViewer.setDocument(pdfDocument);
+    // console.error(this.pdfViewer);
+    // this.pdfViewer.scrollPageIntoView({pageNumber: 2});
+    this.pdfLinkService.setDocument(pdfDocument, null);
+    // this.pdfLinkService.goToPage(2);
+  }
+
+  dispatchEvent(type, findPrev = false) {
+    this.eventBus.dispatch("find", {
+      source: this,
+      type,
+      query: this.query,
+      caseSensitive: false,
+      entireWord: false,
+      highlightAll: true,
+      findPrevious: findPrev,
+      matchDiacritics: true
+    });
+  }
+
+  handleEvent() {
+    $(`${this.container} .input-keyword`).on('keyup', e => {
+      this.query = $(`${this.container} .input-keyword`).val().trim();
+      if (this.query.length == 0) return; 
+      if (e.code == "Enter") {
+        this.dispatchEvent("again", e.shiftKey);
+      }
+      L.log("reference-search-enter", this.settings.fileName);
+    });
+    $(`${this.container} .bt-zoom-in`).on('click', e => {
+      this.pdfViewer.increaseScale();
+    });
+    $(`${this.container} .bt-zoom-out`).on('click', e => {
+      this.pdfViewer.decreaseScale();
+    });
+    $(`${this.container} .bt-page-width`).on('click', e => {
+      this.pdfViewer.currentScaleValue = 'page-width';
+    });
+    $(`${this.container} .bt-page-height`).on('click', e => {
+      this.pdfViewer.currentScaleValue = 'page-height';
+    });
+    $(`${this.container} .bt-zoom-auto`).on('click', e => {
+      this.pdfViewer.currentScaleValue = 'auto';
+    });
+    $(`${this.container} .bt-find`).on('click', e => {
+      this.query = $(`${this.container} .input-keyword`).val().trim();
+      if (this.query.length == 0) return; 
+      this.dispatchEvent("again", e.shiftKey);
+      L.log("reference-search-find", this.settings.fileName);
+    });
+    $(`${this.container} .bt-next`).on('click', e => {
+      this.query = $(`${this.container} .input-keyword`).val().trim();
+      if (this.query.length == 0) return; 
+      this.dispatchEvent("again", false);
+      L.log("reference-search-next", this.settings.fileName);
+    });
+    $(`${this.container} .bt-prev`).on('click', e => {
+      this.query = $(`${this.container} .input-keyword`).val().trim();
+      if (this.query.length == 0) return; 
+      this.dispatchEvent("again", true);
+      L.log("reference-search-prev", this.settings.fileName);
+    });
+    $(`${this.container} .bt-close-search`).click((e) => {
+      console.log($(e.currentTarget).parents(`${this.container}`));
+      $(e.currentTarget).parents(`${this.container}`).find('.bt-search').dropdown('toggle')
+    });
+    $(`${this.container}`).bind('mousewheel', (e) => { // console.log(e);
+      if (e.ctrlKey) {
+        if (e.originalEvent.wheelDelta > 0) {
+            this.pdfViewer.currentScale += 0.02;
+        } else this.pdfViewer.currentScale -= 0.02;
+        e.preventDefault();
+      }
+    });
+    $(`${this.container} .bt-download`).on('click', async e => { console.log(e);
+      // this.eventBus.dispatch("download", {
+      //   source: this
+      // });
+      let data;
+      // try {
+        // if (this.downloadComplete) {
+          data = await this.pdfViewer.pdfDocument.getData();
+          console.log(this.pdfViewer, pdfjsLib);
+        // }
+      // } catch {}
+      this.downloadManager.download(data, null, this.settings.fileName);
+      L.log("reference-download", this.settings.fileName);
+      //, this._downloadUrl, this._docFilename, options);
+    });
+    $(document).on('keydown', (e) => { // console.log(e);
+      if ( e.ctrlKey && ( e.key === 'f' ) ){
+        if ($(`${this.container}`).is(":visible")) {
+          e.preventDefault();
+          $(`${this.container}`).find('.bt-search').trigger('click');
+          let input = $(`${this.container} .input-keyword`).focus();
+          // console.log(input);
+          input[0].selectionStart = 0;
+          input[0].selectionEnd = input.val().length;
+        }
+      }
+    });
+  }
+
+  goToPage(page) {
+    this.pdfViewer.currentPageNumber = Number(page);
+  }
+
+  search(keyword) {
+    this.query = keyword;
+    this.dispatchEvent("again", false);
+    $(`${this.container} input.input-keyword`).val(keyword);
+    // console.log($(`${this.container} input.input-keyword`), keyword);
+  }
+}
+
+// $(() => {
+
+// });
+
 
 // App.enableNavbarButton = (enabled = true) => {
 //   $("#recompose-readcontent button").prop("disabled", !enabled);
@@ -1601,3 +1889,39 @@ App.download = (filename, text) => {
 //     tool.enable(enabled);
 //   });
 // };
+
+
+class KitBuildReferenceTool extends KitBuildCanvasTool {
+  constructor(canvas, options) {
+    super(
+      canvas,
+      Object.assign(
+        {
+          showOn: KitBuildCanvasTool.SH_CONCEPT,
+          color: "#1174b6",
+          icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-book" viewBox="-5 -5 26 26"><path d="M1 2.828c.885-.37 2.154-.769 3.388-.893 1.33-.134 2.458.063 3.112.752v9.746c-.935-.53-2.12-.603-3.213-.493-1.18.12-2.37.461-3.287.811zm7.5-.141c.654-.689 1.782-.886 3.112-.752 1.234.124 2.503.523 3.388.893v9.923c-.918-.35-2.107-.692-3.287-.81-1.094-.111-2.278-.039-3.213.492zM8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.105A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .707.455c.882-.4 2.303-.881 3.68-1.02 1.409-.142 2.59.087 3.223.877a.5.5 0 0 0 .78 0c.633-.79 1.814-1.019 3.222-.877 1.378.139 2.8.62 3.681 1.02A.5.5 0 0 0 16 13.5v-11a.5.5 0 0 0-.293-.455c-.952-.433-2.48-.952-3.994-1.105C10.413.809 8.985.936 8 1.783"/></svg>',
+          gridPos: { x: 0, y: 1 },
+        },
+        options
+      )
+    );
+    this.contextPosition = { x: 0, y: 0 };
+    this.contextRenderedPosition = { x: 0, y: 0 };
+  }
+
+  showOn(what, node) {
+    // console.warn(node, node ? node.data() : undefined);
+    if (node)
+      return this._showOn(what) && node.data('resid');
+    return this._showOn(what, node);
+  }
+
+  async action(event, e, nodes) {
+    // let data = nodes[0].data();
+    // console.log(data);
+    if (this.settings.actionCallback)
+      this.settings.actionCallback?.onReferenceAction(nodes);
+
+    return;
+  }
+}
