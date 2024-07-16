@@ -171,7 +171,10 @@ class KitBuildCanvas {
         break;  
       case KitBuildCanvasTool.DISTANCECOLOR:
         this.canvasTool.addTool(what, new KitBuildDistanceColorTool(this, settings));
-        break;      
+        break;
+      case KitBuildCanvasTool.DATA:
+        this.canvasTool.addTool(what, new KitBuildDataTool(this, settings));
+        break;    
     }
     return this;
   }

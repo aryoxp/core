@@ -144,6 +144,7 @@ KitBuildCanvasTool.PROPAUTHOR     = "propauthor";
 KitBuildCanvasTool.IMAGE          = "image";
 KitBuildCanvasTool.REMOVE_IMAGE   = "remove-image";
 KitBuildCanvasTool.DISTANCECOLOR  = "distance-color";
+KitBuildCanvasTool.DATA           = "data";
 
 KitBuildCanvasTool.SH_NONE        = 0;
 KitBuildCanvasTool.SH_CONCEPT     = 1;
@@ -1192,14 +1193,14 @@ class KitBuildDistanceColorTool extends KitBuildCanvasTool {
         options
       )
     );
-    canvas.cy.on('drag', 'node', (e) => { console.log(e);
+    canvas.cy.on('drag', 'node', (e) => { // console.log(e);
       let node = e.target;
       if (node.data('type') != 'concept') return;
       if (this.conceptMap) {
         this.showColor(node, this.conceptMap, canvas);
       }
     });
-    canvas.cy.on('tap dragfree', 'node', (e) => { console.log(e); 
+    canvas.cy.on('tap dragfree', 'node', (e) => { // console.log(e); 
       e.target.style('border-color', 'rgb(255,0,0)');
       e.target.style('border-opacity', 0.5);
     });
@@ -1356,6 +1357,160 @@ class KitBuildDistanceColorTool extends KitBuildCanvasTool {
     }, 50);
   }
 
+}
+
+class KitBuildDataTool extends KitBuildCanvasTool {
+  constructor(canvas, options) {
+    super(
+      canvas,
+      Object.assign(
+        {
+          showOn: KitBuildCanvasTool.SH_CONCEPT,
+          color: "#11b692",
+          bdColor: "#00a078d8",
+          icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-tags-fill" viewBox="-4 -4 24 24"><path d="M2 2a1 1 0 0 1 1-1h4.586a1 1 0 0 1 .707.293l7 7a1 1 0 0 1 0 1.414l-4.586 4.586a1 1 0 0 1-1.414 0l-7-7A1 1 0 0 1 2 6.586zm3.5 4a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3"/><path d="M1.293 7.793A1 1 0 0 1 1 7.086V2a1 1 0 0 0-1 1v4.586a1 1 0 0 0 .293.707l7 7a1 1 0 0 0 1.414 0l.043-.043z"/></svg>',
+          gridPos: { x: 1, y: 1 },
+        },
+        options
+      )
+    );
+    this.contextPosition = { x: 0, y: 0 };
+    this.contextRenderedPosition = { x: 0, y: 0 };
+  }
+
+  // showOn(what, node) {
+  //   // console.warn(node, node ? node.data() : undefined);
+  //   if (node)
+  //     return this._showOn(what) && node.data('image');
+  //   return this._showOn(what, node);
+  // }
+
+  async action(event, e, nodes) {
+    let data = nodes[0].data();
+    console.log(data);
+
+    let html = `<div class="card border-secondary kb-dialog kb-data-dialog shadow" style="width: 40rem; position: absolute; top: 0" data-id="${data.id}">
+      <div class="card-header">Element Data</div>
+      <div class="card-body">`;
+      html += `<div class="input-group mb-3">
+                <label class="input-group-text" for="inputGroupSelect01">Attribute</label>
+                <select class="form-select" name="attr" id="inputGroupSelect01">
+                  <option selected>Choose...</option>`;
+                  let skip = ['id','label','type'];
+                  for(let attr in data) {
+                    if (skip.includes(attr)) continue;
+                    html += `<option class="attr" value="${attr}">${attr}</option>`;
+                  }
+                html += `</select>
+              </div>`;
+      html += `<div class="input-group">
+                <input type="text" name="attr" aria-label="First name" class="form-control">
+                <input type="text" name="value" aria-label="Last name" class="form-control">
+                <button class="btn btn-outline-success bt-set" type="button">Set</button>
+                <button class="btn btn-outline-danger bt-unset" type="button">Unset</button>
+              </div>`
+      html += `</div>
+      <div class="card-footer d-flex justify-content-end">
+        <a class="bt-ok btn btn-sm btn-primary" style="min-width: 5rem">OK</a>
+        <a class="bt-cancel btn btn-sm btn-secondary ms-2" style="min-width: 5rem">Cancel</a>
+      </div>
+    </div>`;
+
+    $('.kb-dialog').hide().remove();
+    $('body').append(html);
+
+    $('.kb-data-dialog').appendTo('body').show({
+      duration: 0,
+      complete: () => {
+        $('.kb-data-dialog .input-label').focus();
+        $('.kb-data-dialog .input-label').select();
+        // handle click outside the dialog
+        setTimeout(() => {
+          $(document).off('click').on('click', (e) => {
+            if ($('.kb-data-dialog').find(e.target).length) return;
+            $('.kb-data-dialog .bt-cancel').trigger('click');
+          })
+          $(document).off('keyup').on('keyup', function(e) {
+            if (e.key == "Escape") $('.kb-data-dialog .bt-cancel').trigger('click');
+          });
+        }, 500);
+      }
+    })
+    console.log($(`#${this.canvas.canvasId}`).height(), $(`#${this.canvas.canvasId}`).width(), $(`#${this.canvas.canvasId}`).position(), $(`#${this.canvas.canvasId}`).offset())
+    let parent = $(`#${this.canvas.canvasId}`);
+    let offset = $(parent).offset();
+    let child = $('.kb-data-dialog');
+    console.log(offset, child.width(), child.height());
+    $('.kb-data-dialog').css({
+      top:  (parent.height()/2 - child.height()/2) + offset.top, 
+      left: (parent.width()/2 - child.width()/2) + offset.left 
+    });
+
+    $('.kb-data-dialog').on('change', 'select[name="attr"]', e => {
+      let attr = $(e.currentTarget).val();
+      // console.log(attr);
+      $('.kb-data-dialog input[name="attr"]').val(attr);
+      $('.kb-data-dialog input[name="value"]').val(data[attr]);
+    })
+
+    $('.kb-data-dialog').on('click', '.bt-set', e=> {
+      let attr = $('.kb-data-dialog input[name="attr"]').val();
+      let value = $('.kb-data-dialog input[name="value"]').val();
+      nodes[0].data(attr, value);
+      $(e.currentTarget).html('Set <i class="bi bi-check"></i>').removeClass('btn-outline-success').addClass('btn-success');
+      setTimeout(() => {
+        $(e.currentTarget).html('Set').removeClass('btn-success').addClass('btn-outline-success');
+      }, 1000);
+      $('.kb-data-dialog select[name="attr"] option.attr').remove();
+      let skip = ['id','label','type'];
+      let data = nodes[0].data();
+      for(let attr in data) {
+        if (skip.includes(attr) || data[attr] == undefined) continue;
+        $('.kb-data-dialog select[name="attr"]').append(`<option class="attr" value="${attr}">${attr}</option>`);
+      }
+    });
+
+    $('.kb-data-dialog').on('click', '.bt-unset', e=> {
+      let attr = $('.kb-data-dialog input[name="attr"]').val();
+      // let value = $('.kb-data-dialog input[name="value"]').val();
+      nodes[0].removeData(attr);
+      $(e.currentTarget).html('Unset <i class="bi bi-check"></i>').removeClass('btn-outline-danger').addClass('btn-danger');
+      setTimeout(() => {
+        $(e.currentTarget).html('Unset').removeClass('btn-danger').addClass('btn-outline-danger');
+      }, 1000);
+      $('.kb-data-dialog select[name="attr"] option.attr').remove();
+      let skip = ['id','label','type'];
+      let data = nodes[0].data();
+      console.log(data);
+      for(let attr in data) {
+        console.log(attr, data[attr]);
+        if (skip.includes(attr) || data[attr] == undefined) continue;
+        $('.kb-data-dialog select[name="attr"]').append(`<option class="attr" value="${attr}">${attr}</option>`);
+      }
+    });
+
+    $('.kb-data-dialog .bt-cancel').off('click').on('click', () => {
+      $(document).off('click').off('keyup');
+      $('.kb-dialog').hide().remove();
+    });
+
+    $('.kb-data-dialog .bt-ok').off('click').on('click', () => {
+      // n.label = $('.kb-node-dialog .input-label').val()
+      // if (n.label.trim().length != 0) {
+      //   if (n.id == 0) this.canvas.createNode(n).then((node) => { // console.log(node.json())
+      //     $('.kb-data-dialog .bt-cancel').trigger('click')
+      //   })
+      //   else this.canvas.updateNode(n).then((node) => {
+      //     $('.kb-data-dialog .bt-cancel').trigger('click')
+      //     node.select().trigger('select')
+      //   })
+      // }
+    });
+
+    // if (nodes[0] && this.canvas)
+    //   KitBuildUI.removeNodeBackgroundImage(nodes[0], this.canvas);
+    return;
+  }
 }
 
 class KitBuildCanvasToolCanvas {

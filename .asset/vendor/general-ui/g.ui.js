@@ -738,7 +738,7 @@ class UI {
   static makeDraggable(el, opt) {
     opt = Object.assign({ handle: null, cursor: "move" }, opt);
     var handle = $(el).find(opt.handle);
-    console.log(handle);
+    // console.log(handle);
     if (!opt.handle || handle.length == 0) {
       console.warn("Invalid drag handle")
       return
