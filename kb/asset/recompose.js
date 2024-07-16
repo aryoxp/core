@@ -1061,6 +1061,7 @@ class App {
       if (inf) reason.push('inf');
       if (und) reason.push('und');
       if (oth.length != 0) reason.push($('#feedback-nearby-dialog .inputotherreason').val().trim());
+      if (!inf && !und && oth.length != 0) und = true;
 
       if (!(inf || und || oth.length != 0)) {
         UI.dialog('Please provide a reason for feedback.').show();
@@ -1068,6 +1069,59 @@ class App {
       } 
 
       this.feedbackNearbyDialog.hide();
+
+      if (und) {
+        let nodes = App.inst.feedbackNearbyDialog.nodes;
+
+        if (!nodes || !nodes[0].data().resid) {
+          inf = true;
+        } else {
+          let id = nodes[0].data().resid;
+          let page = nodes[0].data().respage;
+          let keyword = nodes[0].data().reskeyword;
+          let cmid = CDM.kit.map.cmid;
+  
+          var showReference = (result) => {
+            let pdfData = atob(result.data.split(',')[1]);
+            if (PDFApp.modal) {
+              PDFApp.modal.show();
+              PDFApp.app.search('');
+              PDFApp.app.goToPage(page);
+              PDFApp.app.search(keyword);
+            } else {
+              PDFApp.app = PDFApp.instance('#pdf-dialog', {
+                width: '800px',
+                height: '550px',
+                pdfData: pdfData,
+                page: page,
+                keyword: keyword,
+                fileName: id
+              });
+              PDFApp.app.load();
+            }
+  
+            App.lastFeedback = App.timer.ts;
+  
+            let data = Object.assign({
+              type: result.type,
+              reason: reason,
+              timestamp: App.timer.ts
+            }, nodes[0].data());
+            let dataMap = L.dataMap(CDM.kitId, CDM.conceptMapId);
+            L.canvas(dataMap, App.inst.canvas);
+            L.compare(dataMap, App.inst.canvas, CDM.conceptMap.canvas);
+            L.log('get-reference', data, dataMap);
+          }
+  
+          let ref = CDM.references.get(`${id}/${cmid}`);
+          if (!ref) {
+            this.ajax.get(`mapApi/getConceptMapReference/${id}/${cmid}`).then(result => {
+              CDM.references.set(`${id}/${cmid}`, result);
+              showReference(result);
+            });  
+          } else showReference(ref);
+        }
+      }
 
       if (inf) {
         let learnerMapData = KitBuildUI.buildConceptMapData(this.canvas);
@@ -1100,54 +1154,7 @@ class App {
         App.lastFeedback = App.timer.ts;
       }
 
-      if (und) {
-        let nodes = App.inst.feedbackNearbyDialog.nodes;
-        let id = nodes[0].data().resid;
-        let page = nodes[0].data().respage;
-        let keyword = nodes[0].data().reskeyword;
-        let cmid = CDM.kit.map.cmid;
 
-        var showReference = (result) => {
-          let pdfData = atob(result.data.split(',')[1]);
-          if (PDFApp.modal) {
-            PDFApp.modal.show();
-            PDFApp.app.search('');
-            PDFApp.app.goToPage(page);
-            PDFApp.app.search(keyword);
-          } else {
-            PDFApp.app = PDFApp.instance('#pdf-dialog', {
-              width: '800px',
-              height: '550px',
-              pdfData: pdfData,
-              page: page,
-              keyword: keyword,
-              fileName: id
-            });
-            PDFApp.app.load();
-          }
-
-          App.lastFeedback = App.timer.ts;
-
-          let data = Object.assign({
-            type: result.type,
-            reason: reason,
-            timestamp: App.timer.ts
-          }, nodes[0].data());
-          let dataMap = L.dataMap(CDM.kitId, CDM.conceptMapId);
-          L.canvas(dataMap, App.inst.canvas);
-          L.compare(dataMap, App.inst.canvas, CDM.conceptMap.canvas);
-          L.log('get-reference', data, dataMap);
-        }
-
-        let ref = CDM.references.get(`${id}/${cmid}`);
-        if (!ref) {
-          this.ajax.get(`mapApi/getConceptMapReference/${id}/${cmid}`).then(result => {
-            CDM.references.set(`${id}/${cmid}`, result);
-            showReference(result);
-          });  
-        } else showReference(ref);
-
-      }
 
 
     });
@@ -1322,6 +1329,7 @@ App.onCanvasEvent = (canvasId, event, data) => {
     }
 
     App.inst.feedbackNearbyDialog.nodeId = data.id;
+    App.inst.feedbackNearbyDialog.nodes = [App.inst.canvas.cy.elements(`#${data.id}`)];
     App.inst.feedbackNearbyDialog.show();
     return;
   }
