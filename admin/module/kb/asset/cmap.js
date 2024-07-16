@@ -181,6 +181,7 @@ class App {
     $('#concept-map-save-as-dialog').on('click', '.bt-generate-fid', () => {
       $('input[name="fid"]').val(App.uuidv4);
     });
+
     $('#concept-map-save-as-dialog').on('click', '.bt-save', () => {
       let mapdata = {};
       mapdata.canvas = KitBuildUI.buildConceptMapData(this.canvas);
@@ -273,6 +274,116 @@ class App {
         return;
       }
       this.decodeMap(App.dialogOpen, $('#decode-textarea').val());
+    });
+
+    /**
+     * 
+     * Content
+     * 
+     */
+
+        /**
+     * Concept Map reader 
+     * */
+    const fileInput = $('.file-input');
+    const droparea = $('.file-drop-area');
+    const deleteButton = $('.item-delete');
+    
+    fileInput.on('dragenter focus click', () => { droparea.addClass('is-active') });
+    fileInput.on('dragleave blur drop', () => { droparea.removeClass('is-active') });
+    fileInput.on('change', () => {
+      let filesCount = $(fileInput)[0].files.length;
+      let textContainer = $(fileInput).prev();
+      if (filesCount === 1) {
+        let fileName = $(fileInput).val().split('\\').pop();
+        let cmid = App.dialogOpen.cmid;
+        let file = $(fileInput)[0].files[0];
+        let reader = new FileReader();
+        reader.onload = (event) => {
+          let content = event.target.result;
+          // console.log(content);
+          let data = {
+            id: fileName,
+            cmid: cmid,
+            type: file.type,
+            data: content
+          }
+          
+          // let data = App.parseIni(content);
+          // console.log(data);
+          this.ajax.post('m/x/kb/kitBuildApi/addConceptMapResource', data).then(result => {
+            console.log(result);
+            $('#content-dialog .bt-refresh').trigger('click');
+          });
+          // try {
+          //   let conceptMap = Core.decompress(data.conceptMap.replaceAll('"',''));
+          //   let kit = Core.decompress(data.kit.replaceAll('"',''));
+          //   console.log(conceptMap, kit);
+          //   CDM.conceptMap = conceptMap;
+          //   CDM.kitId = fileName;
+          //   CDM.conceptMapId = conceptMap.map.cmid;
+          //   CDM.kit = kit;
+          //   console.error(kit);
+          // } catch(e) {
+          //   // 
+          //   textContainer.html(fileName + ' <strong class="text-danger">File is invalid.</strong>');
+          //   return;
+          // }
+        };
+        // console.log(file);
+        reader.readAsDataURL(file);
+        textContainer.html(fileName);
+        $('.item-delete').css('display', 'inline-block');
+      } else if (filesCount === 0) {
+        textContainer.text('or drop files here');
+        $('.item-delete').css('display', 'none');
+      } else {
+        textContainer.text(filesCount + ' files selected');
+        $('.item-delete').css('display', 'inline-block');
+      }
+    });
+    deleteButton.on('click', () => {
+      $('.file-input').val(null);
+      $('.file-msg').text('or drop files here');
+      $('.item-delete').css('display', 'none');
+    });
+
+    $(".app-navbar .bt-content").on("click", (e) => { // console.log(e);
+      if (!App.dialogOpen.cmid) {
+        (new CoreInfo('Please open a concept map to assign its content reference.')).show();
+        return;
+      }
+      App.dialogContent = (new CoreWindow('#content-dialog', {
+        draggable: true,
+        width: '400px',
+        height: '400px',
+        closeBtn: '.bt-close'
+      })).show();
+      $('#content-dialog .bt-refresh').trigger('click');
+    });
+
+    $('#content-dialog .bt-refresh').on('click', e => {
+      let cmid = App.dialogOpen.cmid;
+      this.ajax.get(`m/x/kb/kitBuildApi/getConceptMapReferenceList/${cmid}`).then(result => {
+        // console.log(result);
+        let html = '';
+        for(let res of result) {
+          html += `<div class="d-flex flex-row justify-content-between align-items-center">`;
+          html += `<span>${res.id} <code class="ms-2">${res.type}</code></span>`;
+          html += `<span><button class="btn btn-sm btn-danger bt-delete"`;
+          html += ` data-id="${res.id}" data-cmid="${res.cmid}">`;
+          html += `<i class="bi bi-x"></i>`;
+          html += `</button><span>`;
+          html += `</div>`;
+        }
+        $('#content-dialog .list-references').html(html);
+      });
+    });
+
+    $('#content-dialog .list-references').on('click', '.bt-delete', e => {
+      let id = $(e.currentTarget).attr('data-id');
+      let cmid = $(e.currentTarget).attr('data-cmid');
+      console.log($(e.currentTarget), id, cmid);
     });
 
     /**

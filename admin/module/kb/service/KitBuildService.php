@@ -105,4 +105,58 @@ class KitBuildService extends CoreService {
     return $result;
   }
 
+  function getConceptMapReferenceList($cmid) {
+    $db = self::instance('kb');
+    $qb = QB::instance('reference')
+      ->select('id', 'cmid', 'type')
+      ->where('cmid', QB::LIKE, QB::esc($cmid));
+    $result = $db->query($qb->get());
+    return $result;
+  }
+
+  function getConceptMapReferences($cmid) {
+    $db = self::instance('kb');
+    $qb = QB::instance('reference')
+      ->select('id', 'cmid', 'type', 'data')
+      ->where('cmid', QB::LIKE, QB::esc($cmid));
+    $result = $db->query($qb->get());
+    return $result;
+  }
+
+  function getConceptMapReference($id, $cmid) {
+    $db = self::instance('kb');
+    $qb = QB::instance('reference')
+      ->select('id', 'cmid', 'type', 'data')
+      ->where('id', QB::esc($id))
+      ->where('cmid', QB::esc($cmid));
+    $result = $db->getRow($qb->get());
+    return $result;
+  }
+
+  function addConceptMapResource($id, $cmid, $type, $data) {
+    $insert['id'] = QB::esc($id);
+    $insert['cmid'] = QB::esc($cmid);
+    $insert['type'] = QB::esc($type);
+    $insert['data'] = QB::esc($data);
+
+    $update['type'] = QB::esc($type);
+    $update['data'] = QB::esc($data);
+
+    $db = self::instance('kb');
+    $qb = QB::instance('reference')
+      ->insert($insert, $update);
+    $result = $db->query($qb->get());
+    return $result;
+  }
+
+  function deleteConceptMapResource($id, $cmid) {
+    $db = self::instance('kb');
+    $qb = QB::instance('reference')
+      ->delete()
+      ->where('id', QB::esc($id))
+      ->where('cmid', QB::esc($cmid));
+    $result = $db->query($qb->get());
+    return $result;
+  }
+
 }

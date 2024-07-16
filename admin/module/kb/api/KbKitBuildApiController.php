@@ -111,4 +111,60 @@ class KbKitBuildApiController extends CoreApi {
     }
   }
 
+  function getConceptMapReferenceList($cmid) {
+    try {
+      $service = new KitBuildService();
+      $references = $service->getConceptMapReferenceList($cmid);
+      CoreResult::instance($references)->show();
+    } catch (Exception $ex) {
+      CoreError::instance($ex->getMessage())->show();
+    }
+  }
+
+  function getConceptMapReferences($cmid) {
+    try {
+      $service = new KitBuildService();
+      $references = $service->getConceptMapReferences($cmid);
+      CoreResult::instance($references)->show();
+    } catch (Exception $ex) {
+      CoreError::instance($ex->getMessage())->show();
+    }
+  }
+
+  function getConceptMapReference($id, $cmid) {
+    try {
+      $service = new KitBuildService();
+      $references = $service->getConceptMapReference($id, $cmid);
+      CoreResult::instance($references)->show();
+    } catch (Exception $ex) {
+      CoreError::instance($ex->getMessage())->show();
+    }
+  }
+
+  function addConceptMapResource() {
+    try {
+      $id = $this->postv('id');
+      $cmid = $this->postv('cmid');
+      $type = $this->postv('type');
+      $data = $this->postv('data');
+      $service = new KitBuildService();
+      $references = $service->addConceptMapResource($id, $cmid, $type, $data);
+      CoreResult::instance($references)->show();
+    } catch (Exception $ex) {
+      CoreError::instance($ex->getMessage())->show();
+    }
+  }
+
+  function deleteConceptMapResource() {
+    try {
+      $id = $this->postv('id');
+      $cmid = $this->postv('cmid');
+      $service = new KitBuildService();
+      $references = $service->deleteConceptMapResource($id, $cmid);
+      CoreResult::instance($references)->show();
+    } catch (Exception $ex) {
+      CoreError::instance($ex->getMessage())->show();
+    }
+  }
+
 }

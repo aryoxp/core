@@ -12,7 +12,7 @@ class KbCmapController extends CoreModuleController {
 
   function compose() {
     $this->menuId('kb-cmap');
-    $this->ui->usePlugin('kitbuild-logger', 'kitbuild-ui', 'kitbuild');
+    $this->ui->usePlugin('kitbuild-logger', 'kitbuild-ui', 'kitbuild', 'pdfjs');
     // $this->ui->language('module/cmap/lang/cmap', CoreLanguage::LOCATION_APP_ROOT);
     $this->ui->useScript("cmap.js");
     $this->ui->useStyle("cmap.css");

@@ -1,24 +1,30 @@
+<!-- <div id="viewerContainer" style="position: absolute">
+  <div id="viewer" class="pdfViewer"></div>
+</div> -->
+
 <div class="app-navbar d-flex p-2 border-bottom">
   <div class="btn-group btn-group-sm me-2">
     <button class="bt-new btn btn-primary"><i class="bi bi-asterisk"></i> New</button>
     <button class="bt-open btn btn-sm btn-primary"><i class="bi bi-folder2-open"></i> Open</button>
   </div>
   <div class="btn-group btn-group-sm me-2">
-    <button class="bt-import btn btn-outline-secondary"><i class="bi bi-arrow-right-short"></i><i
-        class="bi bi-code-square"></i> Import</button>
+    <button class="bt-content btn btn-primary"><i class="bi bi-file-richtext"></i> Content</button>
+  </div>
+  <div class="btn-group btn-group-sm me-2">
+    <button class="bt-import btn btn-outline-secondary"><i class="bi bi-arrow-right-short"></i><i class="bi bi-code-square"></i> Import</button>
     <button class="bt-export btn btn-outline-secondary"><i class="bi bi-send"></i> Export</button>
   </div>
   <div class="btn-group btn-group-sm me-2">
     <button class="bt-save btn btn-outline-primary"><i class="bi bi-save"></i> Save</button>
     <button class="bt-save-as btn btn-outline-primary"><i class="bi bi-front"></i> Save As...</button>
   </div>
-  <button class="bt-compose-kit btn btn-warning btn-sm" disabled><i class="bi bi-grid-1x2"></i><i
-    class="bi bi-arrow-right-short"></i><i class="bi bi-layout-wtf"></i> Compose Kit</button>
+  <button class="bt-compose-kit btn btn-warning btn-sm" disabled><i class="bi bi-grid-1x2"></i><i class="bi bi-arrow-right-short"></i><i class="bi bi-layout-wtf"></i> Compose Kit</button>
 </div>
 <div class="d-flex flex-fill align-items-stretch">
-  <?php // $this->pluginView('kitbuild-ui', ["id" => "goalmap-canvas"], 0); ?>
+  <?php // $this->pluginView('kitbuild-ui', ["id" => "goalmap-canvas"], 0); 
+  ?>
   <!-- container of this layout template must have a display: flex style -->
-<!-- or add d-flex Bootstrap class to this layout's container/parent   -->
+  <!-- or add d-flex Bootstrap class to this layout's container/parent   -->
   <div class="kb-container d-flex flex-fill flex-column border bg-white rounded">
     <div class="kb-toolbar p-1 d-flex align-items-center justify-content-between bg-light border-bottom">
       <span class="left-stack"></span>
@@ -103,7 +109,8 @@
       <div class="tab-pane fade show active" id="database" role="tabpanel" aria-labelledby="database-tab">
         <div class="row gx-2 mb-1">
           <div class="col d-flex">
-            <span class="border-bottom px-2 py-1 flex-fill position-relative">Concept Map</span></div>
+            <span class="border-bottom px-2 py-1 flex-fill position-relative">Concept Map</span>
+          </div>
         </div>
         <div class="row gx-2 mb-3">
           <div class="col list list-concept-map" style="min-height:150px;"></div>
@@ -131,7 +138,7 @@
   </div>
 </div>
 
-<div id="assign-topic-dialog" class="card d-none">
+<!-- <div id="assign-topic-dialog" class="card d-none">
   <h6 class="card-header d-flex">
     <span class="drag-handle flex-fill"><i class="dialog-icon bi bi-lightbulb me-2"></i> <span class="dialog-title"><?php echo Lang::l("cmap-assign-topic"); ?></span></span>
     <i class="bi bi-x-lg bt-close bt-x" role="button"></i>
@@ -161,39 +168,87 @@
   <div class="card-footer text-end">
     <button class="btn btn-sm btn-secondary bt-close px-4"><?php echo Lang::l('close'); ?></button>
   </div>
-</div>
+</div> -->
 
-<div id="assign-text-dialog" class="card d-none">
+<div id="content-dialog" class="card d-none">
   <h6 class="card-header d-flex">
-    <span class="drag-handle flex-fill"><i class="dialog-icon bi bi-file-earmark-font me-2"></i> <span class="dialog-title"><?php echo Lang::l("cmap-assign-text"); ?></span></span>
+    <span class="drag-handle flex-fill">
+      <i class="dialog-icon bi bi-file-earmark-font me-2"></i> 
+      <span class="dialog-title">References</span></span>
     <i class="bi bi-x-lg bt-close bt-x" role="button"></i>
   </h6>
   <div class="card-body">
-    <div class="py-2">
-        <span>Concept Map: <span class="cmap-title text-primary"></span></span>
-        <br>
-        <span>Assigned Text: <span class="assigned-text"></span></span>
+    <button class="btn btn-sm btn-success bt-refresh"><i class="bi bi-arrow-repeat"></i> Refresh</button>
+    <div class="list-references mt-2"></div>
+    <div class="file-drop-area mt-2">
+      <span class="fake-btn btn btn-primary me-3">Choose file</span>
+      <span class="file-msg">or drop file here</span>
+      <input class="file-input" type="file" multiple>
+      <div class="item-delete me-4"></div>
     </div>
-    <form class="row form-assign-search-text g-3 needs-validation" novalidate>
-      <div class="col">
-        <div class="input-group input-group-sm mb-3">
-          <input type="text" name="keyword" class="form-control w-50 input-keyword" placeholder="Search keyword" aria-label="Keyword">
-          <select name="perpage" class="form-select flex-shrink-1 input-perpage">
-            <option value="1">1</option>
-            <option value="5" selected>5</option>
-            <option value="10">10</option>
-            <option value="25">25</option>
-          </select>
-          <button class="btn btn-secondary bt-search"><i class="bi bi-search"></i></button>
-        </div>
-        <div class="list-text"></div>
-        <div class="list-text-pagination pagination text-center"></div>
-      </div>
-    </form>
   </div>
   <div class="card-footer text-end">
     <button class="btn btn-sm btn-secondary bt-close px-4"><?php echo Lang::l('close'); ?></button>
   </div>
+</div>
+
+<div id="pdf-dialog" class="card d-none rounded rounded-3 p-1">
+  <div class="toolbar p-1 d-flex align-items-center justify-content-between bg-light border-bottom">
+    <span class="left-stack"></span>
+    <span class="drag-handle flex-fill">&nbsp;</span>
+    <span class="center-stack">
+      <span id="pdf-dialog-camera">
+        <div class="btn-group ms-2">
+          <button class="btn btn-sm btn-outline-secondary" disabled="">
+            <i class="bi bi-camera-video"></i></button>
+          <button class="bt-zoom-in btn btn-sm btn-outline-primary" data-tippy-content="">
+            <i class="bi bi-zoom-in"></i></button>
+          <button class="bt-zoom-out btn btn-sm btn-outline-primary" data-tippy-content="">
+            <i class="bi bi-zoom-out"></i></button>
+          <button class="bt-page-width btn btn-sm btn-outline-primary" data-tippy-content="">
+            <i class="bi bi-arrows"></i></button>
+          <button class="bt-page-height btn btn-sm btn-outline-primary" data-tippy-content="">
+            <i class="bi bi-arrows-vertical"></i></button>
+          <button class="bt-zoom-auto btn btn-sm btn-outline-primary" data-tippy-content="">
+            <i class="bi bi-arrow-counterclockwise"></i></button>
+        </div>
+      </span><span id="pdf-dialog-utility">
+        <div class="btn-group ms-2">
+          <button class="btn btn-sm btn-outline-secondary" disabled="">
+            <i class="bi bi-tools"></i>
+          </button>
+          <button class="bt-search btn btn-sm btn-outline-primary" data-tippy-content="Search" data-bs-auto-close="outside" data-bs-toggle="dropdown">
+            <i class="bi bi-search"></i>
+          </button>
+          <div class="dropdown-menu kb-search-toolbar p-2" tabindex="-1" role="dialog" aria-hidden="true" style="width: 450px">
+            <div class="input-group input-group-sm d-flex align-items-center">
+              <input type="text" class="form-control form-control-sm input-keyword" value="" placeholder="">
+              <button class="bt-find btn btn-sm btn-primary"><i class="bi bi-search"></i></button>
+              <btn class="search-status btn btn-sm btn-outline-secondary">No results</btn>
+              <button class="bt-next btn btn-sm btn-outline-secondary" disabled=""><i class="bi bi-chevron-down"></i></button>
+              <button class="bt-prev btn btn-sm btn-outline-secondary" disabled=""><i class="bi bi-chevron-up"></i></button>
+              <button class="bt-close-search btn btn-sm btn-outline-danger"><i class="bi bi-x-lg"></i></button>
+            </div>
+          </div>
+          <button class="bt-print btn btn-sm btn-outline-primary" data-tippy-content="">
+            <i class="bi bi-printer"></i></button>
+          <button class="bt-download btn btn-sm btn-outline-primary" data-tippy-content="">
+            <i class="bi bi-download"></i></button>
+        </div>
+      </span>
+    </span>
+    <span class="drag-handle flex-fill">&nbsp;</span>
+    <span class="right-stack">
+      <button class="bt-close btn btn-sm" style="right:0;"><i class="bi bi-x-lg"></i></button>
+    </span>
+  </div>
+  <div class="card-body d-flex align-items-stretch" style="height: 500px;">
+    <div id="viewerContainer" class="overflow-auto position-absolute bg-secondary" style="width: calc(100% - 42px); height: calc(100% - 100px);">
+      <div id="viewer" class="pdfViewer"></div>
+    </div>
+    <span class="pdf-info position-absolute pb-1 text-secondary" style="bottom:0; font-size:0.9rem;"><span class="page-info"></span></span>
+    <button class="bt-resize btn btn-sm position-absolute" style="bottom:0; right:0;"><i class="bi bi-arrows-angle-expand"></i></button>
+  </div>  
 </div>
 
 <!-- <div id="concept-map-copy-paste-dialog" class="card d-none">
@@ -207,5 +262,3 @@
     <button class="btn btn-sm btn-primary ms-1 bt-copy-paste px-3"><i class="dialog-icon bi"></i> <span class="dialog-action"><?php echo Lang::l('copy'); ?></span></button>
   </div>
 </div> -->
-
-

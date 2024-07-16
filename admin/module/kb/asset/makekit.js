@@ -8,23 +8,27 @@ CDM.options = {};
 
 class App {
   constructor() {
-    this.kbui = KitBuildUI.instance(App.canvasId)
-    let canvas = this.kbui.canvases.get(App.canvasId)
-    canvas.addToolbarTool(KitBuildToolbar.NODE_CREATE, { priority: 1, visible: false})
-    canvas.addToolbarTool(KitBuildToolbar.UNDO_REDO, { priority: 3 })
-    canvas.addToolbarTool(KitBuildToolbar.CAMERA, { priority: 4 })
-    canvas.addToolbarTool(KitBuildToolbar.UTILITY, { priority: 5, trash: false })
-    canvas.addToolbarTool(KitBuildToolbar.LAYOUT, { stack: 'right' })
-    canvas.toolbar.render()
-    canvas.addCanvasTool(KitBuildCanvasTool.CENTROID)
-    canvas.addCanvasTool(KitBuildCanvasTool.DISCONNECT)
-    canvas.addCanvasTool(KitBuildCanvasTool.LOCK)
-    canvas.addCanvasMultiTool(KitBuildCanvasTool.LOCK)
-    canvas.addCanvasMultiTool(KitBuildCanvasTool.UNLOCK)
-
+    this.kbui = KitBuildUI.instance(App.canvasId);
+    let canvas = this.kbui.canvases.get(App.canvasId);
+    canvas.addToolbarTool(KitBuildToolbar.NODE_CREATE, { priority: 1, visible: false});
+    canvas.addToolbarTool(KitBuildToolbar.UNDO_REDO, { priority: 3 });
+    canvas.addToolbarTool(KitBuildToolbar.CAMERA, { priority: 4 });
+    canvas.addToolbarTool(KitBuildToolbar.UTILITY, { priority: 5, trash: false });
+    canvas.addToolbarTool(KitBuildToolbar.LAYOUT, { stack: 'right' });
+    canvas.toolbar.render();
+    canvas.addCanvasTool(KitBuildCanvasTool.CENTROID);
+    canvas.addCanvasTool(KitBuildCanvasTool.DISCONNECT);
+    canvas.addCanvasTool(KitBuildCanvasTool.LOCK);
+    canvas.addCanvasTool(KitBuildCanvasTool.DATA);
+    canvas.addCanvasMultiTool(KitBuildCanvasTool.LOCK);
+    canvas.addCanvasMultiTool(KitBuildCanvasTool.UNLOCK);
+    
     this.canvas = canvas;
     this.session = Core.instance().session();
     this.ajax = Core.instance().ajax();
+
+    canvas.canvasTool.addTool("ref", new KitBuildReferenceTool(canvas, {ajax: this.ajax}));
+
 
     // Hack for sidebar-panel show/hide
     // To auto-resize the canvas.
@@ -413,14 +417,7 @@ class App {
           let proceed = () => {
             this.showConceptMap(conceptMap);
             UI.info('Concept map loaded.').show();
-            // (new CoreInfo("Concept map loaded.", {
-            //   icon: "check-circle",
-            //   iconStyle: "success",
-            // })).show();
-            // L.log("open-concept-map", conceptMap.map, null, {
-            //   cmid: conceptMap.map.cmid,
-            //   includeMapData: true,
-            // });
+
             openDialog.hide();
           };
           if (this.canvas.cy.elements().length) {
@@ -435,17 +432,7 @@ class App {
 
           App.inst.setKitMap(null);
           App.inst.setConceptMap(conceptMap);
-          // let cyData = KitBuildUI.composeConceptMap(conceptMap)
-          // if (this.canvas.cy.elements().length) {
-          //   let confirm = UI.confirm("Create a new kit from the selected concept map replacing the current kit design on Canvas?").positive(() => {
-          //     this.canvas.cy.elements().remove()
-          //     this.canvas.cy.add(cyData)
-          //     this.canvas.applyElementStyle()
-          //     this.canvas.toolbar.tools.get(KitBuildToolbar.CAMERA).fit();
-          //     confirm.hide()
-          //     openDialog.hide()
-          //   }).show()
-          // }
+
         } catch (error) { console.error(error)
           UI.error("Unable to open selected concept map as kit.").show(); 
         }
@@ -479,11 +466,6 @@ class App {
      * */
     
     $('.app-navbar .bt-option').on('click', () => { // console.log(App.inst)
-      // if (!App.inst.kitMap) {
-      //   UI.info("Please save or open a kit to set its runtime options.").show();
-      //   return;
-      // } 
-      // optionDialog.setKitMap(App.inst.kitMap).show();
       optionDialog.show();
     });
   
@@ -529,14 +511,7 @@ class App {
 
       CDM.options = option;
       UI.success("Kit options applied.").show();
-      // console.log(CDM.options);
-  
-      // KitBuild.updateKitOption(optionDialog.kitMap.map.kid, 
-      //   $.isEmptyObject(option) ? null : JSON.stringify(option)).then((kitMap) => { // console.log(result);
-      //   App.inst.setKitMap(kitMap)
-      //   UI.success("Kit options applied.").show()
-      //   optionDialog.hide()
-      // }).catch(error => UI.error(error).show())
+
     })
   
   
@@ -679,17 +654,6 @@ class App {
         (new CoreError('Invalid kit ID.')).show();
         return;
       }
-      // console.log(saveAsDialog.kitMap, App.inst)
-      // let data = Object.assign({
-      //   // kid: saveAsDialog.kitMap ? saveAsDialog.kitMap.map.kid : null,
-      //   id: id,
-      //   name: $('#input-title').val(),
-      //   options: CDM.options,
-      //   create_time: null,
-      //   enabled: $('#input-enabled').is(':checked'),
-      //   author: this.user ? this.user.username : null,
-      //   cmid: App.inst.conceptMap.map.cmid ? App.inst.conceptMap.map.cmid : null,
-      // }, KitBuildUI.buildConceptMapData(this.canvas)); console.log(data); // return
 
       this.canvas.cy.elements().removeClass('select').unselect();
       let kitdata = {};
@@ -944,35 +908,137 @@ class App {
   /**
    * Handle refresh web browser
    */
-  handleRefresh() {
-    // let session = Core.instance().session()
-    // let canvas  = kbui.canvases.get(App.canvasId)
-    // this.session.getAll().then(sessions => { // console.log(sessions)
-    //   let cmid = sessions.cmid;
-    //   let kid  = sessions.kid;
-    //   let promises = [];
-    //   if (cmid) promises.push(KitBuild.openConceptMap(cmid))
-    //   if (kid) promises.push(KitBuild.openKitMap(kid))
-    //   Promise.all(promises).then(maps => {
-    //     let [conceptMap, kitMap] = maps;
-    //     if (kitMap) {
-    //       App.inst.setKitMap(kitMap); // will also set the concept map
-    //       this.canvas.cy.add(KitBuildUI.composeKitMap(kitMap));
-    //       this.canvas.applyElementStyle();
-    //       this.canvas.toolbar.tools.get(KitBuildToolbar.CAMERA).fit(null, {duration: 0});
-    //       return;
-    //     } 
-    //     if (conceptMap) {
-    //       App.inst.setConceptMap(conceptMap);
-    //       this.canvas.cy.add(KitBuildUI.composeConceptMap(conceptMap));
-    //       this.canvas.applyElementStyle();
-    //       this.canvas.toolbar.tools.get(KitBuildToolbar.CAMERA).fit(null, {duration: 0});
-    //       return;
-    //     }
-    //   })
-    // })
-  }
+
+  handleRefresh() {}
 
 }
 
 App.canvasId = "makekit-canvas";
+
+class KitBuildReferenceTool extends KitBuildCanvasTool {
+  constructor(canvas, options) {
+    super(
+      canvas,
+      Object.assign(
+        {
+          showOn: KitBuildCanvasTool.SH_CONCEPT,
+          color: "#1174b6",
+          bdColor: "#0045a0d8",
+          icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-book" viewBox="-4 -4 24 24"><path d="M1 2.828c.885-.37 2.154-.769 3.388-.893 1.33-.134 2.458.063 3.112.752v9.746c-.935-.53-2.12-.603-3.213-.493-1.18.12-2.37.461-3.287.811zm7.5-.141c.654-.689 1.782-.886 3.112-.752 1.234.124 2.503.523 3.388.893v9.923c-.918-.35-2.107-.692-3.287-.81-1.094-.111-2.278-.039-3.213.492zM8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.105A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .707.455c.882-.4 2.303-.881 3.68-1.02 1.409-.142 2.59.087 3.223.877a.5.5 0 0 0 .78 0c.633-.79 1.814-1.019 3.222-.877 1.378.139 2.8.62 3.681 1.02A.5.5 0 0 0 16 13.5v-11a.5.5 0 0 0-.293-.455c-.952-.433-2.48-.952-3.994-1.105C10.413.809 8.985.936 8 1.783"/></svg>',
+          gridPos: { x: 0, y: 1 },
+        },
+        options
+      )
+    );
+    this.contextPosition = { x: 0, y: 0 };
+    this.contextRenderedPosition = { x: 0, y: 0 };
+  }
+
+  async action(event, e, nodes) {
+    let data = nodes[0].data();
+    console.log(data);
+
+    let html = `<div class="card border-secondary kb-dialog kb-data-dialog shadow" style="width: 30rem; position: absolute; top: 0" data-id="${data.id}">
+      <div class="card-header d-flex justify-content-between align-items-center"><span>Element: ${data.label} <code>${data.id}</code></span> <button class="btn bt-cancel p-0"><i class="bi bi-x-lg"></i></button></div>
+      <div class="card-body">`;
+      html += `<div class="input-group mb-3">
+        <label class="input-group-text" for="inputGroupSelect01">Res ID</label>
+        <select class="form-select" name="id" id="inputGroupSelect01"></select>
+        </div>`;
+      html += `<div class="input-group mb-3">
+        <label class="input-group-text" for="inputGroupSelect01">Page</label>
+        <input type="text" name="page" class="form-control" value="${data.respage ?? 1}">
+        </div>`;
+      html += `<div class="input-group mb-3">
+        <label class="input-group-text" for="inputGroupSelect01">Keyword</label>
+        <input type="text" name="keyword" class="form-control" value="${data.reskeyword ?? data.label}">
+        </div>`;
+      html += `<div class="text-end">
+        <button class="btn btn-outline-success bt-set" type="button" style="min-width:10rem">Set</button>
+        <button class="btn btn-outline-danger bt-unset" type="button" style="min-width:10rem">Unset</button></div>`;
+      html += `</div>
+      <div class="card-footer d-flex justify-content-end">
+        <a class="bt-cancel btn btn-sm btn-secondary ms-2" style="min-width: 5rem">OK</a>
+      </div>
+    </div>`;
+
+    $('.kb-dialog').hide().remove();
+    $('body').append(html);
+
+
+
+    $('.kb-data-dialog').appendTo('body').show({
+      duration: 0,
+      complete: () => {
+        $('.kb-data-dialog .input-label').focus();
+        $('.kb-data-dialog .input-label').select();
+        // handle click outside the dialog
+        setTimeout(() => {
+          $(document).off('click').on('click', (e) => {
+            if ($('.kb-data-dialog').find(e.target).length) return;
+            $('.kb-data-dialog .bt-cancel').trigger('click');
+          })
+          $(document).off('keyup').on('keyup', function(e) {
+            if (e.key == "Escape") $('.kb-data-dialog .bt-cancel').trigger('click');
+          });
+        }, 500);
+      }
+    })
+    console.log($(`#${this.canvas.canvasId}`).height(), $(`#${this.canvas.canvasId}`).width(), $(`#${this.canvas.canvasId}`).position(), $(`#${this.canvas.canvasId}`).offset())
+    let parent = $(`#${this.canvas.canvasId}`);
+    let offset = $(parent).offset();
+    let child = $('.kb-data-dialog');
+    console.log(offset, child.width(), child.height());
+    $('.kb-data-dialog').css({
+      top:  (parent.height()/2 - child.height()/2) + offset.top, 
+      left: (parent.width()/2 - child.width()/2) + offset.left 
+    });
+
+    $('.kb-data-dialog').on('change', 'select[name="attr"]', e => {
+      let attr = $(e.currentTarget).val();
+      // console.log(attr);
+      $('.kb-data-dialog input[name="attr"]').val(attr);
+      $('.kb-data-dialog input[name="value"]').val(data[attr]);
+    })
+
+    $('.kb-data-dialog').on('click', '.bt-set', e=> {
+      let resid = $('.kb-data-dialog select[name="id"]').val();
+      let respage = $('.kb-data-dialog input[name="page"]').val();
+      let reskeyword = $('.kb-data-dialog input[name="keyword"]').val();
+      nodes[0].data('resid', resid);
+      nodes[0].data('respage', respage);
+      nodes[0].data('reskeyword', reskeyword);
+      $(e.currentTarget).html('Set <i class="bi bi-check"></i>').removeClass('btn-outline-success').addClass('btn-success');
+      setTimeout(() => {
+        $(e.currentTarget).html('Set').removeClass('btn-success').addClass('btn-outline-success');
+      }, 1000);
+    });
+
+    $('.kb-data-dialog').on('click', '.bt-unset', e=> {
+      nodes[0].removeData('resid');
+      nodes[0].removeData('respage');
+      nodes[0].removeData('reskeyword');
+      $('.kb-data-dialog select[name="id"] option').prop('selected', false);
+      $('.kb-data-dialog input[name="page"]').val(1);
+      $('.kb-data-dialog input[name="keyword"]').val(nodes[0].data('label'));
+      $(e.currentTarget).html('Unset <i class="bi bi-check"></i>').removeClass('btn-outline-danger').addClass('btn-danger');
+      setTimeout(() => {
+        $(e.currentTarget).html('Unset').removeClass('btn-danger').addClass('btn-outline-danger');
+      }, 1000);
+    });
+
+    $('.kb-data-dialog .bt-cancel').off('click').on('click', () => {
+      $(document).off('click').off('keyup');
+      $('.kb-dialog').hide().remove();
+    });
+
+    this.settings.ajax.get(`m/x/kb/kitBuildApi/getConceptMapReferenceList/${App.inst.conceptMap.id}`).then(list => {
+      for(let ref of list) {
+        let selected = nodes[0].data('resid') == ref.id ? 'selected="selected"' : '';
+        $('.kb-data-dialog select[name="id"]').append(`<option value="${ref.id}" ${selected}>${ref.id}</option>`);
+      }
+    });
+
+    return;
+  }
+}
