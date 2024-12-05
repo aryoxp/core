@@ -4,6 +4,7 @@
     "label": "Malang Assistant",
     "url": "docs",
     "icon": "bus-front",
+    "type": "public",
     "subs": [{
         "id": "mta-navigation",
         "label": "Navigation",

@@ -268,6 +268,12 @@ class Cookie {
     });
   }
 
+  getCookie(cookieKey = null) {
+    const value = `; ${this.cookie()}`;
+    const parts = value.split(`; ${cookieKey}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+  }
+
   getAll() {
     return new Promise((resolve, reject) => {
       this.get()

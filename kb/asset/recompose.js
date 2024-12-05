@@ -1,5 +1,14 @@
-$(() => {
-  // jQuery onReady callback
+$(() => { // jQuery onReady callback
+
+  // Define global App CDM
+  Core.instance().config();
+  CDM = {};
+  CDM.cookieid = `CORESID-${Core.configuration.get('env')}__${Core.configuration.get('app')}`; 
+  CDM.options = {};
+  CDM.references = new Map();
+  CDM.collab = true;
+
+  // initialize App
   let app = App.instance();
 });
 
@@ -35,45 +44,12 @@ class L {
     let compare = Analyzer.compare(learnerMapData, direction);
     // console.warn(compare);
     dataMap.set('compare', Core.compress(compare));
+    dataMap.set('nmatch', compare.match.length);
+    dataMap.set('nmiss', compare.miss.length);
+    dataMap.set('nexcess', compare.excess.length);
     return dataMap; 
   }
 }
-
-class Timer {
-  constructor(element) {
-    this.element = element;
-    this.startTimestamp = Math.floor(Date.now()/1000);
-    this.ts = 0;
-    
-    this.off();
-  }
-
-  on() {
-    Timer.interval = setInterval(() => {
-      let ts = Math.floor(Date.now()/1000) - this.startTimestamp;
-      let duration = App.time(ts);
-      $(this.element).html(duration);
-      this.ts = ts;
-    }, 1000);
-    return this;
-  }
-
-  off() {
-    if (Timer.interval) clearInterval(Timer.interval);
-    Timer.interval = null;
-
-    let ts = Math.floor(Date.now()/1000) - this.startTimestamp;
-    let duration = App.time(ts);
-    $(this.element).html(duration);
-    
-    return this; 
-  }
-}
-
-CDM = {};
-CDM.cookieid = 'CORESID-mgm__kb';
-CDM.options = {};
-CDM.references = new Map();
 
 class App {
   constructor() {
@@ -98,7 +74,7 @@ class App {
     this.runtime = Core.instance().runtime();
     this.config = Core.instance().config();
 
-    canvas.canvasTool.addTool("ref", new KitBuildReferenceTool(canvas, {
+    canvas.toolCanvas.addTool("ref", new KitBuildReferenceTool(canvas, {
       ajax: this.ajax, 
       actionCallback: this
     }));
@@ -138,7 +114,11 @@ class App {
     // console.log(this, typeof KitBuildLogger);
 
     this.handleEvent();
-    this.handleRefresh();
+    this.handleRefresh().then( sessions => { // console.log(sessions);
+      if (this.config.get('enablecollab'))
+        this.startCollab();
+    });
+
   }
 
   static instance() {
@@ -366,7 +346,7 @@ class App {
     fileInput.on('change', () => {
       let filesCount = $(fileInput)[0].files.length;
       let textContainer = $(fileInput).prev();
-      if (filesCount === 1) {
+      if (filesCount >= 1) {
         let file = $(fileInput)[0].files[0];
         let reader = new FileReader();
         reader.onload = (event) => {
@@ -382,22 +362,26 @@ class App {
             CDM.kitId = fileName;
             CDM.conceptMapId = conceptMap.map.cmid;
             CDM.kit = kit;
-            console.error(kit);
-          } catch(e) {
-            // 
-            textContainer.html(fileName + ' <strong class="text-danger">File is invalid.</strong>');
+            textContainer.html(fileNameToDisplay
+              + ` <strong class="badge rounded-pill text-bg-success">File OK</strong>`
+            );
+          } catch(e) { console.error(e, fileName);
+            textContainer.html(fileNameToDisplay
+              + ` <strong class="badge rounded-pill text-bg-danger">Invalid File</strong>`
+            );
             return;
           }
         };
         // console.log(file);
         reader.readAsText(file);
         let fileName = $(fileInput).val().split('\\').pop();
-        textContainer.html(fileName);
+        let fileNameToDisplay = fileName.length > 25 ? fileName.substring(0, 25) + "..." : fileName;
+        textContainer.html(`Loading ${fileNameToDisplay}...`);
         $('.item-delete').css('display', 'inline-block');
       } else if (filesCount === 0) {
         textContainer.text('or drop files here');
         $('.item-delete').css('display', 'none');
-      } else {
+      } else { // multiple files are selected, currently ignored
         textContainer.text(filesCount + ' files selected');
         $('.item-delete').css('display', 'inline-block');
       }
@@ -537,7 +521,7 @@ class App {
       else
         $(`#concept-map-open-dialog .list-topic .list-item[data-tid="${tid}"]`).trigger("click");
       $("#concept-map-open-dialog .bt-refresh-topic-list").trigger("click");
-      $('input[name="userid"]').val(App.getCookie('userid'));
+      $('input[name="userid"]').val(decodeURI(App.getCookie('userid')));
       openDialog.show();
     });
 
@@ -545,10 +529,15 @@ class App {
 
     $('#concept-map-open-dialog').on('click', '.bt-open-id', (e) => {
       e.preventDefault();
+      let currentLabel = Loading.load(e.currentTarget, "Retrieving data...");
       let remember = $('#concept-map-open-dialog input#inputrememberme:checked').val();
       let userid = $('#concept-map-open-dialog input[name="userid"]').val().trim();
-      let url = Core.instance().config('baseurl') + "mapApi/get/";
-      url += $('#concept-map-open-dialog input[name="mapid"]').val().trim();
+      let mapid = $('#concept-map-open-dialog input[name="mapid"]').val().trim();
+      let url = Core.instance().config('baseurl') + `mapApi/get/${mapid}`;
+      if (mapid.length == 0) {
+        UI.warningDialog("Please enter Kit-Build kit ID to open.").show();
+        return;
+      }
       // console.log(url, remember, userid);
       Core.instance().ajax().post(url, {
         remember: remember ? 1 : 0,
@@ -574,13 +563,8 @@ class App {
           return;
         }
         App.openKit().then(() => {
-          if (remember) Core.instance().cookie().set('userid', userid);
-          else Core.instance().cookie().unset('userid');
+          App.postOpenKit();
           openDialog.hide();
-          // console.log('new timer');
-          App.timer = new Timer('.app-navbar .timer');
-          App.timer.on();
-          App.lastFeedback = App.timer.ts;
         });
         // console.log(data);
         // console.warn("Log status: ", result);
@@ -588,6 +572,8 @@ class App {
         console.error(error);
         UI.errorDialog(error).show();
         return;
+      }).finally(()=>{
+        Loading.done(e.currentTarget, currentLabel);
       });
     });
 
@@ -597,6 +583,12 @@ class App {
       let remember = $('#concept-map-open-dialog input#inputrememberme:checked').val();
       let userid = $('#concept-map-open-dialog input[name="userid"]').val().trim();
       let url = $('#concept-map-open-dialog input[name="mapurl"]').val().trim();
+      if (url.length == 0) {
+        UI.warningDialog("Please enter an URL that refer to a Kit-Build kit map data.")
+          .show();
+        return;
+      }
+
       Core.instance().ajax().post(url, {
         remember: remember ? 1 : 0,
         userid: userid
@@ -612,7 +604,7 @@ class App {
           CDM.kit = kit;
           // console.error(CDM);
         } catch(e) { console.error(e); }
-        if (!CDM.conceptMap) { console.error("X");
+        if (!CDM.conceptMap) { // console.error("X");
           UI.errorDialog("Invalid concept map data.").show();
           return;
         }
@@ -621,6 +613,7 @@ class App {
           return;
         }
         App.openKit().then(() => {
+          App.postOpenKit();
           openDialog.hide();
         });
         // console.log(data);
@@ -642,6 +635,7 @@ class App {
         return;
       }
       App.openKit().then(() => {
+        App.postOpenKit();
         openDialog.hide();
       });
     });
@@ -724,8 +718,10 @@ class App {
 
     $(".app-navbar").on("click", ".bt-save", () => {
 
-      // console.log(CDM); return;
-      if(!CDM.kit) new CoreDialog('Please open a kit').show();
+      if(!CDM.kit) {
+        UI.dialog('Please open a kit').show();
+        return;
+      }
 
       let {d, lmapdata} = this.buildLearnerMapData(); // console.log(canvas);
       let data = {};
@@ -754,7 +750,11 @@ class App {
     });
     $(".app-navbar").on("click", ".bt-load", () => {
 
-      if(!CDM.kit) UI.dialog('Please open a kit').show();
+      if(!CDM.kit) {
+        UI.dialog('Please open a kit prior to loading.').show();
+        return;
+      }
+
       this.session.get('draft-map').then(result => {
         let lmapdata = Core.decompress(result);
 
@@ -797,6 +797,8 @@ class App {
               psessid: lmapdata.sessid
             }, dataMap);
             App.lastFeedback = App.timer.ts;
+            App.postOpenKit();
+
           }).show();
       });
 
@@ -873,48 +875,48 @@ class App {
 
       let confirm = UI.confirm(
         "Do you want to reset this concept map as defined in the kit?"
-      )
-        .positive(() => {
-          App.parseKitMapOptions(CDM.kit);
-          App.resetMapToKit(CDM.kit, this.canvas).then(() => {
-            // Remove attribute of image binary data 
-            let attrs = ['image', 'bug'];
-            let canvas = this.canvas.cy.elements().jsons(); // console.log(canvas);
-            for(let el of canvas) {
-              for (let attr of attrs) { // console.log(el, el.data[attr])
-                if (el.data.image) delete el.data[attr];
-              }
+      ).positive(() => {
+        App.parseKitMapOptions(CDM.kit);
+        App.resetMapToKit(CDM.kit, this.canvas).then(() => {
+          // Remove attribute of image binary data 
+          let attrs = ['image', 'bug'];
+          let canvas = this.canvas.cy.elements().jsons(); // console.log(canvas);
+          for(let el of canvas) {
+            for (let attr of attrs) { // console.log(el, el.data[attr])
+              if (el.data.image) delete el.data[attr];
             }
-            let dataMap = new Map([["cmapid", CDM.kitId]]);
-            dataMap.set('canvas', Core.compress(canvas));
-            let learnerMapData = KitBuildUI.buildConceptMapData(this.canvas);
-            learnerMapData.conceptMap = CDM.conceptMap;
-            console.log(learnerMapData);
-            Analyzer.composePropositions(learnerMapData);
-            let direction = learnerMapData.conceptMap.map.direction;
-            let compare = Analyzer.compare(learnerMapData, direction);
-            console.warn(compare);
-            dataMap.set('compare', Core.compress(compare)); 
-            L.log("reset", null, dataMap);
-            // App.collab(
-            //   "command",
-            //   "set-kit-map",
-            //   kit,
-            //   this.canvas.cy.elements().jsons()
-            // );
-            // L.log("reset-learner-map", CDM.kit.map, null, {
-            //   includeMapData: true,
-            //   lmid: this.learnerMap.map.lmid,
-            // });
-          });
-          let undoRedo = this.canvas.toolbar.tools.get(KitBuildToolbar.UNDO_REDO);
-          if (undoRedo) undoRedo.clearStacks().updateStacksStateButton();
-          confirm.hide();
-          UI.info("Concept map has been reset.").show();
-          App.lastFeedback = App.timer.ts;
-          return;
-        })
-        .show();
+          }
+          let dataMap = new Map([["cmapid", CDM.kitId]]);
+          dataMap.set('canvas', Core.compress(canvas));
+          let learnerMapData = KitBuildUI.buildConceptMapData(this.canvas);
+          learnerMapData.conceptMap = CDM.conceptMap.canvas;
+          // console.log(learnerMapData);
+          Analyzer.composePropositions(learnerMapData);
+          let direction = CDM.conceptMap.map.direction;
+          let compare = Analyzer.compare(learnerMapData, direction);
+          // console.warn(compare);
+          dataMap.set('compare', Core.compress(compare)); 
+          L.log("reset", null, dataMap);
+          App.postOpenKit();
+          // App.collab(
+          //   "command",
+          //   "set-kit-map",
+          //   kit,
+          //   this.canvas.cy.elements().jsons()
+          // );
+          // L.log("reset-learner-map", CDM.kit.map, null, {
+          //   includeMapData: true,
+          //   lmid: this.learnerMap.map.lmid,
+          // });
+        });
+        let undoRedo = this.canvas.toolbar.tools.get(KitBuildToolbar.UNDO_REDO);
+        if (undoRedo) undoRedo.clearStacks().updateStacksStateButton();
+        confirm.hide();
+        UI.info("Concept map has been reset.").show();
+        App.lastFeedback = App.timer.ts;
+        return;
+      })
+      .show();
     });
 
     /**
@@ -1009,7 +1011,7 @@ class App {
       }
 
       Analyzer.showCompareMap(compare, this.canvas.cy, direction, level);
-      this.canvas.canvasTool
+      this.canvas.toolCanvas
         .enableIndicator(false)
         .enableConnector(false)
         .clearCanvas()
@@ -1039,7 +1041,7 @@ class App {
       this.canvas.cy.edges().remove();
       this.canvas.cy.add(feedbackDialog.learnerMapEdgesData);
       this.canvas.applyElementStyle();
-      this.canvas.canvasTool
+      this.canvas.toolCanvas
         .enableIndicator()
         .enableConnector()
         .clearCanvas()
@@ -1131,7 +1133,7 @@ class App {
         let direction = CDM.conceptMap.map.direction;
         let compare = Analyzer.compare(learnerMapData, direction);
         
-        this.canvas.canvasTool
+        this.canvas.toolCanvas
           .enableIndicator(false)
           .enableConnector(false)
           .clearCanvas()
@@ -1148,7 +1150,7 @@ class App {
         }, dataMap);
         $(".app-navbar .bt-feedback").prop('disabled', true);
         $(".app-navbar .bt-clear-feedback").prop('disabled', false);
-        let disTool = this.canvas.canvasTool.tools.get(KitBuildCanvasTool.DISTANCECOLOR);
+        let disTool = this.canvas.toolCanvas.tools.get(KitBuildCanvasTool.DISTANCECOLOR);
         let node = this.canvas.cy.nodes('#'+this.feedbackNearbyDialog.nodeId);
         disTool.showNearby(node);
         App.lastFeedback = App.timer.ts;
@@ -1229,19 +1231,17 @@ class App {
    */
 
   handleRefresh() {
-    this.session.getAll().then((sessions) => {
-      // console.log(sessions, document.cookie);
-      Logger.userid = sessions.userid;
-      Logger.sessid = App.getCookie(CDM.cookieid);
-      Logger.canvasid = App.canvasId;
-      // console.log(Logger.userid, Logger.sessid);
-      this.canvas.on("event", App.onCanvasEvent);
+    return new Promise((resolve, reject) => {
+      this.session.getAll().then((sessions) => {
+        Logger.userid = sessions.userid;
+        Logger.sessid = App.getCookie(CDM.cookieid);
+        Logger.canvasid = App.canvasId;
+        this.canvas.on("event", App.onCanvasEvent);
+        resolve(sessions);
+        // console.log(sessions, document.cookie);
+        // console.log(Logger.userid, Logger.sessid);  
+      });
     });
-
-    // console.log(this, CDM);
-
-
-
   }
 
   onReferenceAction(nodes) {
@@ -1269,38 +1269,144 @@ class App {
     // console.log(this);
   }
 
+  async startCollab() {
+    App.collab = await KitBuildCollab.instance('kitbuild', this.canvas, {
+      host: this.config.get('collabhost'),
+      port: this.config.get('collabport'),
+      listener: this.onCollabEvent.bind(this)
+    });
+    KitBuildCollab.enableControl();
+  }
+
+  // Collab Server --> App
+  onCollabEvent(e, ...data) { console.warn("App", e, data);      
+    switch(e) {
+      case 'reconnected':
+      case 'connected':
+        App.collab?.registerUser(decodeURI(App.getCookie('userid'))); 
+        break;
+      case 'socket-command': {
+        let command = data.shift();
+        switch(command) {
+          case 'push-map-state':
+            this.applyMapState(data.shift());
+            break;
+        }
+      } break;
+      case 'socket-get-map-state': {
+        let requesterSocketId = data.shift();
+        this.generateMapState()
+          .then(mapState => { // console.log(mapState);
+            App.collab.send("send-map-state", requesterSocketId, mapState);
+          })
+      }  break;
+      case 'socket-set-map-state': {
+        let mapState = data.shift(); // console.log(mapState);
+        this.applyMapState(mapState).then(() => { // console.log(this);
+          App.collab.send("get-channels");
+        });
+      }  break;
+      case 'join-room-request': {
+        let room = data.shift();
+        let confirm = UI.confirm(`You have been requested to join room <strong>${room}</strong>. Do you want to accept?`)
+          .emphasize()
+          .positive(() => {
+            App.collab.joinRoom(room, App.collab.user).then(e => {
+              App.collab.broadcastEvent('join-room', room);
+              UI.info(`Room ${room} joined.`).show();
+            });
+          })
+          .negative(() => {
+            App.collab.rejectjoinRoomRequest(room, App.collab.user).then(e => {
+              // console.log(this, confirm);
+              // confirm.hide();
+            });
+          })
+          .show();
+      } break;
+      case 'socket-user-leave-room': {
+        let user = data.shift();
+        let room = data.shift();
+        UI.info(`You have left Room: <strong>${room.name}</strong>.`)
+          .show();
+      } break;
+    }
+  }
+
+  generateMapState() {
+    return new Promise((resolve, reject) => { // console.log(CDM);
+      let mapState = {
+        kit: CDM.kit,
+        conceptMap: CDM.conceptMap,
+        cyData: this.canvas.cy.elements().jsons()
+      };
+      resolve(mapState)
+    })
+  }
+
+  applyMapState(mapState){ // console.log(mapState);
+    return new Promise((resolve, reject) => {
+      let kit = mapState.kit;
+      let cyData = mapState.cyData;
+      let conceptMap = mapState.conceptMap;
+      if (!cyData) {
+        console.warn('Invalid cyData: ', cyData);
+        return;
+      }
+      if (!kit) {
+        console.warn('Invalid kit: ', kit);
+        return;
+      }
+      if (!conceptMap) {
+        console.warn('Invalid conceptMap: ', conceptMap);
+        return;
+      }
+      CDM.kit = kit;
+      CDM.conceptMap = conceptMap;
+      this.canvas.cy.elements().remove();
+      this.canvas.cy.add(cyData ? cyData : {}).unselect();
+      this.canvas.applyElementStyle();
+      this.canvas.toolbar.tools.get(KitBuildToolbar.CAMERA).fit(null, {duration: 0});
+      // KitBuildApp.inst.canvas.toolbar.tools.get(KitBuildToolbar.NODE_CREATE).setActiveDirection(conceptMap.map.direction)
+      this.canvas.toolbar.tools.get(KitBuildToolbar.UNDO_REDO).clearStacks().updateStacksStateButton();
+      this.canvas.toolCanvas.clearCanvas().clearIndicatorCanvas();
+      this.canvas.cy.remove('#VIRTUAL');
+      resolve(mapState);
+    });
+  }
+
 }
 
 App.canvasId = "recompose-canvas";
 
-App.getCookie = (name) => {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(';').shift();
-}
+// App.getCookie = (name) => {
+//   const value = `; ${document.cookie}`;
+//   const parts = value.split(`; ${name}=`);
+//   if (parts.length === 2) return parts.pop().split(';').shift();
+// }
 
-App.onBrowserStateChange = (event) => {
-  // console.warn(event)
-  L.log("browser-state-change", { from: event.oldState, to: event.newState });
-  if (event.newState == "terminated") {
-    let stateData = {};
-    if (App.inst && App.inst.logger)
-      stateData.logger = {
-        username: App.inst.logger.username,
-        seq: App.inst.logger.seq,
-        sessid: App.inst.logger.sessid,
-        enabled: App.inst.logger.enabled,
-      };
-    stateData.map = Core.compress(
-      App.inst.canvas.cy.elements().jsons()
-    );
-    let cmapAppStateData = JSON.stringify(Object.assign({}, stateData));
-    localStorage.setItem(App.name, cmapAppStateData);
-  }
-};
+// App.onBrowserStateChange = (event) => {
+//   // console.warn(event)
+//   L.log("browser-state-change", { from: event.oldState, to: event.newState });
+//   if (event.newState == "terminated") {
+//     let stateData = {};
+//     if (App.inst && App.inst.logger)
+//       stateData.logger = {
+//         username: App.inst.logger.username,
+//         seq: App.inst.logger.seq,
+//         sessid: App.inst.logger.sessid,
+//         enabled: App.inst.logger.enabled,
+//       };
+//     stateData.map = Core.compress(
+//       App.inst.canvas.cy.elements().jsons()
+//     );
+//     let cmapAppStateData = JSON.stringify(Object.assign({}, stateData));
+//     localStorage.setItem(App.name, cmapAppStateData);
+//   }
+// };
 
-App.onCanvasEvent = (canvasId, event, data) => {
-  // console.log(canvasId, event, data);
+App.onCanvasEvent = (canvasId, event, data) => { 
+  // console.error(canvasId, event, data, CDM);
   Logger.canvasid = canvasId;
   let skip = [ // for canvas data
     'camera-reset', 
@@ -1340,7 +1446,10 @@ App.onCanvasEvent = (canvasId, event, data) => {
   if (event.includes("connect"))
     L.compare(dataMap, App.inst.canvas, CDM.conceptMap.canvas);
   L.log(event, data, dataMap);
-  // App.collab("command", event, canvasId, data);
+
+  // forward event to collaboration interface
+  App.collab?.send("command", event, data);
+
 };
 
 App.openKit = () => {
@@ -1370,7 +1479,7 @@ App.openKit = () => {
     canvas.toolbar.tools
       .get(KitBuildToolbar.NODE_CREATE)
       .setActiveDirection(CDM.conceptMap.map.direction);
-    canvas.canvasTool.tools
+    canvas.toolCanvas.tools
       .get(KitBuildCanvasTool.DISTANCECOLOR)
       .setConceptMap(CDM.conceptMap.canvas);
     canvas.applyElementStyle();
@@ -1409,6 +1518,22 @@ App.openKit = () => {
 
     resolve();
   });
+}
+
+App.postOpenKit = () => {
+  let remember = $('#concept-map-open-dialog input#inputrememberme:checked').val();
+  let userid = $('#concept-map-open-dialog input[name="userid"]').val().trim();
+  if (remember) Core.instance().cookie().set('userid', userid);
+  else Core.instance().cookie().unset('userid');
+  App.timer = new Timer('.app-navbar .timer');
+  App.timer.on();
+  App.lastFeedback = App.timer.ts;
+  App.inst.generateMapState().then(mapState => { // console.warn(mapState);
+    App.collab.send("push-map-state", mapState);
+  });
+
+  if (App.inst.config.get('enablecollab'))
+    App.collab?.registerUser(userid);
 }
 
 /**
@@ -1559,15 +1684,9 @@ App.parseOptions = (options, defaultValueIfNull) => {
   return option;
 };
 
-App.getCookie = (cname) => {
-  let name = cname + "=";
-  let ca = document.cookie.split(';');
-  for(let i = 0; i < ca.length; i++) {
-    let c = ca[i];
-    while (c.charAt(0) == ' ') c = c.substring(1);
-    if (c.indexOf(name) == 0) return c.substring(name.length, c.length);
-  }
-  return "";
+App.getCookie = (name) => {
+  let value = Core.instance().cookie().getCookie(name);
+  return value;
 }
 
 App.duration = (seconds) => {
@@ -1608,284 +1727,6 @@ App.download = (filename, text) => {
   document.body.removeChild(element);
 }
 
-class PDFApp {
-  constructor(container, options) {
-    PDFApp.currentPage = 3,
-    PDFApp.pdf = null,
-    PDFApp.zoom = 1
-    this.container = container;
-    this.settings = Object.assign({
-      pdfData: atob(
-        'JVBERi0xLjcKCjEgMCBvYmogICUgZW50cnkgcG9pbnQKPDwKICAvVHlwZSAvQ2F0YWxvZwog' +
-        'IC9QYWdlcyAyIDAgUgo+PgplbmRvYmoKCjIgMCBvYmoKPDwKICAvVHlwZSAvUGFnZXMKICAv' +
-        'TWVkaWFCb3ggWyAwIDAgMjAwIDIwMCBdCiAgL0NvdW50IDEKICAvS2lkcyBbIDMgMCBSIF0K' +
-        'Pj4KZW5kb2JqCgozIDAgb2JqCjw8CiAgL1R5cGUgL1BhZ2UKICAvUGFyZW50IDIgMCBSCiAg' +
-        'L1Jlc291cmNlcyA8PAogICAgL0ZvbnQgPDwKICAgICAgL0YxIDQgMCBSIAogICAgPj4KICA+' +
-        'PgogIC9Db250ZW50cyA1IDAgUgo+PgplbmRvYmoKCjQgMCBvYmoKPDwKICAvVHlwZSAvRm9u' +
-        'dAogIC9TdWJ0eXBlIC9UeXBlMQogIC9CYXNlRm9udCAvVGltZXMtUm9tYW4KPj4KZW5kb2Jq' +
-        'Cgo1IDAgb2JqICAlIHBhZ2UgY29udGVudAo8PAogIC9MZW5ndGggNDQKPj4Kc3RyZWFtCkJU' +
-        'CjcwIDUwIFRECi9GMSAxMiBUZgooSGVsbG8sIHdvcmxkISkgVGoKRVQKZW5kc3RyZWFtCmVu' +
-        'ZG9iagoKeHJlZgowIDYKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDEwIDAwMDAwIG4g' +
-        'CjAwMDAwMDAwNzkgMDAwMDAgbiAKMDAwMDAwMDE3MyAwMDAwMCBuIAowMDAwMDAwMzAxIDAw' +
-        'MDAwIG4gCjAwMDAwMDAzODAgMDAwMDAgbiAKdHJhaWxlcgo8PAogIC9TaXplIDYKICAvUm9v' +
-        'dCAxIDAgUgo+PgpzdGFydHhyZWYKNDkyCiUlRU9G')
-    }, options);
-    this.init();
-    this.handleEvent();
-  }
-
-  static instance(container, options) {
-    if (!PDFApp.inst)
-      PDFApp.inst = new PDFApp(container, options);
-    return PDFApp.inst;
-  }
-  
-  init() {
-    if (!pdfjsLib.getDocument || !pdfjsViewer.PDFViewer) {
-      // eslint-disable-next-line no-alert
-      alert("Please build the pdfjs-dist library using\n `gulp dist-install`");
-    }
-
-    pdfjsLib.GlobalWorkerOptions.workerSrc = "pdf.worker.min.mjs";
-  
-    const container = $('#viewerContainer').get(0);
-    const CMAP_URL = "cmaps/";
-    const CMAP_PACKED = true;
-  
-    const DEFAULT_URL = Core.instance().config('basefileurl') + 'files/helloworld.pdf';
-  
-    const ENABLE_XFA = true;
-    const SEARCH_FOR = "x86"; // try "Mozilla";
-  
-    const SANDBOX_BUNDLE_SRC = new URL(
-      "pdf.sandbox.min.mjs",
-      window.location
-    );
-    const eventBus = new pdfjsViewer.EventBus();
-    // eventBus._dispatchToDOM = true;
-  
-    // (Optionally) enable hyperlinks within PDF files.
-    this.pdfLinkService = new pdfjsViewer.PDFLinkService({
-      eventBus,
-    });
-  
-    // (Optionally) enable find controller.
-    this.pdfFindController = new pdfjsViewer.PDFFindController({
-      eventBus,
-      linkService: this.pdfLinkService,
-      updateMatchesCountOnProgress: false
-    });
-  
-    // (Optionally) enable scripting support.
-    this.pdfScriptingManager = new pdfjsViewer.PDFScriptingManager({
-      eventBus,
-      sandboxBundleSrc: SANDBOX_BUNDLE_SRC,
-    });
-  
-    this.pdfViewer = new pdfjsViewer.PDFViewer({
-      container,
-      eventBus,
-      linkService: this.pdfLinkService,
-      findController: this.pdfFindController,
-      scriptingManager: this.pdfScriptingManager,
-    });
-  
-    this.pdfLinkService.setViewer(this.pdfViewer);
-    this.pdfScriptingManager.setViewer(this.pdfViewer);
-    this.downloadManager = new pdfjsViewer.DownloadManager();
-    // console.log(new pdfjsViewer.DownloadManager);
-
-    eventBus.on("pagesinit", () => {
-      // We can use pdfViewer now, e.g. let's change default scale.
-      this.pdfViewer.currentScaleValue = "page-width";
-      $(`${this.container} .page-info`).html(`${this.pdfViewer.currentPageNumber}/${this.pdfViewer.pdfDocument.numPages}`);
-      // this.pdfViewer.currentScaleValue = 2;
-      // console.log(this.settings);
-      this.pdfViewer.currentPageNumber = Number(this.settings.page) ?? 1;
-      this.query = this.settings.keyword;
-      this.dispatchEvent("again", false);
-      // console.log(this.pdfViewer, this.pdfLinkService);
-      // this.pdfViewer.scrollPageIntoView({
-      //   pageNumber: 3
-      // });
-      // this.pdfViewer.nextPage();
-      // this.pdfLinkService.goToPage(2);
-      // console.log("X");
-      // We can try searching for things.
-      // if (SEARCH_FOR) {
-      //   eventBus.dispatch("find", { type: "VM", query: SEARCH_FOR });
-      // }
-      // setTimeout(() => {
-      //   this.pdfLinkService.goToPage(2);
-      //   console.warn("X");
-      //   // $("#viewerContainer").scrollTop = 100;
-      //   // $("#viewer").scrollTop = 300;
-      // }, 1500);
-      // // this.pdfViewer.scrollPageIntoView({pageNumber: 4});
-      // console.log(this.pdfViewer);
-    });
-
-    eventBus.on("pagechanging", (e) => { // console.log(e);
-      $(`${this.container} .page-info`).html(`${e.pageNumber}/${this.pdfViewer.pdfDocument.numPages}`);
-    });
-
-    eventBus.on("updatefindcontrolstate", (e) => { console.log(e, $(`${this.container} .bt-next`), $(`${this.container} .bt-prev`));
-      $(`${this.container} .search-status`).html(`${e.matchesCount.current}/${e.matchesCount.total}`);
-      if (e.matchesCount.current < e.matchesCount.total) $(`${this.container} .bt-next`).prop('disabled', false);
-      else $(`${this.container} .bt-next`).prop('disabled', true);
-      if (e.matchesCount.current > 1) $(`${this.container} .bt-prev`).prop('disabled', false);
-      else $(`${this.container} .bt-prev`).prop('disabled', true);
-    })
-
-    eventBus.on("updatefindmatchescount", (e) => { // console.log(e);
-      $(`${this.container} .search-status`).html(`${e.matchesCount.current}/${e.matchesCount.total}`);
-      if (e.matchesCount.total > 1) $(`${this.container} .bt-next`).prop('disabled', false);
-      else $(`${this.container} .bt-next`).prop('disabled', true);
-      $(`${this.container} .bt-prev`).prop('disabled', true);
-    });
-
-
-    
-    // Loading document.
-    this.loadingTask = pdfjsLib.getDocument({
-      // url: DEFAULT_URL,
-      data: this.settings.pdfData,
-      // cMapUrl: CMAP_URL,
-      // cMapPacked: CMAP_PACKED,
-      // enableXfa: ENABLE_XFA,
-    });
-
-    this.eventBus = eventBus;
-  
-    PDFApp.modal = UI.modal(this.container, {width: this.settings.width, height: this.settings.height, hideElement: '.bt-close'}).show();
-    UI.makeResizable(this.container, {handle: '.bt-resize'});
-    UI.makeDraggable(this.container, {handle: '.drag-handle'});
-  };
-
-  async load() {
-    const pdfDocument = await this.loadingTask.promise;
-    // Document loaded, specifying document for the viewer and
-    // the (optional) linkService.
-    this.pdfViewer.setDocument(pdfDocument);
-    // console.error(this.pdfViewer);
-    // this.pdfViewer.scrollPageIntoView({pageNumber: 2});
-    this.pdfLinkService.setDocument(pdfDocument, null);
-    // this.pdfLinkService.goToPage(2);
-  }
-
-  dispatchEvent(type, findPrev = false) {
-    this.eventBus.dispatch("find", {
-      source: this,
-      type,
-      query: this.query,
-      caseSensitive: false,
-      entireWord: false,
-      highlightAll: true,
-      findPrevious: findPrev,
-      matchDiacritics: true
-    });
-  }
-
-  handleEvent() {
-    $(`${this.container} .input-keyword`).on('keyup', e => {
-      this.query = $(`${this.container} .input-keyword`).val().trim();
-      if (this.query.length == 0) return; 
-      if (e.code == "Enter") {
-        this.dispatchEvent("again", e.shiftKey);
-      }
-      L.log("reference-search-enter", this.settings.fileName);
-    });
-    $(`${this.container} .bt-zoom-in`).on('click', e => {
-      this.pdfViewer.increaseScale();
-    });
-    $(`${this.container} .bt-zoom-out`).on('click', e => {
-      this.pdfViewer.decreaseScale();
-    });
-    $(`${this.container} .bt-page-width`).on('click', e => {
-      this.pdfViewer.currentScaleValue = 'page-width';
-    });
-    $(`${this.container} .bt-page-height`).on('click', e => {
-      this.pdfViewer.currentScaleValue = 'page-height';
-    });
-    $(`${this.container} .bt-zoom-auto`).on('click', e => {
-      this.pdfViewer.currentScaleValue = 'auto';
-    });
-    $(`${this.container} .bt-find`).on('click', e => {
-      this.query = $(`${this.container} .input-keyword`).val().trim();
-      if (this.query.length == 0) return; 
-      this.dispatchEvent("again", e.shiftKey);
-      L.log("reference-search-find", this.settings.fileName);
-    });
-    $(`${this.container} .bt-next`).on('click', e => {
-      this.query = $(`${this.container} .input-keyword`).val().trim();
-      if (this.query.length == 0) return; 
-      this.dispatchEvent("again", false);
-      L.log("reference-search-next", this.settings.fileName);
-    });
-    $(`${this.container} .bt-prev`).on('click', e => {
-      this.query = $(`${this.container} .input-keyword`).val().trim();
-      if (this.query.length == 0) return; 
-      this.dispatchEvent("again", true);
-      L.log("reference-search-prev", this.settings.fileName);
-    });
-    $(`${this.container} .bt-close-search`).click((e) => {
-      console.log($(e.currentTarget).parents(`${this.container}`));
-      $(e.currentTarget).parents(`${this.container}`).find('.bt-search').dropdown('toggle')
-    });
-    $(`${this.container}`).bind('mousewheel', (e) => { // console.log(e);
-      if (e.ctrlKey) {
-        if (e.originalEvent.wheelDelta > 0) {
-            this.pdfViewer.currentScale += 0.02;
-        } else this.pdfViewer.currentScale -= 0.02;
-        e.preventDefault();
-      }
-    });
-    $(`${this.container} .bt-download`).on('click', async e => { console.log(e);
-      // this.eventBus.dispatch("download", {
-      //   source: this
-      // });
-      let data;
-      // try {
-        // if (this.downloadComplete) {
-          data = await this.pdfViewer.pdfDocument.getData();
-          console.log(this.pdfViewer, pdfjsLib);
-        // }
-      // } catch {}
-      this.downloadManager.download(data, null, this.settings.fileName);
-      L.log("reference-download", this.settings.fileName);
-      //, this._downloadUrl, this._docFilename, options);
-    });
-    $(document).on('keydown', (e) => { // console.log(e);
-      if ( e.ctrlKey && ( e.key === 'f' ) ){
-        if ($(`${this.container}`).is(":visible")) {
-          e.preventDefault();
-          $(`${this.container}`).find('.bt-search').trigger('click');
-          let input = $(`${this.container} .input-keyword`).focus();
-          // console.log(input);
-          input[0].selectionStart = 0;
-          input[0].selectionEnd = input.val().length;
-        }
-      }
-    });
-  }
-
-  goToPage(page) {
-    this.pdfViewer.currentPageNumber = Number(page);
-  }
-
-  search(keyword) {
-    this.query = keyword;
-    this.dispatchEvent("again", false);
-    $(`${this.container} input.input-keyword`).val(keyword);
-    // console.log($(`${this.container} input.input-keyword`), keyword);
-  }
-}
-
-// $(() => {
-
-// });
-
-
 // App.enableNavbarButton = (enabled = true) => {
 //   $("#recompose-readcontent button").prop("disabled", !enabled);
 //   $("#recompose-saveload button").prop("disabled", !enabled);
@@ -1897,39 +1738,3 @@ class PDFApp {
 //     tool.enable(enabled);
 //   });
 // };
-
-
-class KitBuildReferenceTool extends KitBuildCanvasTool {
-  constructor(canvas, options) {
-    super(
-      canvas,
-      Object.assign(
-        {
-          showOn: KitBuildCanvasTool.SH_CONCEPT,
-          color: "#1174b6",
-          icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-book" viewBox="-5 -5 26 26"><path d="M1 2.828c.885-.37 2.154-.769 3.388-.893 1.33-.134 2.458.063 3.112.752v9.746c-.935-.53-2.12-.603-3.213-.493-1.18.12-2.37.461-3.287.811zm7.5-.141c.654-.689 1.782-.886 3.112-.752 1.234.124 2.503.523 3.388.893v9.923c-.918-.35-2.107-.692-3.287-.81-1.094-.111-2.278-.039-3.213.492zM8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.105A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .707.455c.882-.4 2.303-.881 3.68-1.02 1.409-.142 2.59.087 3.223.877a.5.5 0 0 0 .78 0c.633-.79 1.814-1.019 3.222-.877 1.378.139 2.8.62 3.681 1.02A.5.5 0 0 0 16 13.5v-11a.5.5 0 0 0-.293-.455c-.952-.433-2.48-.952-3.994-1.105C10.413.809 8.985.936 8 1.783"/></svg>',
-          gridPos: { x: 0, y: 1 },
-        },
-        options
-      )
-    );
-    this.contextPosition = { x: 0, y: 0 };
-    this.contextRenderedPosition = { x: 0, y: 0 };
-  }
-
-  showOn(what, node) {
-    // console.warn(node, node ? node.data() : undefined);
-    if (node)
-      return this._showOn(what) && node.data('resid');
-    return this._showOn(what, node);
-  }
-
-  async action(event, e, nodes) {
-    // let data = nodes[0].data();
-    // console.log(data);
-    if (this.settings.actionCallback)
-      this.settings.actionCallback?.onReferenceAction(nodes);
-
-    return;
-  }
-}

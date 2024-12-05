@@ -1,30 +1,19 @@
 class KitBuildToolbarTool {
   constructor(canvas, options) {
-    this.canvas = canvas
+    this.canvas = canvas;
     this.settings = Object.assign({
       icon: "app",
       priority: 1,
       stack: 'center', // or 'start' or 'end'
       visible: true
-    }, options)
-    this.eventListeners = new Map();
+    }, options);
     this.evtListeners = new Set();
   }
 
-  attachEventListener(id, listener) {
-    return this.eventListeners.set(id, listener)
-  }
-
-  detachEventListener(id, listener) {
-    return this.eventListeners.delete(id)
-  }
-
-  broadcastEvent(event, data, options) {
-    this.eventListeners.forEach((listener, k, map) => {
-      if (listener != null && typeof listener.onToolbarToolEvent == 'function')
-        listener.onToolbarToolEvent(this.canvas.canvasId, event, data, options)
-    })
-    this.evtListeners.forEach(listener => listener(this.canvas.canvasId, event, data, options))
+  raiseEvent(event, data) { // console.log(this.evtListeners, event, data);
+    // forward tool event to toolbar
+    this.evtListeners.forEach(listener => 
+      listener(event, data));
   }
 
   on(what, listener) {
@@ -349,7 +338,7 @@ class NodeCreationTool extends KitBuildToolbarTool {
           }
         }
       })
-      this.broadcastEvent("concept-color-change", {
+      this.raiseEvent("concept-color-change", {
         prior: pnodes,
         later: tnodes
       });
@@ -400,9 +389,9 @@ class NodeCreationTool extends KitBuildToolbarTool {
           })
           Promise.all(centroidize).then(() => { 
             this.canvas.cy.nodes('[type="link"]').data('limit', 1);
-            this.canvas.canvasTool.clearCanvas().clearIndicatorCanvas()
+            this.canvas.toolCanvas.clearCanvas().clearIndicatorCanvas()
             let later = this.canvas.cy.elements().jsons()
-            this.broadcastEvent('convert-type', {
+            this.raiseEvent('convert-type', {
               from: from,
               to: to,
               prior: prior,
@@ -441,10 +430,10 @@ class NodeCreationTool extends KitBuildToolbarTool {
             centroidize.push(KitBuildCanvas.centroidizeLinkPosition(link)))
           Promise.all(centroidize).then(() => { 
             this.canvas.cy.nodes('[type="link"]').data('limit', 9);
-            this.canvas.canvasTool.clearCanvas().clearIndicatorCanvas()
+            this.canvas.toolCanvas.clearCanvas().clearIndicatorCanvas()
 
             let later = this.canvas.cy.elements().jsons()
-            this.broadcastEvent('convert-type', {
+            this.raiseEvent('convert-type', {
               from: from,
               to: to,
               prior: prior,
@@ -731,20 +720,20 @@ class UndoRedoTool extends KitBuildToolbarTool {
       if (command && command.undo) { console.warn(command)
         command.undo(this.canvas, command.undoData)
         this.redoStack.push(command)
-        this.canvas.canvasTool.clearCanvas().clearIndicatorCanvas()
+        this.canvas.toolCanvas.clearCanvas().clearIndicatorCanvas()
       }
       this.updateStacksStateButton()
-      this.broadcastEvent(`undo-${command.event}`, command.undoData)
+      this.raiseEvent(`undo-${command.event}`, command.undoData)
     })
     this.handleEvent('click', '.bt-redo', (e) => { // console.log('Redo')
       let command = this.redoStack.length ? this.redoStack.pop() : null;
       if (command && command.redo) { console.warn(command)
         command.redo(this.canvas, command.redoData)
         this.undoStack.push(command)
-        this.canvas.canvasTool.clearCanvas().clearIndicatorCanvas()
+        this.canvas.toolCanvas.clearCanvas().clearIndicatorCanvas()
       }
       this.updateStacksStateButton()
-      this.broadcastEvent(`redo-${command.event}`, command.redoData)
+      this.raiseEvent(`redo-${command.event}`, command.redoData)
     })
   }
 
@@ -823,7 +812,7 @@ class CameraTool extends KitBuildToolbarTool {
           data-tippy-content="">
           <i class="bi bi-arrow-counterclockwise"></i></button>
       </div>`
-    return controlHtml
+    return controlHtml;
   }
 
   handle() {
@@ -864,7 +853,7 @@ class CameraTool extends KitBuildToolbarTool {
         duration: this.settings.duration,
         complete: () => resolve()
       });
-      this.broadcastEvent(zoomIn ? 'camera-zoom-in' : 'camera-zoom-out', {level: level})
+      this.raiseEvent(zoomIn ? 'camera-zoom-in' : 'camera-zoom-out', {level: level})
     })
   };
 
@@ -878,7 +867,7 @@ class CameraTool extends KitBuildToolbarTool {
         },
         complete: () => resolve()
       }, options))
-      this.broadcastEvent('camera-fit')
+      this.raiseEvent('camera-fit')
     })
   }
 
@@ -889,7 +878,7 @@ class CameraTool extends KitBuildToolbarTool {
         duration: this.settings.duration,
         complete: () => resolve()
       }, options))
-      this.broadcastEvent('camera-center')
+      this.raiseEvent('camera-center')
     })
   }
 
@@ -902,7 +891,7 @@ class CameraTool extends KitBuildToolbarTool {
         duration: this.settings.duration,
         complete: () => resolve()
       }, options))
-      this.broadcastEvent('camera-reset')
+      this.raiseEvent('camera-reset')
     });
   }
 
@@ -913,7 +902,7 @@ class CameraTool extends KitBuildToolbarTool {
         duration: this.settings.duration,
         complete: () => resolve()
       }, options));
-      this.broadcastEvent('camera-pan', node.json())
+      this.raiseEvent('camera-pan', node.json())
     })
   }
 
@@ -922,7 +911,7 @@ class CameraTool extends KitBuildToolbarTool {
     await this.panToNode(`#${nodeId}`, { duration: 200 });
     this.cy.nodes().unselect();
     this.cy.nodes(`#${nodeId}`).select();
-    this.broadcastEvent('camera-focus', node.json());
+    this.raiseEvent('camera-focus', node.json());
   }
 
 }
@@ -1033,7 +1022,7 @@ class UtilityTool extends KitBuildToolbarTool {
           duration: this.settings.duration
         });
         this.updateSearchToolbarUI();
-        this.broadcastEvent("toolbar-next-search-item", {
+        this.raiseEvent("toolbar-next-search-item", {
           node: nextNode.json(), 
           index: this.searchItemIndex
         })
@@ -1050,7 +1039,7 @@ class UtilityTool extends KitBuildToolbarTool {
           duration: this.settings.duration
         });
         this.updateSearchToolbarUI()
-        this.broadcastEvent("toolbar-prev-search-item", {
+        this.raiseEvent("toolbar-prev-search-item", {
           node: prevNode.json(),
           index: this.searchItemIndex
         })
@@ -1058,10 +1047,11 @@ class UtilityTool extends KitBuildToolbarTool {
     });
 
     this.handleEvent('click', '.bt-screen-capture', (e) => {
+      this.canvas.cy.nodes().removeClass('peer-select');
       let png64 = this.canvas.cy.png( { full: true, scale: 2 });
-      this.showImageDialog(png64)
-      this.broadcastEvent('screen-capture')
-      e.stopPropagation()
+      this.showImageDialog(png64);
+      this.raiseEvent('screen-capture');
+      e.stopPropagation();
     });
 
     this.handleEvent('click', '.bt-clear-canvas', (e) => {
@@ -1074,10 +1064,10 @@ class UtilityTool extends KitBuildToolbarTool {
 
         let elements = this.canvas.cy.elements().jsons() // for undo command
         this.canvas.cy.elements().remove()
-        this.canvas.canvasTool.clearCanvas().clearIndicatorCanvas()
+        this.canvas.toolCanvas.clearCanvas().clearIndicatorCanvas()
         
         // broadcast for others
-        this.broadcastEvent('clear-canvas', elements)
+        this.raiseEvent('clear-canvas', elements)
         
         // post undo-redo command
         this.canvas.toolbar.tools.get(KitBuildToolbar.UNDO_REDO).post('clear-canvas', {
@@ -1143,7 +1133,7 @@ class UtilityTool extends KitBuildToolbarTool {
     this.updateSearchToolbarUI();
     let foundNodes = []
     Array.from(this.foundNodes.values()).forEach(n => foundNodes.push(n.json()))
-    this.broadcastEvent("toolbar-search", {
+    this.raiseEvent("toolbar-search", {
       keyword: keyword,
       nodes: foundNodes
     })
@@ -1160,11 +1150,11 @@ class UtilityTool extends KitBuildToolbarTool {
 
   showImageDialog(png64) {
     
-    let maxHeight = `calc(${$(`#${this.canvas.canvasId}`).height()}px - 4rem)` // console.log(maxHeight)
+    let maxHeight = `calc(${$(`#${this.canvas.canvasId}`).height()}px)` // console.log(maxHeight)
     let maxWidth = `calc(${$(`#${this.canvas.canvasId}`).width()}px - 16rem)` // console.log(maxHeight)
-    let imageMaxWidth = `calc(${$(`#${this.canvas.canvasId}`).width()}px - 16rem - 6px)` // console.log(maxHeight)
+    let imageMaxWidth = `calc(${$(`#${this.canvas.canvasId}`).width()}px - 32rem)` // console.log(maxHeight)
     let dialogHtml = `<div class="card border-secondary kb-dialog kb-image-dialog shadow" style="max-width: ${maxWidth}; max-height: ${maxHeight}; position: absolute; top: 0; display: none">
-      <div class="card-body text-center scroll-y">
+      <div class="card-body text-center overflow-auto">
         <span class="bg-checker d-flex align-items-center justify-content-center">
           <img class="canvas-export" style="max-width: ${imageMaxWidth};" src="${png64}">
         </span>
@@ -1205,7 +1195,7 @@ class UtilityTool extends KitBuildToolbarTool {
             a.href = png64;
             a.download = 'concept-map.png';
             a.click();
-            this.broadcastEvent('download-screen-capture')
+            this.raiseEvent('download-screen-capture')
           });
         }
       })
@@ -1273,7 +1263,7 @@ class CanvasStateTool extends KitBuildToolbarTool {
         let state = localStorage.getItem("state") // console.log(state)
         this.canvas.cy.elements().remove()
         this.canvas.cy.add(JSON.parse(state).jsons)
-        this.canvas.canvasTool.clearCanvas()
+        this.canvas.toolCanvas.clearCanvas()
         this.canvas.toolbar.tools.get(KitBuildToolbar.CAMERA).fit()
         this.canvas.toolbar.tools.get(KitBuildToolbar.NODE_CREATE)
         this.canvas.applyElementStyle()
@@ -1374,7 +1364,7 @@ class ShareTool extends KitBuildToolbarTool {
           $('.kb-share-dialog .bt-paste').off('click').on('click', (e) => { // console.log(e)
             navigator.clipboard.readText().then(clipboard => { // console.log(clipboard)
               $('.kb-share-dialog .encoded-data').val(clipboard);
-              this.broadcastEvent('paste-canvas-data', clipboard)
+              this.raiseEvent('paste-canvas-data', clipboard)
             })
           })
 
@@ -1386,7 +1376,7 @@ class ShareTool extends KitBuildToolbarTool {
               setTimeout(() => {
                 $(e.currentTarget).html('<i class="bi bi-files"></i> <span class="dialog-title">Copy</span>');
               }, 1500)
-              this.broadcastEvent('copy-canvas-data', encodedData)
+              this.raiseEvent('copy-canvas-data', encodedData)
               e.preventDefault()
               e.stopPropagation()
             } else {
@@ -1397,7 +1387,7 @@ class ShareTool extends KitBuildToolbarTool {
                   this.canvas.reset().cy.add(cyData)
                   this.canvas.applyElementStyle()
                   this.canvas.toolbar.tools.get(KitBuildToolbar.NODE_CREATE).setActiveDirection(canvasData.direction)
-                  this.broadcastEvent('apply-canvas-data', cyData, { compress: true })
+                  this.raiseEvent('apply-canvas-data', cyData, { compress: true })
                   setTimeout(() => {
                     KitBuildUI.dialog("Concept map canvas data has been applied.", this.canvas.canvasId, {
                       icon: 'check-circle-fill',
@@ -1558,7 +1548,7 @@ class LayoutTool extends KitBuildToolbarTool {
         tile: true,
         packComponents: true,
         animationDuration: 0,
-        ready: () => this.canvas.canvasTool.clearCanvas().clearIndicatorCanvas(),
+        ready: () => this.canvas.toolCanvas.clearCanvas().clearIndicatorCanvas(),
         stop: () => {
           // shift to previous center position
           let bb = nodes.boundingBox()
@@ -1583,8 +1573,8 @@ class LayoutTool extends KitBuildToolbarTool {
                 data.forEach(n => canvas.cy.nodes(`#${n.id}`).position(n.position))
               }
             })
-          this.broadcastEvent('layout-elements', { prior: prior, later: later })
-          this.canvas.canvasTool.clearCanvas().clearIndicatorCanvas()
+          this.raiseEvent('layout-elements', { prior: prior, later: later })
+          this.canvas.toolCanvas.clearCanvas().clearIndicatorCanvas()
         },
       }).run()
     }
@@ -1708,7 +1698,6 @@ class KitBuildToolbar {
     this.canvas = canvas
     this.settings = Object.assign({}, options)
     this.tools = new Map()
-    this.eventListeners = new Map();
     this.evtListeners = new Set();
   }
 
@@ -1716,28 +1705,26 @@ class KitBuildToolbar {
     return new KitBuildToolbar(canvas, options)
   }
 
-  addTool(id, tool) {
-    this.tools.set(id, tool)
-    if (typeof tool.attachEventListener == 'function')
-      tool.attachEventListener("toolbar", this)
-    this.broadcastEvent('add-tool', id)  
+  addTool(id, tool) { // console.error(id, tool);
+    this.tools.set(id, tool);
+    tool.on('event', this.raiseEvent.bind(this));
+    this.raiseEvent('add-tool', id)  ;
   }
 
-  removeTool(id) {
-    this.tools.delete(id)
-    if (typeof tool.detachEventListener == 'function') 
-      tool.detachEventListener("toolbar")
-    this.broadcastEvent('remove-tool', id)
+  removeTool(id) { // console.error(id, tool);
+    this.tools.delete(id);
+    tool.off('event', this.raiseEvent.bind(this));
+    this.raiseEvent('remove-tool', id);
   }
 
   hideTool(id) {
     $(`#${this.canvas.canvasId}-${id}`).hide()
-    this.broadcastEvent('hide-tool', id)
+    this.raiseEvent('hide-tool', id)
   }
 
   showTool(id) {
     $(`#${this.canvas.canvasId}-${id}`).show()
-    this.broadcastEvent('show-tool', id)
+    this.raiseEvent('show-tool', id)
   }
 
   render() { // render tools' controls on toolbar
@@ -1763,65 +1750,36 @@ class KitBuildToolbar {
     $(`#${this.canvas.canvasId}`).siblings('.kb-toolbar').find('.right-stack').html(rightStack);
     UI.broadcast("toolbar-render", this);
     tools.forEach((v, k, map) => v.postRender());
-    this.broadcastEvent('render', Array.from(this.tools.keys()));
+    this.raiseEvent('render', Array.from(this.tools.keys()));
     // register all tools' event handlers
     this.tools.forEach((v, k, map) => { if (v.handle) v.handle() });
-    this.broadcastEvent('handle', Array.from(this.tools.keys()));
+    this.raiseEvent('handle', Array.from(this.tools.keys()));
   }
 
-  attachEventListener(id, listener) {
-    // also forward-attach the listeners to tools
-    this.tools.forEach((v, k, map) => {
-      if (typeof v.attachEventListener == 'function')
-        v.attachEventListener(id, listener)
-    })
-    return this.eventListeners.set(id, listener)
-  }
-
-  detachEventListener(id) {
-    this.tools.forEach((v, k, map) => {
-      if (typeof v.detachEventListener == 'function')
-        v.detachEventListener(id)
-    })
-    return this.eventListeners.delete(id)
-  }
-
-  broadcastEvent(evt, data, options) { // console.warn(evt, data)
-    this.eventListeners.forEach((l, k, map) => {
-      if (typeof l.onToolbarEvent == 'function')
-        l.onToolbarEvent(this.canvas.canvasId, evt, data, options)
-    })
-    this.evtListeners.forEach(listener => listener(this.canvas.canvasId, evt, data, options))
-  }
+  raiseEvent(evt, data) { // console.error(evt, data);
+    // forward toolbar-tool event to event listeners
+    this.evtListeners.forEach(listener => listener(evt, data));
+    return this;
+  };
 
   on(what, listener) {
-    switch(what) {
-      case 'event':
-        if (typeof listener == 'function') {
-          this.evtListeners.add(listener)
-          this.tools.forEach(tool => tool.on('event', listener))
+    switch (what) {
+      case "event":
+        if (typeof listener == "function") {
+          this.evtListeners.add(listener);
         }
         break;
     }
   }
 
   off(what, listener) {
-    switch(what) {
-      case 'event':
-        this.evtListeners.delete(listener)
-        this.tools.forEach(tool => tool.off('event', listener))
+    switch (what) {
+      case "event":
+        if (typeof listener == "function") {
+          this.evtListeners.delete(listener);
+        }
         break;
     }
   }
-
-  /** 
-   * Event listener handlers
-   * */ 
-
-  onToolbarToolEvent(canvasId, evt, data, options) {
-    // currently do nothing related to this toolbar
-    // when anything happens to toolbar tool
-  }
-
 
 }

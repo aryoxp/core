@@ -1,4 +1,7 @@
 class Analyzer {
+
+  static VERBOSE = false;
+
   static composePropositions(conceptMap) {
     if (!conceptMap) return;
 
@@ -6,7 +9,7 @@ class Analyzer {
     let cMap = conceptMap;
     let gMap = conceptMap.conceptMap ? conceptMap.conceptMap : conceptMap;
 
-    // console.warn(cMap, gMap);
+    if (Analyzer.VERBOSE) console.warn("Analyzer: conceptmap: ", cMap, "goalmap", gMap);
 
     let concepts = new Map(
       gMap.concepts.map((concept) => [concept.cid, concept])

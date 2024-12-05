@@ -13,8 +13,6 @@ class KitBuildCanvas {
     // Cache for concept and link ID
     this._lastConceptId = 0;
     this._lastLinkId = 0;
-
-    this.toolbar = KitBuildToolbar.instance(this, this.settings)
     
     // start CytoscapeJS canvas
     this.cy = cytoscape({
@@ -27,18 +25,14 @@ class KitBuildCanvas {
     });
 
     // start canvas overlay tool
-    this.canvasTool = KitBuildCanvasToolCanvas.instance(this, this.settings)
+    this.toolCanvas = KitBuildToolCanvas.instance(this, this.settings);
+    this.toolbar = KitBuildToolbar.instance(this, this.settings);
 
-    // listen to onToolbarToolEvent(evt, data)
-    // listen to onToolbarEvent(evt, data)
-    this.toolbar.attachEventListener("canvas", this)
+    this.toolCanvas.on('event', this.raiseEvent.bind(this));
+    this.toolbar.on('event', this.raiseEvent.bind(this));
 
-    // listen to onCanvasToolEvent(evt, data)
-    this.canvasTool.attachEventListener("canvas", this)
-
-    // listeners for this canvas' events
-    this.eventListeners = new Map()
-    this.evtListeners = new Set()
+    // listeners storage for this canvas' events
+    this.evtListeners = new Set();
     
   }
 
@@ -47,23 +41,9 @@ class KitBuildCanvas {
     return new KitBuildCanvas(canvasId, options)
   }
 
-  attachEventListener(id, listener) {
-    this.toolbar.attachEventListener(id, listener)
-    this.canvasTool.attachEventListener(id, listener)
-    this.eventListeners.set(id, listener)
-  }
-
-  detachEventListener(id) {
-    this.toolbar.detachEventListener(id)
-    this.canvasTool.detachEventListener(id)
-    this.eventListeners.delete(id)
-  }
-
-  broadcastEvent(event, data) { // console.warn(event, data)
-    this.eventListeners.forEach(listener => {
-      if (listener != null && typeof listener.onCanvasEvent == 'function')
-        listener.onCanvasEvent(this.canvasId, event, data)
-    })
+  raiseEvent(event, data) { // console.warn(event, data)
+    // also behave as listeners for toolbar and toolcanvas
+    // forward event to app
     this.evtListeners.forEach(listener => listener(this.canvasId, event, data))
   }
 
@@ -72,8 +52,8 @@ class KitBuildCanvas {
       case 'event':
         if (typeof listener == 'function') {
           this.evtListeners.add(listener)
-          this.toolbar.on(what, listener)
-          this.canvasTool.on(what, listener)
+          // this.toolbar.on(what, listener)
+          // this.toolCanvas.on(what, listener)
         }
         break;
     }
@@ -85,7 +65,7 @@ class KitBuildCanvas {
       case 'event':
         this.evtListeners.delete(listener)
         this.toolbar.off(what, listener)
-        this.canvasTool.off(what, listener)
+        this.toolCanvas.off(what, listener)
         break;
     }
     return this;
@@ -126,54 +106,54 @@ class KitBuildCanvas {
     let settings = Object.assign({}, this.settings, options)
     switch(what) {
       case KitBuildCanvasTool.DELETE:
-        this.canvasTool.addTool(what, new KitBuildDeleteTool(this), 
+        this.toolCanvas.addTool(what, new KitBuildDeleteTool(this), 
           Object.assign({ gridPos: {x: 1, y: -1} }, settings))
         break;
       case KitBuildCanvasTool.DUPLICATE:
-        this.canvasTool.addTool(what, new KitBuildDuplicateTool(this), 
+        this.toolCanvas.addTool(what, new KitBuildDuplicateTool(this), 
           Object.assign({ gridPos: {x: 1, y: 1} }, settings))
         break;
       case KitBuildCanvasTool.EDIT:
-        this.canvasTool.addTool(what, new KitBuildEditTool(this), 
+        this.toolCanvas.addTool(what, new KitBuildEditTool(this), 
           Object.assign({ gridPos: {x: -1, y: -1} }, settings))
         break;
       case KitBuildCanvasTool.SWITCH:
-        this.canvasTool.addTool(what, new KitBuildSwitchTool(this), 
+        this.toolCanvas.addTool(what, new KitBuildSwitchTool(this), 
           Object.assign({ gridPos: {x: -1, y: 1} }, settings))
         break;
       case KitBuildCanvasTool.DISCONNECT:
-        this.canvasTool.addTool(what, new KitBuildDisconnectTool(this, settings))
+        this.toolCanvas.addTool(what, new KitBuildDisconnectTool(this, settings))
         break;
       case KitBuildCanvasTool.CENTROID:
-        this.canvasTool.addTool(what, new KitBuildCentroidTool(this), 
+        this.toolCanvas.addTool(what, new KitBuildCentroidTool(this), 
           Object.assign({ gridPos: {x: 0, y: 1} }, settings))
         break;
       case KitBuildCanvasTool.CREATE_CONCEPT:
-        this.canvasTool.addTool(what, new KitBuildCreateConceptTool(this, settings))
+        this.toolCanvas.addTool(what, new KitBuildCreateConceptTool(this, settings))
         break;  
       case KitBuildCanvasTool.CREATE_LINK:
-        this.canvasTool.addTool(what, new KitBuildCreateLinkTool(this, settings))
+        this.toolCanvas.addTool(what, new KitBuildCreateLinkTool(this, settings))
         break;
       case KitBuildCanvasTool.FOCUS:
-        this.canvasTool.addTool(what, new KitBuildFocusTool(this, settings))
+        this.toolCanvas.addTool(what, new KitBuildFocusTool(this, settings))
         break;
       case KitBuildCanvasTool.PROPOSITION:
-        this.canvasTool.addTool(what, new KitBuildPropositionTool(this, settings))
+        this.toolCanvas.addTool(what, new KitBuildPropositionTool(this, settings))
         break;
       case KitBuildCanvasTool.PROPAUTHOR:
-        this.canvasTool.addTool(what, new KitBuildPropositionAuthorTool(this, settings))
+        this.toolCanvas.addTool(what, new KitBuildPropositionAuthorTool(this, settings))
         break;
       case KitBuildCanvasTool.LOCK:
-        this.canvasTool.addTool(what, new KitBuildLockTool(this, settings))
+        this.toolCanvas.addTool(what, new KitBuildLockTool(this, settings))
         break;
       case KitBuildCanvasTool.UNLOCK:
-        this.canvasTool.addTool(what, new KitBuildUnlockTool(this, settings))
+        this.toolCanvas.addTool(what, new KitBuildUnlockTool(this, settings))
         break;  
       case KitBuildCanvasTool.DISTANCECOLOR:
-        this.canvasTool.addTool(what, new KitBuildDistanceColorTool(this, settings));
+        this.toolCanvas.addTool(what, new KitBuildDistanceColorTool(this, settings));
         break;
       case KitBuildCanvasTool.DATA:
-        this.canvasTool.addTool(what, new KitBuildDataTool(this, settings));
+        this.toolCanvas.addTool(what, new KitBuildDataTool(this, settings));
         break;    
     }
     return this;
@@ -183,23 +163,19 @@ class KitBuildCanvas {
     let settings = Object.assign({}, this.settings, options)
     switch(what) {
       case KitBuildCanvasTool.DELETE:
-        this.canvasTool.addMultiTool(what, new KitBuildDeleteTool(this, settings))
+        this.toolCanvas.addMultiTool(what, new KitBuildDeleteTool(this, settings))
         break;
       case KitBuildCanvasTool.DUPLICATE:
-        this.canvasTool.addMultiTool(what, new KitBuildDuplicateTool(this, settings))
+        this.toolCanvas.addMultiTool(what, new KitBuildDuplicateTool(this, settings))
         break;
       case KitBuildCanvasTool.LOCK:
-        this.canvasTool.addMultiTool(what, new KitBuildLockTool(this, settings))
+        this.toolCanvas.addMultiTool(what, new KitBuildLockTool(this, settings))
         break;
       case KitBuildCanvasTool.UNLOCK:
-        this.canvasTool.addMultiTool(what, new KitBuildUnlockTool(this, settings))
+        this.toolCanvas.addMultiTool(what, new KitBuildUnlockTool(this, settings))
         break;
     }
     return this;
-  }
-
-  start() {
-    
   }
 
   setOptions(options) {
@@ -209,7 +185,7 @@ class KitBuildCanvas {
 
   reset() {
     this.cy.elements().remove()
-    this.canvasTool.clearCanvas().clearIndicatorCanvas()
+    this.toolCanvas.clearCanvas().clearIndicatorCanvas()
     this._lastConceptId = 0;
     this._lastLinkId = 0;
     return this
@@ -279,8 +255,8 @@ class KitBuildCanvas {
           undo: () => this.cy.remove(`#${nodeJson.data.id}`),
           redo: () => this.cy.add(nodeJson)
       })
-      this.broadcastEvent(`create-${node.data('type')}`, nodeJson)
-      this.canvasTool.clearCanvas().clearIndicatorCanvas()
+      this.raiseEvent(`create-${node.data('type')}`, nodeJson)
+      this.toolCanvas.clearCanvas().clearIndicatorCanvas()
       resolve(node);
     });
     
@@ -329,8 +305,8 @@ class KitBuildCanvas {
             'height': data.later.data.height | 0
           }),
       })
-      this.broadcastEvent(`update-${node.data('type')}`, updateData)
-      this.canvasTool.clearCanvas().clearIndicatorCanvas()
+      this.raiseEvent(`update-${node.data('type')}`, updateData)
+      this.toolCanvas.clearCanvas().clearIndicatorCanvas()
       resolve(node)
     });
     
@@ -388,7 +364,7 @@ class KitBuildCanvas {
       position: { x: x, y: y },
       duration: duration,
       complete: () => {
-        this.canvasTool.clearIndicatorCanvas()
+        this.toolCanvas.clearIndicatorCanvas()
         if (this.cy.elements(`#${id}`).selected())
           this.cy.elements(`#${id}`).trigger('select')
       }
@@ -398,35 +374,35 @@ class KitBuildCanvas {
     this.cy.add({ group: "edges", data: data })
 
     // restore selection of related link
-    if (this.canvasTool.activeNode && this.canvasTool.activeNode.data('id') == data.source) {
-      let node = this.cy.nodes(`[id="${this.canvasTool.activeNode.data('id')}"]`)
-      if (!node.length) this.canvasTool.clearCanvas()
+    if (this.toolCanvas.activeNode && this.toolCanvas.activeNode.data('id') == data.source) {
+      let node = this.cy.nodes(`[id="${this.toolCanvas.activeNode.data('id')}"]`)
+      if (!node.length) this.toolCanvas.clearCanvas()
       else node.trigger('select')
     }
-    this.canvasTool.clearIndicatorCanvas()
+    this.toolCanvas.clearIndicatorCanvas()
   }
   removeEdge(source, target) { // source,target: id 
     this.cy.edges(`[source="${source}"][target="${target}"]`).remove()
 
     // restore selection of related link
-    if (this.canvasTool.activeNode && this.canvasTool.activeNode.data('id') == source) {
-      let node = this.cy.nodes(`[id="${this.canvasTool.activeNode.data('id')}"]`)
-      if (!node.length) this.canvasTool.clearCanvas()
+    if (this.toolCanvas.activeNode && this.toolCanvas.activeNode.data('id') == source) {
+      let node = this.cy.nodes(`[id="${this.toolCanvas.activeNode.data('id')}"]`)
+      if (!node.length) this.toolCanvas.clearCanvas()
       else node.trigger('select')
     }
-    this.canvasTool.clearIndicatorCanvas()
+    this.toolCanvas.clearIndicatorCanvas()
   }
   moveEdge(prior, later) { // prior,later: {data: {}}, 
     this.cy.edges(`[source="${prior.data.source}"][target="${prior.data.target}"]`).remove()
     this.cy.add({ group: "edges", data: later.data })
 
     // restore selection of related link
-    if (this.canvasTool.activeNode && this.canvasTool.activeNode.data('id') == prior.data.source) {
-      let node = this.cy.nodes(`[id="${this.canvasTool.activeNode.data('id')}"]`)
-      if (!node.length) this.canvasTool.clearCanvas()
+    if (this.toolCanvas.activeNode && this.toolCanvas.activeNode.data('id') == prior.data.source) {
+      let node = this.cy.nodes(`[id="${this.toolCanvas.activeNode.data('id')}"]`)
+      if (!node.length) this.toolCanvas.clearCanvas()
       else node.trigger('select')
     }
-    this.canvasTool.clearIndicatorCanvas()
+    this.toolCanvas.clearIndicatorCanvas()
   }
   switchDirection(priors, laters) {
     if (!Array.isArray(priors)) return;
@@ -437,16 +413,16 @@ class KitBuildCanvas {
       this.cy.add({ group: "edges", data: later.data }))
     
     // restore selection of related link
-    if (this.canvasTool.activeNode && this.canvasTool.activeNode.data('id') == prior.data.source) {
-      let node = this.cy.nodes(`[id="${this.canvasTool.activeNode.data('id')}"]`)
-      if (!node.length) this.canvasTool.clearCanvas()
+    if (this.toolCanvas.activeNode && this.toolCanvas.activeNode.data('id') == prior.data.source) {
+      let node = this.cy.nodes(`[id="${this.toolCanvas.activeNode.data('id')}"]`)
+      if (!node.length) this.toolCanvas.clearCanvas()
       else node.trigger('select')
     }
-    this.canvasTool.clearIndicatorCanvas()
+    this.toolCanvas.clearIndicatorCanvas()
   }
   addNode(data, position) { // data: { nodeData }, position: {x, y}
     this.cy.add({ group: "nodes", data: data, position: position }).unselect()
-    this.canvasTool.clearIndicatorCanvas()
+    this.toolCanvas.clearIndicatorCanvas()
     this.applyElementStyle()
   }
   addElements(elements) { // [ elementsCyData ]
@@ -454,12 +430,12 @@ class KitBuildCanvas {
     elements.forEach(element => this.cy.add(element).unselect())
     
     // restore selection of related link
-    if (this.canvasTool.activeNode && this.canvasTool.activeNode.data('type') == 'link') {
-      let node = this.cy.nodes(`[id="${this.canvasTool.activeNode.data('id')}"]`)
-      if (!node.length) this.canvasTool.clearCanvas()
+    if (this.toolCanvas.activeNode && this.toolCanvas.activeNode.data('type') == 'link') {
+      let node = this.cy.nodes(`[id="${this.toolCanvas.activeNode.data('id')}"]`)
+      if (!node.length) this.toolCanvas.clearCanvas()
       else node.trigger('select')
     }
-    this.canvasTool.clearIndicatorCanvas()
+    this.toolCanvas.clearIndicatorCanvas()
     this.applyElementStyle()
   }
   removeElements(elements) { // [ elementData ]
@@ -474,12 +450,12 @@ class KitBuildCanvas {
     })
     
     // restore selection of related link
-    if (this.canvasTool.activeNode && this.canvasTool.activeNode.data('type') == 'link') {
-      let node = this.cy.nodes(`[id="${this.canvasTool.activeNode.data('id')}"]`)
-      if (!node.length) this.canvasTool.clearCanvas()
+    if (this.toolCanvas.activeNode && this.toolCanvas.activeNode.data('type') == 'link') {
+      let node = this.cy.nodes(`[id="${this.toolCanvas.activeNode.data('id')}"]`)
+      if (!node.length) this.toolCanvas.clearCanvas()
       else node.trigger('select')
     }
-    this.canvasTool.clearIndicatorCanvas()
+    this.toolCanvas.clearIndicatorCanvas()
     this.applyElementStyle()
   }
   updateNodeData(id, data) {
@@ -489,12 +465,12 @@ class KitBuildCanvas {
   updateEdgeData(id, data) {
     let edge = this.cy.edges(`#${id}`).data(data);
     // restore selection of related link
-    if (this.canvasTool.activeNode && this.canvasTool.activeNode.data('id') == edge.data('source')) {
-      let node = this.cy.nodes(`[id="${this.canvasTool.activeNode.data('id')}"]`)
-      if (!node.length) this.canvasTool.clearCanvas()
+    if (this.toolCanvas.activeNode && this.toolCanvas.activeNode.data('id') == edge.data('source')) {
+      let node = this.cy.nodes(`[id="${this.toolCanvas.activeNode.data('id')}"]`)
+      if (!node.length) this.toolCanvas.clearCanvas()
       else node.trigger('select')
     }
-    this.canvasTool.clearIndicatorCanvas()
+    this.toolCanvas.clearIndicatorCanvas()
   }
   changeNodesColor(nodesData) { // nodesData: [ id, color, bgColor ]
     if (!Array.isArray(nodesData)) return;
@@ -517,7 +493,7 @@ class KitBuildCanvas {
       }
     })
     this.toolbar.tools.get(KitBuildToolbar.NODE_CREATE).setActiveDirection(type)
-    this.canvasTool.clearIndicatorCanvas()
+    this.toolCanvas.clearIndicatorCanvas()
   }
   
 
@@ -657,13 +633,13 @@ class KitBuildUI {
     //   console.log(event.oldState, event.newState, event.originalEvent, Date.now(), this.canvases);
     // });
   }
-  static addLifeCycleListener(listener) {
-    if (!lifecycle) {
-      console.error("Lifecycle library is not defined.")
-      return
-    }
-    lifecycle.addEventListener('statechange', listener)
-  }
+  // static addLifeCycleListener(listener) {
+  //   if (!lifecycle) {
+  //     console.error("Lifecycle library is not defined.")
+  //     return
+  //   }
+  //   lifecycle.addEventListener('statechange', listener)
+  // }
   static instance(canvasId, options) {
     if (KitBuildUI.inst) {
       if (!KitBuildUI.inst.canvases.has(canvasId)) 
@@ -1582,23 +1558,3 @@ class KitBuildUI {
   }
 
 }
-
-
-
-/*!
- Copyright 2018 Google Inc. All Rights Reserved.
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
-     http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
-*/
-/*! lifecycle.es5.js v0.1.1 */
-!function(e,t){"object"==typeof exports&&"undefined"!=typeof module?module.exports=t():"function"==typeof define&&define.amd?define(t):e.lifecycle=t()}(this,function(){"use strict";var e=void 0;try{new EventTarget,e=!1}catch(t){e=!1}var t="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e},n=function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")},i=function(){function e(e,t){for(var n=0;n<t.length;n++){var i=t[n];i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),Object.defineProperty(e,i.key,i)}}return function(t,n,i){return n&&e(t.prototype,n),i&&e(t,i),t}}(),r=function(e,t){if("function"!=typeof t&&null!==t)throw new TypeError("Super expression must either be null or a function, not "+typeof t);e.prototype=Object.create(t&&t.prototype,{constructor:{value:e,enumerable:!1,writable:!0,configurable:!0}}),t&&(Object.setPrototypeOf?Object.setPrototypeOf(e,t):e.__proto__=t)},a=function(e,t){if(!e)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return!t||"object"!=typeof t&&"function"!=typeof t?e:t},s=function(){function e(){n(this,e),this._registry={}}return i(e,[{key:"addEventListener",value:function(e,t){this._getRegistry(e).push(t)}},{key:"removeEventListener",value:function(e,t){var n=this._getRegistry(e),i=n.indexOf(t);i>-1&&n.splice(i,1)}},{key:"dispatchEvent",value:function(e){return e.target=this,Object.freeze(e),this._getRegistry(e.type).forEach(function(t){return t(e)}),!0}},{key:"_getRegistry",value:function(e){return this._registry[e]=this._registry[e]||[]}}]),e}(),o=e?EventTarget:s,u=e?Event:function e(t){n(this,e),this.type=t},f=function(e){function t(e,i){n(this,t);var r=a(this,(t.__proto__||Object.getPrototypeOf(t)).call(this,e));return r.newState=i.newState,r.oldState=i.oldState,r.originalEvent=i.originalEvent,r}return r(t,u),t}(),c="active",h="passive",d="hidden",l="frozen",p="terminated",v="object"===("undefined"==typeof safari?"undefined":t(safari))&&safari.pushNotification,y=["focus","blur","visibilitychange","freeze","resume","pageshow","onpageshow"in self?"pagehide":"unload"],g=function(e){return e.preventDefault(),e.returnValue="Are you sure?"},_=[[c,h,d,p],[c,h,d,l],[d,h,c],[l,d],[l,c],[l,h]].map(function(e){return e.reduce(function(e,t,n){return e[t]=n,e},{})}),b=function(){return document.visibilityState===d?d:document.hasFocus()?c:h};return new(function(e){function t(){n(this,t);var e=a(this,(t.__proto__||Object.getPrototypeOf(t)).call(this)),i=b();return e._state=i,e._unsavedChanges=[],e._handleEvents=e._handleEvents.bind(e),y.forEach(function(t){return addEventListener(t,e._handleEvents,!0)}),v&&addEventListener("beforeunload",function(t){e._safariBeforeUnloadTimeout=setTimeout(function(){t.defaultPrevented||t.returnValue.length>0||e._dispatchChangesIfNeeded(t,d)},0)}),e}return r(t,o),i(t,[{key:"addUnsavedChanges",value:function(e){!this._unsavedChanges.indexOf(e)>-1&&(0===this._unsavedChanges.length&&addEventListener("beforeunload",g),this._unsavedChanges.push(e))}},{key:"removeUnsavedChanges",value:function(e){var t=this._unsavedChanges.indexOf(e);t>-1&&(this._unsavedChanges.splice(t,1),0===this._unsavedChanges.length&&removeEventListener("beforeunload",g))}},{key:"_dispatchChangesIfNeeded",value:function(e,t){if(t!==this._state)for(var n=function(e,t){for(var n,i=0;n=_[i];++i){var r=n[e],a=n[t];if(r>=0&&a>=0&&a>r)return Object.keys(n).slice(r,a+1)}return[]}(this._state,t),i=0;i<n.length-1;++i){var r=n[i],a=n[i+1];this._state=a,this.dispatchEvent(new f("statechange",{oldState:r,newState:a,originalEvent:e}))}}},{key:"_handleEvents",value:function(e){switch(v&&clearTimeout(this._safariBeforeUnloadTimeout),e.type){case"pageshow":case"resume":this._dispatchChangesIfNeeded(e,b());break;case"focus":this._dispatchChangesIfNeeded(e,c);break;case"blur":this._state===c&&this._dispatchChangesIfNeeded(e,b());break;case"pagehide":case"unload":this._dispatchChangesIfNeeded(e,e.persisted?l:p);break;case"visibilitychange":this._state!==l&&this._state!==p&&this._dispatchChangesIfNeeded(e,b());break;case"freeze":this._dispatchChangesIfNeeded(e,l)}}},{key:"state",get:function(){return this._state}},{key:"pageWasDiscarded",get:function(){return document.wasDiscarded||!1}}]),t}())});
-//# sourceMappingURL=lifecycle.es5.js.map

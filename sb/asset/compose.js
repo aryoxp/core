@@ -213,7 +213,7 @@ class App {
         closeBtn: '.bt-cancel'
       })).show();
       $('#concept-map-new-dialog .bt-generate-uuid').trigger('click');
-      $('input[name="userid"]').val(App.getCookie('userid'));
+      $('input[name="userid"]').val(decodeURI(App.getCookie('userid')));
       return;
 
       let proceed = () => {

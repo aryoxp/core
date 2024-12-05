@@ -2,8 +2,7 @@ class KitBuildCanvasTool {
   constructor(canvas, options) {
     // console.warn(options)
     this.canvas = canvas;
-    this.settings = Object.assign(
-      {
+    this.settings = Object.assign({
         type: "button", // 'button' | 'handle'
         showOn: KitBuildCanvasTool.SH_LINK,
         bgColor: "#ffffff",
@@ -32,27 +31,11 @@ class KitBuildCanvasTool {
     );
     // this.toolPos = options.toolPos ? options.toolPos : this.settings.toolPos
     this.toolPos = this.settings.toolPos;
-    this.eventListeners = new Map();
     this.evtListeners = new Set();
   }
 
-  attachEventListener(id, listener) {
-    return this.eventListeners.set(id, listener);
-  }
-
-  detachEventListener(id, listener) {
-    return this.eventListeners.delete(id);
-  }
-
-  broadcastEvent(event, data, options) {
-    // console.warn(this);
-    this.eventListeners.forEach((listener, k, map) => {
-      if (listener != null && typeof listener.onCanvasToolEvent == "function")
-        listener.onCanvasToolEvent(this.canvas.canvasId, event, data, options);
-    });
-    this.evtListeners.forEach((listener) =>
-      listener(this.canvas.canvasId, event, data, options)
-    );
+  raiseEvent(event, data) { // console.error(event, data);
+    this.evtListeners.forEach(listener => listener(event, data));
   }
 
   on(what, listener) {
@@ -260,8 +243,8 @@ class KitBuildDeleteTool extends KitBuildCanvasTool {
         redo: () => this.canvas.cy.elements(`#${node.id()}`).remove(),
       });
     node.remove();
-    this.broadcastEvent(`delete-${node.data("type")}`, data);
-    this.canvas.canvasTool.clearCanvas().clearIndicatorCanvas();
+    this.raiseEvent(`delete-${node.data("type")}`, data);
+    this.canvas.toolCanvas.clearCanvas().clearIndicatorCanvas();
     // })
   }
 
@@ -293,15 +276,15 @@ class KitBuildDeleteTool extends KitBuildCanvasTool {
               canvas.cy.elements(ids.join()).remove();
             },
           });
-        this.broadcastEvent(`delete-multi-nodes`, nodesAndEdgesJson);
+        this.raiseEvent(`delete-multi-nodes`, nodesAndEdgesJson);
         unlockedNodes.remove();
-        this.canvas.canvasTool.clearCanvas().clearIndicatorCanvas();
+        this.canvas.toolCanvas.clearCanvas().clearIndicatorCanvas();
       })
       .catch(() => {
         nodes.selectify();
-        this.canvas.canvasTool.clearCanvas();
-        this.canvas.canvasTool.clearIndicatorCanvas();
-        this.canvas.canvasTool.drawSelectedNodesBoundingBox(e);
+        this.canvas.toolCanvas.clearCanvas();
+        this.canvas.toolCanvas.clearIndicatorCanvas();
+        this.canvas.toolCanvas.drawSelectedNodesBoundingBox(e);
       });
   }
 }
@@ -341,8 +324,8 @@ class KitBuildDuplicateTool extends KitBuildCanvasTool {
     setTimeout(() => {
       this.activeNode = duplicateNode;
       duplicateNode.position(newPos).select().trigger("select");
-      this.canvas.canvasTool.clearIndicatorCanvas();
-      this.broadcastEvent(
+      this.canvas.toolCanvas.clearIndicatorCanvas();
+      this.raiseEvent(
         `duplicate-${node.data("type")}`,
         duplicateNode.json()
       );
@@ -387,7 +370,7 @@ class KitBuildDuplicateTool extends KitBuildCanvasTool {
       ids.push(`#${duplicateNode.id()}`);
       setTimeout(() => {
         duplicateNode.select().trigger("select");
-        this.canvas.canvasTool.clearIndicatorCanvas();
+        this.canvas.toolCanvas.clearIndicatorCanvas();
       }, 10);
     });
     this.activeNode = null;
@@ -399,7 +382,7 @@ class KitBuildDuplicateTool extends KitBuildCanvasTool {
         undo: (canvas, data) => canvas.cy.nodes(data.join(", ")).remove(),
         redo: (canvas, data) => canvas.cy.add(data),
       });
-    this.broadcastEvent(
+    this.raiseEvent(
       `duplicate-nodes`,
       this.canvas.cy.nodes(ids.join(", ")).jsons()
     );
@@ -492,7 +475,7 @@ class KitBuildSwitchTool extends KitBuildCanvasTool {
       later: edges.jsons(),
     };
 
-    let undoRedo = this.canvas.canvasTool.getToolbarTool(
+    let undoRedo = this.canvas.toolCanvas.getToolbarTool(
       KitBuildToolbar.UNDO_REDO
     );
     if (undoRedo)
@@ -503,7 +486,7 @@ class KitBuildSwitchTool extends KitBuildCanvasTool {
           redoData: data,
         })
       );
-    this.broadcastEvent(`switch-direction`, data);
+    this.raiseEvent(`switch-direction`, data);
 
     left.remove();
     right.remove();
@@ -556,7 +539,7 @@ class KitBuildDisconnectTool extends KitBuildCanvasTool {
     if (!node) return;
     let edges = node.connectedEdges('[lock!="locked"]');
     edges.remove();
-    let undoRedo = this.canvas.canvasTool.getToolbarTool(
+    let undoRedo = this.canvas.toolCanvas.getToolbarTool(
       KitBuildToolbar.UNDO_REDO
     );
     if (undoRedo)
@@ -570,7 +553,7 @@ class KitBuildDisconnectTool extends KitBuildCanvasTool {
           canvas.cy.edges(ids.join(", ")).remove();
         },
       });
-    this.broadcastEvent(`disconnect-links`, edges.jsons());
+    this.raiseEvent(`disconnect-links`, edges.jsons());
   }
 }
 
@@ -596,7 +579,7 @@ class KitBuildCentroidTool extends KitBuildCanvasTool {
   action(event, e, node) {
     // console.log("ACTION")
     node.unselectify();
-    this.canvas.canvasTool.clearCanvas();
+    this.canvas.toolCanvas.clearCanvas();
     let concepts = node.neighborhood('[type="concept"]');
     let from = Object.assign({}, node.position());
     from.x |= 0;
@@ -607,7 +590,7 @@ class KitBuildCentroidTool extends KitBuildCanvasTool {
     to.y |= 0;
     to.id = node.id();
     let data = { from: from, to: to };
-    let undoRedo = this.canvas.canvasTool.getToolbarTool(
+    let undoRedo = this.canvas.toolCanvas.getToolbarTool(
       KitBuildToolbar.UNDO_REDO
     );
     if (undoRedo)
@@ -619,14 +602,14 @@ class KitBuildCentroidTool extends KitBuildCanvasTool {
           redoData: data,
         })
       );
-    this.broadcastEvent(`centroid`, data);
+    this.raiseEvent(`centroid`, data);
     node.animate({
       position: data.to,
       duration: 300,
       complete: () => {
         setTimeout(() => {
           node.unlock().selectify().trigger("select");
-          this.canvas.canvasTool.clearIndicatorCanvas();
+          this.canvas.toolCanvas.clearIndicatorCanvas();
         }, 50);
       },
     });
@@ -726,8 +709,8 @@ class KitBuildCreateConceptTool extends KitBuildCanvasTool {
           canvas.cy.add(data);
         },
       });
-    this.broadcastEvent(`create-${node.data("type")}`, node.json());
-    this.canvas.canvasTool.clearCanvas().clearIndicatorCanvas();
+    this.raiseEvent(`create-${node.data("type")}`, node.json());
+    this.canvas.toolCanvas.clearCanvas().clearIndicatorCanvas();
     setTimeout(() => node.select().trigger("select"), 10);
   }
 }
@@ -821,8 +804,8 @@ class KitBuildCreateLinkTool extends KitBuildCanvasTool {
           canvas.cy.add(data);
         },
       });
-    this.broadcastEvent(`create-${node.data("type")}`, node.json());
-    this.canvas.canvasTool.clearCanvas().clearIndicatorCanvas();
+    this.raiseEvent(`create-${node.data("type")}`, node.json());
+    this.canvas.toolCanvas.clearCanvas().clearIndicatorCanvas();
     setTimeout(() => node.select().trigger("select"), 10);
   }
 }
@@ -873,10 +856,10 @@ class KitBuildLockTool extends KitBuildCanvasTool {
     // console.log("ACTION", nodes, this.state)
     elements.unselectify();
     let edges = elements.filter("edge").data("lock", "locked");
-    this.canvas.canvasTool.clearIndicatorCanvas();
+    this.canvas.toolCanvas.clearIndicatorCanvas();
     let ids = [];
     edges.forEach((e) => ids.push(`#${e.id()}`));
-    let undoRedo = this.canvas.canvasTool.getToolbarTool(
+    let undoRedo = this.canvas.toolCanvas.getToolbarTool(
       KitBuildToolbar.UNDO_REDO
     );
     if (undoRedo)
@@ -896,7 +879,7 @@ class KitBuildLockTool extends KitBuildCanvasTool {
             .source()
             .trigger("select"),
       });
-    this.broadcastEvent(`lock-edges`, edges.jsons());
+    this.raiseEvent(`lock-edges`, edges.jsons());
   }
 
   action(event, e, nodes) {
@@ -910,7 +893,7 @@ class KitBuildLockTool extends KitBuildCanvasTool {
       id: edge.id(),
       lock: edge.data("lock") == "locked" ? "unlocked" : "locked",
     };
-    let undoRedo = this.canvas.canvasTool.getToolbarTool(
+    let undoRedo = this.canvas.toolCanvas.getToolbarTool(
       KitBuildToolbar.UNDO_REDO
     );
     if (undoRedo)
@@ -930,9 +913,9 @@ class KitBuildLockTool extends KitBuildCanvasTool {
             .source()
             .trigger("select"),
       });
-    this.broadcastEvent(`${this.state}-edge`, redoData);
+    this.raiseEvent(`${this.state}-edge`, redoData);
     setTimeout(() => {
-      this.canvas.canvasTool.clearIndicatorCanvas();
+      this.canvas.toolCanvas.clearIndicatorCanvas();
       edge.selectify().source().unlock().selectify().trigger("select");
     }, 20);
   }
@@ -962,10 +945,10 @@ class KitBuildUnlockTool extends KitBuildCanvasTool {
     // console.log("ACTION", nodes)
     elements.unselectify();
     let edges = elements.filter("edge").data("lock", "unlocked");
-    this.canvas.canvasTool.clearIndicatorCanvas();
+    this.canvas.toolCanvas.clearIndicatorCanvas();
     let ids = [];
     edges.forEach((e) => ids.push(`#${e.id()}`));
-    let undoRedo = this.canvas.canvasTool.getToolbarTool(
+    let undoRedo = this.canvas.toolCanvas.getToolbarTool(
       KitBuildToolbar.UNDO_REDO
     );
     if (undoRedo)
@@ -985,7 +968,7 @@ class KitBuildUnlockTool extends KitBuildCanvasTool {
             .source()
             .trigger("select"),
       });
-    this.broadcastEvent(`unlock-edges`, edges.jsons());
+    this.raiseEvent(`unlock-edges`, edges.jsons());
   }
 }
 
@@ -1067,9 +1050,9 @@ class KitBuildPropositionTool extends KitBuildCanvasTool {
     // console.error(event, e, nodes);
     this.canvas.cy.elements(":selected").unselectify();
     let edge = this.canvas.cy.edges(":selected");
-    this.broadcastEvent(`proposition-edge-tool-clicked`, edge.data());
+    this.raiseEvent(`proposition-edge-tool-clicked`, edge.data());
     setTimeout(() => {
-      this.canvas.canvasTool.clearIndicatorCanvas();
+      this.canvas.toolCanvas.clearIndicatorCanvas();
       edge.selectify().source().unlock().selectify().trigger("select");
     }, 20);
     return;
@@ -1104,9 +1087,9 @@ class KitBuildPropositionAuthorTool extends KitBuildCanvasTool {
     // console.error(event, e, nodes);
     this.canvas.cy.elements(":selected").unselectify();
     let edge = this.canvas.cy.edges(":selected");
-    this.broadcastEvent(`proposition-author-tool-clicked`, edge.data());
+    this.raiseEvent(`proposition-author-tool-clicked`, edge.data());
     setTimeout(() => {
-      this.canvas.canvasTool.clearIndicatorCanvas();
+      this.canvas.toolCanvas.clearIndicatorCanvas();
       edge.selectify().source().unlock().selectify().trigger("select");
     }, 20);
     return;
@@ -1212,7 +1195,8 @@ class KitBuildDistanceColorTool extends KitBuildCanvasTool {
 
   action(event, e, nodes) {
     // console.error(event, e, nodes, nodes[0].data());
-    this.broadcastEvent(`distance-feedback`, nodes[0].data());
+    console.log(this);
+    this.raiseEvent(`distance-feedback`, nodes[0].data());
     return;
   }
 
@@ -1350,9 +1334,9 @@ class KitBuildDistanceColorTool extends KitBuildCanvasTool {
       concepts.select().trigger("select");
       concepts.selectify();
       if (this.canvas.cy.nodes(":selected").length > 1) {
-        this.canvas.canvasTool.activeTools = [];
-        this.canvas.canvasTool.clearCanvas();
-        this.canvas.canvasTool.drawSelectedNodesBoundingBox();
+        this.canvas.toolCanvas.activeTools = [];
+        this.canvas.toolCanvas.clearCanvas();
+        this.canvas.toolCanvas.drawSelectedNodesBoundingBox();
       }
     }, 50);
   }
@@ -1513,7 +1497,11 @@ class KitBuildDataTool extends KitBuildCanvasTool {
   }
 }
 
-class KitBuildCanvasToolCanvas {
+/**
+ * Tool Canvas
+ */
+
+class KitBuildToolCanvas {
   constructor(canvas, options) {
     // cache the Cytoscape canvas
     this.canvas = canvas;
@@ -1604,48 +1592,11 @@ class KitBuildCanvasToolCanvas {
   }
 
   static instance(canvas, options) {
-    return new KitBuildCanvasToolCanvas(canvas, options);
+    return new KitBuildToolCanvas(canvas, options);
   }
 
-  attachEventListener(id, listener) {
-    // also forward-attach the listeners to tools
-    this.tools.forEach((v, k, map) => {
-      if (typeof v.attachEventListener == "function")
-        v.attachEventListener(id, listener);
-    });
-    this.edgeTools.forEach((v, k, map) => {
-      if (typeof v.attachEventListener == "function")
-        v.attachEventListener(id, listener);
-    });
-    this.multiNodeTools.forEach((v, k, map) => {
-      if (typeof v.attachEventListener == "function")
-        v.attachEventListener(id, listener);
-    });
-    return this.eventListeners.set(id, listener);
-  }
-
-  detachEventListener(id) {
-    this.tools.forEach((v, k, map) => {
-      if (typeof v.detachEventListener == "function") v.detachEventListener(id);
-    });
-    this.edgeTools.forEach((v, k, map) => {
-      if (typeof v.detachEventListener == "function") v.detachEventListener(id);
-    });
-    this.multiNodeTools.forEach((v, k, map) => {
-      if (typeof v.detachEventListener == "function") v.detachEventListener(id);
-    });
-    return this.eventListeners.delete(id);
-  }
-
-  broadcastEvent(evt, data, options) {
-    this.eventListeners.forEach((l, k, map) => {
-      // console.error(l)
-      if (l && typeof l.onCanvasToolEvent == "function")
-        l.onCanvasToolEvent(this.canvas.canvasId, evt, data, options);
-    });
-    this.evtListeners.forEach((listener) =>
-      listener(this.canvas.canvasId, evt, data, options)
-    );
+  raiseEvent(evt, data) { // console.error(this.evtListeners, evt, data);
+    this.evtListeners.forEach(listener => listener(evt, data));
     return this;
   }
 
@@ -1654,9 +1605,6 @@ class KitBuildCanvasToolCanvas {
       case "event":
         if (typeof listener == "function") {
           this.evtListeners.add(listener);
-          this.tools.forEach((tool) => tool.on("event", listener));
-          this.edgeTools.forEach((tool) => tool.on("event", listener));
-          this.multiNodeTools.forEach((tool) => tool.on("event", listener));
         }
         break;
     }
@@ -1667,9 +1615,6 @@ class KitBuildCanvasToolCanvas {
       case "event":
         if (typeof listener == "function") {
           this.evtListeners.delete(listener);
-          this.tools.forEach((tool) => tool.off("event", listener));
-          this.edgeTools.forEach((tool) => tool.off("event", listener));
-          this.multiNodeTools.forEach((tool) => tool.off("event", listener));
         }
         break;
     }
@@ -1732,18 +1677,24 @@ class KitBuildCanvasToolCanvas {
       tool.gridPos,
       options && options.gridPos ? options.gridPos : null
     );
+    tool.on('event', this.raiseEvent.bind(this));
     return this.tools.set(id, tool);
   }
 
   removeTool(id) {
+    let tool = this.tools.get(id);
+    if (tool) tool.off('event', this.raiseEvent.bind(this));
     return this.tools.delete(id);
   }
 
-  addMultiTool(id, tool, options) {
+  addMultiTool(id, tool) {
+    tool.on('event', this.raiseEvent.bind(this));
     return this.multiNodeTools.set(id, tool);
   }
 
   removeMultiTool(id) {
+    let tool = this.multiNodeTools.get(id);
+    if (tool) tool.off('event', this.raiseEvent.bind(this));
     return this.multiNodeTools.delete(id);
   }
 
@@ -2090,7 +2041,7 @@ class KitBuildCanvasToolCanvas {
       let edge = this.activeNode.connectedEdges(
         `[type="${this.tapStartTool.settings.which}"][target="${this.tapStartTool.assignedTo}"]`
       );
-      let undoRedo = this.canvas.canvasTool.getToolbarTool(
+      let undoRedo = this.canvas.toolCanvas.getToolbarTool(
         KitBuildToolbar.UNDO_REDO
       );
 
@@ -2137,7 +2088,7 @@ class KitBuildCanvasToolCanvas {
                 })
               );
             edge.remove(); // remove prior edge
-            this.broadcastEvent(
+            this.raiseEvent(
               `move-connect-${newEdge.data("type")}`,
               moveData
             );
@@ -2151,7 +2102,7 @@ class KitBuildCanvasToolCanvas {
                   redoData: newEdge.json(),
                 })
               );
-            this.broadcastEvent(
+            this.raiseEvent(
               `connect-${newEdge.data("type")}`,
               newEdge.json()
             );
@@ -2171,7 +2122,7 @@ class KitBuildCanvasToolCanvas {
           let edgeJson = edge.json();
           let type = edge.data("type");
           edge.remove();
-          this.broadcastEvent(`disconnect-${type}`, edgeJson);
+          this.raiseEvent(`disconnect-${type}`, edgeJson);
         } // if no edge, then it is just cancelling the connection process
       }
 
@@ -2342,7 +2293,7 @@ class KitBuildCanvasToolCanvas {
     if (e.target.hasClass && e.target.hasClass("hide")) return;
     this.isNodeTapHold = true;
     e.target.select();
-    this.canvas.canvasTool.clearCanvas();
+    this.canvas.toolCanvas.clearCanvas();
     this.canvas.cy.elements().not(e.target).lock().unselectify();
   }
 
@@ -2411,7 +2362,7 @@ class KitBuildCanvasToolCanvas {
             redoData: moveData.later,
           })
         );
-      this.broadcastEvent(`move-nodes`, moveData);
+      this.raiseEvent(`move-nodes`, moveData);
       return;
     }
 
@@ -2435,7 +2386,7 @@ class KitBuildCanvasToolCanvas {
           redoData: moveData,
         })
       );
-    this.broadcastEvent(`move-${e.target.data("type")}`, moveData);
+    this.raiseEvent(`move-${e.target.data("type")}`, moveData);
   }
 
   onNodeSelect(e) {
@@ -2450,13 +2401,13 @@ class KitBuildCanvasToolCanvas {
       this.clearCanvas();
       this.drawSelectedNodesBoundingBox();
       this.boundingBoxDrawn = true;
-      this.broadcastEvent(`select-nodes`, [e.target.id()]);
+      this.raiseEvent(`select-nodes`, [e.target.id()]);
       return;
     }
     this.activeNode = e.target;
     this.clearCanvas();
     this.drawTools(e.target);
-    this.broadcastEvent(`select-nodes`, [e.target.id()]);
+    this.raiseEvent(`select-nodes`, [e.target.id()]);
   }
 
   onNodeUnselect(e) {
@@ -2467,7 +2418,7 @@ class KitBuildCanvasToolCanvas {
       this.clearCanvas();
       this.drawSelectedNodesBoundingBox();
       this.boundingBoxDrawn = true;
-      this.broadcastEvent(`unselect-nodes`, [e.target.id()]);
+      this.raiseEvent(`unselect-nodes`, [e.target.id()]);
       return;
     }
     this.activeNode = this.canvas.cy.nodes(":selected")[0];
@@ -2475,7 +2426,7 @@ class KitBuildCanvasToolCanvas {
       this.clearCanvas();
       this.drawTools(this.activeNode);
     }
-    this.broadcastEvent(`unselect-nodes`, [e.target.id()]);
+    this.raiseEvent(`unselect-nodes`, [e.target.id()]);
   }
 
   onEdgeTap(e) {
@@ -2536,7 +2487,7 @@ class KitBuildCanvasToolCanvas {
    */
 
   onToolClicked(tool, e, node) {
-    if (typeof tool.action == "function") tool.action("click", e, node);
+    if (typeof tool.action == "function") tool.action("tool-clicked", e, node);
   }
 
   onMultiNodeToolClicked(tool, e, elements) {
@@ -2869,6 +2820,10 @@ class KitBuildCanvasToolCanvas {
   }
 }
 
+/**
+ * Undo-Redo
+ */
+
 class UndoRedoMove {
   constructor(data) {
     Object.assign(this, data);
@@ -2881,7 +2836,7 @@ class UndoRedoMove {
     canvas.cy.elements(`#${this.id}`).animate({
       position: data.from,
       duration: 100,
-      complete: () => canvas.canvasTool.clearCanvas().clearIndicatorCanvas(),
+      complete: () => canvas.toolCanvas.clearCanvas().clearIndicatorCanvas(),
     });
   }
   redo(canvas, data) {
@@ -2889,7 +2844,7 @@ class UndoRedoMove {
     canvas.cy.elements(`#${this.id}`).animate({
       position: data.to,
       duration: 100,
-      complete: () => canvas.canvasTool.clearCanvas().clearIndicatorCanvas(),
+      complete: () => canvas.toolCanvas.clearCanvas().clearIndicatorCanvas(),
     });
   }
 }
@@ -2907,7 +2862,7 @@ class UndoRedoMoves {
       canvas.cy.elements(`#${node.id}`).animate({
         position: { x: node.x, y: node.y },
         duration: 100,
-        complete: () => canvas.canvasTool.clearCanvas().clearIndicatorCanvas(),
+        complete: () => canvas.toolCanvas.clearCanvas().clearIndicatorCanvas(),
       })
     );
   }
@@ -2917,7 +2872,7 @@ class UndoRedoMoves {
       canvas.cy.elements(`#${node.id}`).animate({
         position: { x: node.x, y: node.y },
         duration: 100,
-        complete: () => canvas.canvasTool.clearCanvas().clearIndicatorCanvas(),
+        complete: () => canvas.toolCanvas.clearCanvas().clearIndicatorCanvas(),
       })
     );
   }
@@ -3015,7 +2970,7 @@ class UndoRedoCentroid {
     canvas.cy.elements(`#${this.id}`).animate({
       position: data.from,
       duration: 100,
-      complete: () => canvas.canvasTool.clearCanvas().clearIndicatorCanvas(),
+      complete: () => canvas.toolCanvas.clearCanvas().clearIndicatorCanvas(),
     });
   }
   redo(canvas, data) {
@@ -3023,7 +2978,7 @@ class UndoRedoCentroid {
     canvas.cy.elements(`#${this.id}`).animate({
       position: data.to,
       duration: 100,
-      complete: () => canvas.canvasTool.clearCanvas().clearIndicatorCanvas(),
+      complete: () => canvas.toolCanvas.clearCanvas().clearIndicatorCanvas(),
     });
   }
 }

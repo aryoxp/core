@@ -1,6 +1,8 @@
 <div class="d-flex flex-column vh-100">
-  <div class="app-navbar d-flex align-items-center p-2 ps-4">
-    <div class="timer position-absolute h4 m-0 text-secondary">00:00:00</div>
+  <div class="app-navbar d-flex align-items-center p-2 pe-2">
+    <div class="position-absolute top-0 end-0 px-2 py-1 me-2 mt-2 d-flex align-items-center bg-secondary-subtle border border-secondary-subtle rounded">
+      <i class="bi bi-clock me-2"></i><span class="timer h5 m-0 text-secondary" style="min-width:6em">00:00:00</span>
+    </div>
     <div class="flex-fill">&nbsp;</div>
     <button class="bt-open-kit btn btn-sm btn-primary"><i class="bi bi-folder2-open"></i> Open Kit</button>
     <div class="btn-group btn-group-sm ms-2" id="recompose-readcontent">
@@ -18,7 +20,7 @@
     </div>
     <div class="btn-group btn-group-sm ms-2" id="recompose-feedbacklevel">
       <button class="bt-feedback btn btn-warning"><i class="bi bi-eye-fill"></i> Feedback <span class="count"></span></button>
-      <button class="bt-clear-feedback btn btn-success" disabled><i class="bi bi-play-fill"></i> Resume Concept Mapping</button>
+      <button class="bt-clear-feedback btn btn-success" disabled><i class="bi bi-play-fill"></i> Resume</button>
     </div>
     <div class="btn-group btn-group-sm ms-2">
       <button class="bt-submit btn btn-danger"><i class="bi bi-send"></i> Submit <span class="count"></span></button>
@@ -42,62 +44,78 @@
     <div class="status-control text-end m-2 mt-0"><button class="btn btn-primary btn-sm opacity-0">&nbsp;</button></div>
   </div>
 </div>
-    
+
 <form id="concept-map-open-dialog" class="card d-none">
   <div class="card-body">
 
     <h4 class="mx-3 my-2">Open Kit</h4>
 
-    <div class="p-3 m-3 border bg-light">
-      <div class="input-group mb-3">
-        <input type="text" class="form-control" name="userid" placeholder="Enter your name or ID" />
-        <div class="form-check input-group-text">
-          <input class="me-2" type="checkbox" value="1" id="inputrememberme" checked>
-          <label class="form-check-label" for="inputrememberme">Remember Me</label>
-        </div>
+    <!-- <div class="p-3 m-3 border bg-light"> -->
+    <div class="input-group p-3">
+      <input type="text" class="form-control" name="userid" placeholder="Enter your name or ID" />
+      <div class="form-check input-group-text">
+        <input class="me-2" type="checkbox" value="1" id="inputrememberme" checked>
+        <label class="form-check-label" for="inputrememberme">Remember Me</label>
       </div>
     </div>
+    <!-- </div> -->
 
-    <hr>
-
-    <div class="p-3 mx-3 border bg-light">
-      <div class="px-3">
-        <div class="input-group mb-3">
+    <ul class="nav nav-pills px-3 mb-3" id="pills-tab" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="pills-id-tab"
+          data-bs-toggle="pill" data-bs-target="#pills-id" type="button" role="tab"
+          aria-controls="pills-id" aria-selected="true">Kit-Build ID</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="pills-url-tab" data-bs-toggle="pill"
+          data-bs-target="#pills-url" type="button" role="tab"
+          aria-controls="pills-url" aria-selected="false">URL</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="pills-file-tab" data-bs-toggle="pill"
+          data-bs-target="#pills-file" type="button" role="tab"
+          aria-controls="pills-file" aria-selected="false">File</button>
+      </li>
+    </ul>
+    <div class="tab-content" id="pills-tabContent">
+      <div class="tab-pane fade show active px-3" id="pills-id" role="tabpanel"
+        aria-labelledby="pills-id-tab">
+        <div class="input-group">
           <input type="text" class="form-control" name="mapid"
-            placeholder="Enter concept map ID here"
-            aria-label="Enter concept map ID here"
+            placeholder="Enter concept map ID"
+            aria-label="Enter concept map ID"
             aria-describedby="button-addon2" value="<?php if (isset($conceptMapId)) echo $conceptMapId; ?>">
-          <a class="btn btn-primary bt-open-id" type="button"><i class="bi bi-folder2-open"></i> Open Map</a>
+          <a class="btn btn-primary bt-open-id" type="button"><i class="bi bi-folder2-open"></i> <span class="bt-open-id-label">Open Map</span></a>
         </div>
       </div>
-      <!-- <hr> -->
-      <div class="px-3">
+      <div class="tab-pane fade px-3" id="pills-url" role="tabpanel"
+        aria-labelledby="pills-url-tab">
         <div class="input-group">
           <input type="text" class="form-control" name="mapurl"
-            placeholder="Enter concept map URL here"
-            aria-label="Enter concept map URL here"
+            placeholder="Enter concept map URL"
+            aria-label="Enter concept map URL"
             aria-describedby="button-addon2" value="<?php if (isset($conceptMapUrl)) echo $conceptMapUrl; ?>">
           <a class="btn btn-primary bt-open-url" type="button"><i class="bi bi-folder2-open"></i> Open from URL</a>
         </div>
-        <!-- <input type="text" class="form-control" name="url" placeholder="Enter concept map data URL here" /> -->
+      </div>
+      <div class="tab-pane fade px-3 text-end" id="pills-file" role="tabpanel"
+        aria-labelledby="pills-file-tab">
+        <div class="file-drop-area">
+          <span class="fake-btn btn btn-primary me-3">Choose file</span>
+          <span class="file-msg">or drop file here</span>
+          <input class="file-input" type="file" multiple>
+          <div class="item-delete me-4"></div>
+        </div>
+        <a class="bt-open btn btn-primary px-3 mt-3" style="min-width: 8rem;">
+          <i class="bi bi-folder2-open"></i> Open from File</a>
       </div>
     </div>
 
     <hr>
 
-    <div class="px-3">
-      <div class="file-drop-area">
-        <span class="fake-btn btn btn-primary me-3">Choose file</span>
-        <span class="file-msg">or drop file here</span>
-        <input class="file-input" type="file" multiple>
-        <div class="item-delete me-4"></div>
-      </div>
-    </div>
     <div class="row">
-      <div class="col text-end px-4 pt-3">
+      <div class="col text-end mx-3">
         <a class="bt-cancel btn btn-secondary" style="min-width: 6rem;"><?php echo Lang::l('cancel'); ?></a>
-        <a class="bt-open btn btn-primary ms-1" style="min-width: 6rem;">
-          <i class="bi bi-folder2-open"></i> Open from File<?php // echo Lang::l('open'); ?></a>
       </div>
     </div>
 
@@ -145,7 +163,7 @@
     <i class="bi bi-x-lg bt-close bt-x" role="button"></i>
   </h6>
   <div class="card-body position-relative d-flex flex-column flex-fill">
-    <p>Why do you need feedback this time?</p>
+    <p>Why do you need feedback?</p>
     <div class="form-check">
       <input class="form-check-input" type="checkbox" value="" id="inputcorrect">
       <label class="form-check-label" for="inputcorrect">
@@ -179,8 +197,8 @@
 
 <div id="feedback-nearby-dialog" class="card d-none">
   <h6 class="card-header d-flex">
-    <span class="drag-handle flex-fill"><i class="dialog-icon bi bi-file-text"></i> 
-    <span class="dialog-title">Get Feedback for This Node?</span></span>
+    <span class="drag-handle flex-fill"><i class="dialog-icon bi bi-file-text"></i>
+      <span class="dialog-title">Get Feedback for This Node?</span></span>
     <i class="bi bi-x-lg bt-close bt-x" role="button"></i>
   </h6>
   <div class="card-body position-relative d-flex flex-column flex-fill">
@@ -220,7 +238,7 @@
   </div>
   <div class="card-footer text-end">
     <button class="btn btn-sm btn-secondary bt-cancel bt-close px-3"><?php echo Lang::l('ok'); ?></button>
-    <button class="btn btn-sm btn-primary bt-modify px-3 ms-1">Modify My Map</button>
+    <button class="btn btn-sm btn-success bt-modify px-3 ms-1"><i class="bi bi-play-fill me-1"></i>Resume</button>
   </div>
 </div>
 
@@ -280,5 +298,5 @@
     </div>
     <span class="pdf-info position-absolute pb-1 text-secondary" style="bottom:0; font-size:0.9rem;"><span class="page-info"></span></span>
     <button class="bt-resize btn btn-sm position-absolute" style="bottom:0; right:0;"><i class="bi bi-arrows-angle-expand"></i></button>
-  </div>  
+  </div>
 </div>

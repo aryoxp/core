@@ -2,7 +2,7 @@
 
 class LogService extends CoreService {
   function log($tstampc, $userid, $cmid, $kid, $sessid, $action, $canvasid, $seq,
-      $data, $canvas, $compare) {
+      $data, $canvas, $compare, $nmatch, $nexcess, $nmiss) {
     try {
       $log             = [];
       $log['tstampc']  = QB::esc($tstampc);
@@ -16,6 +16,9 @@ class LogService extends CoreService {
       $log['data']     = QB::esc($data);
       $log['canvas']   = QB::esc($canvas);
       $log['compare']  = QB::esc($compare);
+      $log['nma']      = QB::esc($nmatch);
+      $log['nex']      = QB::esc($nexcess);
+      $log['nmi']      = QB::esc($nmiss);
       $db = self::instance();
       $qb = QB::instance('log')->insert($log);
       $result = $db->query($qb->get());
@@ -50,6 +53,66 @@ class LogService extends CoreService {
       $result = $db->query($qb->get());
       $lid = $db->getInsertId();
       return $lid;
+    } catch (Exception $ex) {
+      throw CoreError::instance($ex->getMessage());
+    } 
+  }
+
+  function extractCompareCount() {
+    try {
+      set_time_limit(30000);
+      $db = self::instance('kblog');
+      $qb = QB::instance('log')->select('id', 'compare')->where('compare', 'IS NOT', QB::raw(QB::NULL));
+      // echo $qb->get();
+      $logs = $db->query($qb->get());
+      // var_dump($logs);
+      foreach($logs as $log) {
+        $lid = $log->id;
+        $c = CoreApi::decompress($log->compare);
+        $c = json_decode($c);
+        $update['nma'] = count($c->match);
+        $update['nex'] = count($c->excess);
+        $update['nmi'] = count($c->miss);
+        $qb = QB::instance('log')->update($update)->where('id', $lid);
+        $db->query($qb->get());
+        echo "-";
+        // var_dump($c);
+        // unset($c);
+      }
+      // $qb = QB::instance('log')->insert($log);
+      // $result = $db->query($qb->get());
+      // $lid = $db->getInsertId();
+      return true;
+    } catch (Exception $ex) {
+      throw CoreError::instance($ex->getMessage());
+    } 
+  }
+
+  function extractCompareCountA() {
+    try {
+      set_time_limit(30000);
+      $db = self::instance('kbloga');
+      $qb = QB::instance('log')->select('id', 'compare')->where('compare', 'IS NOT', QB::raw(QB::NULL));
+      // echo $qb->get();
+      $logs = $db->query($qb->get());
+      // var_dump($logs);
+      foreach($logs as $log) {
+        $lid = $log->id;
+        $c = CoreApi::decompress($log->compare);
+        $c = json_decode($c);
+        $update['nma'] = count($c->match);
+        $update['nex'] = count($c->excess);
+        $update['nmi'] = count($c->miss);
+        $qb = QB::instance('log')->update($update)->where('id', $lid);
+        $db->query($qb->get());
+        echo "-";
+        // var_dump($c);
+        // unset($c);
+      }
+      // $qb = QB::instance('log')->insert($log);
+      // $result = $db->query($qb->get());
+      // $lid = $db->getInsertId();
+      return true;
     } catch (Exception $ex) {
       throw CoreError::instance($ex->getMessage());
     } 

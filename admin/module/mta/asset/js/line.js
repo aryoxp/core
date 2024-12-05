@@ -470,7 +470,7 @@ $(() => {
     $(`#input-enabled`).prop('checked', parseInt(enabled));
     $('.input-color-preview').css('background-color', linecolor);
     $('#mta-profile .btn-delete').hide();
-    App.dialogLineProfile = (new CoreWindow('#mta-profile', {
+    App.dialogLineProfile = (new CoreWindow('#akun-dialog', {
       draggable: true,
       width: '450px'
     })).show();

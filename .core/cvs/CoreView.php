@@ -296,6 +296,7 @@ class CoreView {
     foreach ($pluginKeys as $pluginKey) $this->usePlugin($pluginKey);
 
     $clientBaseConfig                  = new stdClass;
+    $clientBaseConfig->{'env'}         = CORE_ENV;
     $clientBaseConfig->{'app'}         = Core::lib(Core::URI)->get(CoreUri::APP);
     $clientBaseConfig->{'controller'}  = Core::lib(Core::URI)->get(CoreUri::CONTROLLERID);
     $clientBaseConfig->{'method'}      = Core::lib(Core::URI)->get(CoreUri::METHOD);
@@ -321,7 +322,7 @@ class CoreView {
     $i = 0;
     foreach ($cfgs as $key => $value) {
       if ($key == 'core') {
-        echo ($i > 0 ? "\n" : "") . "      data-{$key}=\"" . "\n      ";
+        echo ($i > 0 ? "\n      " : "") . "data-{$key}=\"" . "\n      ";
         echo implode("\n      ", str_split($value, 80)) . "\"";
       } else echo ($i > 0 ? "\n      " : "") . "data-{$key}=\"{$value}\"";
       $i++;

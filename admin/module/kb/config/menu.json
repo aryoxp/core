@@ -42,6 +42,12 @@
         "icon": "code-square",
         "label": "Log Data Decoder",
         "url": "m/x/kb/decode"
+      },
+      {
+        "id": "kb-log-processor",
+        "icon": "code-square",
+        "label": "Log Processor",
+        "url": "m/x/kb/logProcessor"
       }
     ]
   }
