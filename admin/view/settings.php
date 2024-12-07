@@ -1,11 +1,5 @@
 <?php $this->view('head.php', null, CoreView::CORE); ?>
 <?php $this->view('header.php'); ?>
-<!-- <header class="app-header fixed-top">
-  <?php //$this->view('sidepanel.php'); 
-  ?>
-</header> -->
-<!--//app-header-->
-
 
 <div class="container">
   <div class="row m-5">
@@ -14,7 +8,6 @@
       Settings</h3>
     </div>
   </div>
-
   <div class="row m-5">
     <div class="col">
       <h5 class="mb-3">Apps Available</h5>
@@ -42,7 +35,7 @@
       <h5 class="mb-3">Roles</h5>
       <div class="registered-app-info mb-3 px-4 py-3 border rounded bg-light"></div>
       <div id="list-role" class="mb-3"></div>
-      <form id="create-role" method="post" class="px-4 py-3 border border-3 rounded bg-white">
+      <form id="create-role" method="post" class="px-4 py-3 border border-3 rounded bg-secondary-subtle">
         <input type="hidden" name="app" />
         <div class="input-group">
           <input type="text" name="rid" class="form-control" placeholder="Role ID">
@@ -70,31 +63,6 @@
       </form>
     </div>
   </div>
-  <!-- <div class="row mb-5">
-        <div class="col-12">
-          <h4 class="py-2 mb-3 border-bottom text-primary">Authorization</h4>
-        </div>
-        <div class="col">
-          <h5 class="mb-3">Menus</h5>
-          <div class="registered-app-info mb-3 px-4 py-3 border rounded bg-light"></div>
-          <div id="list-menu"></div>
-        </div>
-        <div class="col">
-          <h5 class="mb-3">Roles</h5>
-          <div class="registered-app-info mb-3 px-4 py-3 border rounded bg-light"></div>
-          <div id="list-role" class="mb-3"></div>
-          <form id="create-role" method="post">
-            <input type="hidden" name="app" />
-            <div class="input-group">
-              <input type="text" name="rid" class="form-control" placeholder="Role ID">
-              <input type="text" name="name" class="form-control w-25" placeholder="Role Name">
-              <button class="btn btn-success text-light btn-sm px-2 py-1 bt-create">
-                <i class="bi bi-plus-lg"></i> Create
-              </button>
-            </div>
-          </form>
-        </div>
-      </div> -->
   <div class="row m-5">
     <div class="col-12">
       <h4 class="py-2 mb-3 border-bottom text-primary">User Manager</h4>
@@ -157,7 +125,7 @@
       <hr>
       <div class="text-end">
         <button class="app-btn-close-dialog btn btn-outline-secondary border border-secondary">Close</button>
-        <button class="btn-save btn btn-success text-light fw-normal ms-2">Save</button>
+        <button class="bt-save btn btn-success text-light fw-normal ms-2">Save</button>
       </div>
     </form>
   </div>

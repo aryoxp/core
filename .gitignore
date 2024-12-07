@@ -8,3 +8,7 @@ server/node_modules
 /server/package-lock.json
 /server/package.json
 .vscode
+/admin/module/wadm
+/admin/module/waka
+/admin/module/wmon
+/.shared/lib/mpdf

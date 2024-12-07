@@ -224,4 +224,15 @@ class SettingsApiController extends CoreApi {
       CoreError::instance($e->getMessage())->show();
     }
   }
+  public function updatePassword() {
+    try {
+      $username = $this->postv('username');
+      $password = $this->postv('password');
+      $oldPassword = $this->postv('oldPassword');
+      $result = (new RBACService())->updatePassword($username, $password, $oldPassword);
+      CoreResult::instance($result)->show();
+    } catch(Exception $e) {
+      CoreError::instance($e->getMessage())->show();
+    }
+  }
 }

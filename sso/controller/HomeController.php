@@ -4,8 +4,9 @@ class HomeController extends CoreController {
 
   public function index() {
     $this->ui->useCoreLib('core-ui');
+    $this->ui->usePlugin('bootstrap');
     $this->ui->useScript('js/sso.js');
-    $this->ui->useStyle('css/portal.css'); 
+    $this->ui->useStyle('css/sso.css'); 
     $this->ui->view('login.php');
   }
 
@@ -39,7 +40,7 @@ class HomeController extends CoreController {
       // $sess = new CoreSession();
       // $sess->set($userdata);
       if($uuid === false) {
-        header('location: ' . $this->location() . '?e=2&redirect=' . urlencode($redirect));
+        header('location: ' . $this->location() . '?e=2&redirect=' . $redirect);
       } else {
         $location = ((isset($redirect) && $redirect) 
           ? $redirect . "?token=$uuid" 
@@ -47,7 +48,7 @@ class HomeController extends CoreController {
         header('location: ' . $location);
       }
     } else
-      header('location: ' . $this->location() . '?e=1&redirect=' . urlencode($redirect));
+      header('location: ' . $this->location() . '?e=1&redirect=' . $redirect);
     exit;
   }
 

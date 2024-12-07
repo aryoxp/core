@@ -59,7 +59,7 @@ class RBACService extends CoreService {
   }
   public function deleteRole($app, $rid) {
     $db = self::instance('sso');
-    $qb = QB::instance('app')
+    $qb = QB::instance('role')
       ->delete()
       ->where('app', QB::esc($app))
       ->where('rid', QB::esc($rid));
@@ -204,6 +204,17 @@ class RBACService extends CoreService {
       $auth[$app][] = $m->mid;
     } 
     return $auth;
+  }
+  public function updatePassword($username, $password, $oldPassword) {
+    $db = self::instance('sso');
+    if (!empty($password)) $update['password'] = QB::raw('MD5(\''.QB::esc($password).'\')');
+    else return 0;
+    $qb = QB::instance('user')
+      ->update($update ?? QB::raw('1'))
+      ->where('username', QB::esc($username))
+      ->where('password', QB::raw('MD5(\''.QB::esc($oldPassword).'\')'));
+    $result = $db->query($qb->get());
+    return $db->getAffectedRows();
   }
   
 }
