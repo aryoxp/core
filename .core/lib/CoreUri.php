@@ -62,7 +62,7 @@ class CoreUri {
     $this->query    = $_SERVER['QUERY_STRING'];
 
     
-    $this->pathinfo = $_SERVER['PATH_INFO'] ?? null; 
+    $this->pathinfo = $_SERVER['PATH_INFO'] ?? ""; 
     if ($this->pathinfo === null) {
       throw new Exception("Web server is not configured to have PATH_INFO defined.");
       exit;
