@@ -5,14 +5,108 @@
     "url": "docs",
     "icon": "cash-coin",
     "subs": [{
-        "id": "wmon-transaksi-in",
-        "label": "<i class=\"bi bi-box-arrow-in-right me-2\"></i> Kas Masuk",
-        "url": "m/x/wmon/transaksi/in"
+        "id": "wmon-dashboard",
+        "icon": "speedometer2",
+        "label": "Dashboard",
+        "url": "m/x/wmon/home"
       },
       {
-        "id": "wmon-transaksi-out",
-        "label": "<i class=\"bi bi-box-arrow-right me-2\"></i> Kas Keluar",
-        "url": "m/x/wmon/transaksi/out"
+        "id": "wmon-mutasi-kas",
+        "icon": "arrow-left-right",
+        "label": "Mutasi Kas",
+        "url": "m/x/wmon/transaksi/mutasikas"
+      },
+      { "type": "separator" },
+      {
+        "id": "wmon-pembayaran-mahasiswa",
+        "icon": "cash-coin",
+        "label": "Pembayaran Mahasiswa",
+        "url": "m/x/wmon/transaksi/pembayaranmahasiswa"
+      },
+      { "type": "separator" },
+      {
+        "id": "wmon-pengeluaran-kerumahtanggaan",
+        "icon": "cash-coin",
+        "label": "Pengeluaran RT",
+        "url": "m/x/wmon/transaksi/pengeluaranrt"
+      },
+      { "type": "separator" },
+      {
+        "id": "wmon-hutang",
+        "icon": "currency-dollar",
+        "label": "Hutang",
+        "url": "m/x/wmon/transaksi/hutang"
+      },
+      {
+        "id": "wmon-pengeluaran-akademi",
+        "icon": "cash-coin",
+        "label": "Pengeluaran Akademi",
+        "url": "m/x/wmon/transaksi/pengeluaranakademi"
+      },
+      {
+        "id": "public",
+        "icon": "gear",
+        "label": "Dummy",
+        "url": "test",
+        "type": "public"
+      },
+      { "type": "separator" },
+      { 
+        "id": "wmon-laporan-group",
+        "label": "Laporan",
+        "subs":[
+          {
+            "id": "wmon-laporan-pembayaran-mahasiswa",
+            "icon": "book",
+            "label": "Pembayaran Mahasiswa",
+            "url": "m/x/wmon/laporan/pembayaranmahasiswa"
+          },
+          {
+            "id": "wmon-laporan-pengeluaran-kerumahtanggaan",
+            "icon": "book",
+            "label": "Pengeluaran RT",
+            "url": "m/x/wmon/laporan/pengeluaranrt"
+          },
+          {
+            "id": "wmon-laporan-pengeluaran-akademi",
+            "icon": "book",
+            "label": "Pengeluaran Akademi",
+            "url": "m/x/wmon/laporan/pengeluaranakademi"
+          },
+          {
+            "id": "wmon-jurnal-kas-kecil",
+            "icon": "book",
+            "label": "Jurnal Kas Kecil",
+            "url": "m/x/wmon/laporan/jurnalkaskecil"
+          },
+          {
+            "id": "wmon-buku-besar",
+            "icon": "book",
+            "label": "Buku Besar",
+            "url": "m/x/wmon/laporan/bukubesar",
+            "type": "public"
+          },
+          {
+            "id": "wmon-ikhtisar",
+            "icon": "book",
+            "label": "Ikhtisar",
+            "url": "m/x/wmon/laporan/ikhtisar",
+            "type": "public"
+          },
+          { "type": "separator" }
+        ]
+      },
+      {
+        "id": "wmon-akun-index",
+        "icon": "book",
+        "label": "Akun",
+        "url": "m/x/wmon/akun/index"
+      },
+      {
+        "id": "wmon-jenis-transaksi-index",
+        "icon": "grid",
+        "label": "Jenis Transaksi",
+        "url": "m/x/wmon/transaksi/jenistransaksi"
       }
     ]
   }

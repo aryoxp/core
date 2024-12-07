@@ -329,3 +329,22 @@ head {
   filter: "progid:DXImageTransform.Microsoft.BasicImage(rotation=2)";
 }
 
+
+
+
+.datepicker td, th {
+  padding:8px 16px;
+  border-radius: unset !important;
+}
+.datepicker thead {
+  background-color: #ddd;
+  border-bottom: 1px solid #ccc;
+}
+
+.datepicker .active,
+.datepicker .focused {
+  /* background-color: red !important; */
+  background-image: linear-gradient(to bottom right, rgb(15, 59, 202), rgb(13, 34, 103)) !important;
+  color: white !important;
+  border-radius: 8px !important;
+}

@@ -24,6 +24,13 @@ class HomeController extends CoreController {
     }
   }
 
+  public function profile() {
+    $apps = CoreModule::getModules();
+    $this->ui->useCoreLib('core-ui', 'admin');
+    $this->ui->useScript('js/profile.js');
+    $this->ui->view('profile.php', [ 'apps' => $apps ]);
+  }
+
   public function signOut() {
     session_destroy();
     header('location: ' . $this->ui->location());

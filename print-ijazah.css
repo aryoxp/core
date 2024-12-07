@@ -1,0 +1,20 @@
+@media print{
+  body {
+    margin: 0;
+    font-size: 75%;
+  }
+  @page{
+    size: auto; 
+    margin: 10mm;
+  }
+}
+
+p {
+  font-size: 11pt;
+}
+
+.subs {
+  font-family: firasanscondensed;
+  font-style: italic;
+  font-size: 9pt;
+}

@@ -1,0 +1,18 @@
+@media print{
+  body {
+    margin: 0;
+    font-size: 75%;
+  }
+  @page{
+    size: auto; 
+    margin: 0mm;
+  }
+} 
+
+table, p {
+  font-size: 10pt;
+}
+.table > :not(caption) > * > * {
+  padding: 2pt;
+  padding-bottom: 1pt;
+}

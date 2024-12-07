@@ -4,10 +4,31 @@
     "label": "WIS Administration",
     "url": "docs",
     "icon": "house-gear",
-    "subs": [{
-        "id": "wadm-register-student",
-        "label": "<i class=\"bi bi-person-add me-2\"></i> Register Student",
-        "url": "m/x/wadm/home/regstudent"
+    "subs": [
+      {
+        "id": "wadm-mahasiswa",
+        "icon": "people-fill",
+        "label": "Data Mahasiswa",
+        "url": "m/x/wadm/student"
+      },
+      {
+        "id": "wadm-student-register",
+        "icon": "person-add",
+        "label": "Pendaftaran Mahasiswa",
+        "url": "m/x/wadm/student/register"
+      },
+      { "type": "separator"},
+      {
+        "id": "wadm-pegawai",
+        "icon": "people-fill",
+        "label": "Pegawai",
+        "url": "m/x/wadm/pegawai"
+      },
+      {
+        "id": "wadm-user-manager",
+        "icon": "person-gear",
+        "label": "User Manager",
+        "url": "m/x/wadm/user"
       }
     ]
   }

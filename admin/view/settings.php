@@ -42,7 +42,7 @@
       <h5 class="mb-3">Roles</h5>
       <div class="registered-app-info mb-3 px-4 py-3 border rounded bg-light"></div>
       <div id="list-role" class="mb-3"></div>
-      <form id="create-role" method="post" class="px-4 py-3 border border-3 rounded bg-white">
+      <form id="create-role" method="post" class="px-4 py-3 border border-3 rounded bg-secondary-subtle">
         <input type="hidden" name="app" />
         <div class="input-group">
           <input type="text" name="rid" class="form-control" placeholder="Role ID">
@@ -157,7 +157,7 @@
       <hr>
       <div class="text-end">
         <button class="app-btn-close-dialog btn btn-outline-secondary border border-secondary">Close</button>
-        <button class="btn-save btn btn-success text-light fw-normal ms-2">Save</button>
+        <button class="bt-save btn btn-success text-light fw-normal ms-2">Save</button>
       </div>
     </form>
   </div>

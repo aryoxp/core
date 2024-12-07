@@ -77,7 +77,10 @@ class CoreWindow {
   }
 
   setContent(content) {
-    $(this.element).find('.app-card-body').html(content);
+    let type = this.constructor.name;
+    let el = $(this.element).find('.app-card-body').html(content);
+    if (type == 'CoreInfo') el.addClass('text-center');
+    else el.removeClass('text-center');
     return this;
   }
 
@@ -170,5 +173,100 @@ class CoreError extends CoreWindow {
   show() {
     super.show();
     return this;
+  }
+}
+
+class CoreLoading {
+  constructor(content, opts) {
+    this.settings = Object.assign({}, Loading.default, opts)
+    this.content = content;
+  }
+  static instance(content, opts) {
+    return new Loading(content, opts)
+  }
+  static load(element, content, options) {
+    let settings = Object.assign({
+      loadingContent: content ?? 'Loading...',
+      disable: true,
+      target: false,
+      addSpinner: true
+    }, options);
+    let html = (settings.target) ? $(element).find(settings.target).html() : $(element).html();
+    settings.loadingContent = `<div class="d-flex align-items-center"><div class="spinner-border spinner-border-sm me-2" role="status"></div> ${settings.loadingContent}</div>`;
+    if (settings.target) 
+      $(element).find(settings.target).html(settings.loadingContent);
+    else $(element).html(settings.loadingContent);
+    $(element).attr('disabled', true).prop('disabled', true).addClass('disabled');
+    return html;
+  }
+  static done(element, content, options) {
+    let settings = Object.assign({
+      doneContent: content ?? 'OK',
+      target: false
+    }, options);
+    if (settings.target) 
+      $(element).find(settings.target).html(settings.doneContent);
+    else $(element).html(settings.doneContent);
+    $(element).attr('disabled', false).prop('disabled', false).removeClass('disabled');
+  }
+  show(opts) {
+    let content = this.content
+    this.settings = Object.assign(this.settings, opts)
+    if (content) $('#modal-loading .loading-text').html(content)
+    if (this.settings.width) $('#modal-loading .modal-dialog').css('max-width', this.settings.width)
+    if (!$('#modal-loading .animation').html()) {
+      let dotSvgs = '', dots = ['primary', 'danger', 'warning', 'success', 'secondary']
+      for(let d of dots) {
+        dotSvgs += `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-stop-fill text-${d}" viewBox="0 0 16 16"><path d="M5 3.5h6A1.5 1.5 0 0 1 12.5 5v6a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 11V5A1.5 1.5 0 0 1 5 3.5z"/></svg>`
+      }
+      $('#modal-loading .animation').html(dotSvgs)
+    }
+    Loading.modal = new bootstrap.Modal($('#modal-loading'), this.settings)
+    Loading.modal.show()
+    function rand() {
+      if (!Loading.modal._isShown && !Loading.modal._isTransitioning) return
+      let pos = []
+      return anime({
+        targets: '#modal-loading svg',
+        translateY: content ? 0 : 3,
+        scale: 1.5,
+        translateX: function() {
+          let p
+          do {
+            p = ((anime.random(-2, 2)) * 16) - 6
+          } while (pos.includes(p))
+          pos.push(p)
+          return p;
+        },
+        delay: 100,
+        rotate: anime.stagger(anime.random(-3, 3) * 15),
+        easing: 'easeInOutQuad',
+        duration: 400,
+        complete: rand
+      })
+    }
+    rand()
+    return Loading.modal
+  }
+  hide() {
+    if (Loading.modal) Loading.modal.hide()
+  }
+}
+
+class CUI {
+  static confirm(content, options) {
+    return new CoreConfirm(content, options);
+  }
+  static info(content, options) {
+    return new CoreInfo(content, options);
+  }
+  static error(content, options) {
+    return new CoreError(content, options);
+  }
+  static load(el, content, options) {
+    return CoreLoading.load(el, content, options);
+  }
+  static done(el, content, options) {
+    return CoreLoading.done(el, content, options);
   }
 }

@@ -1,0 +1,30 @@
+@media print{
+  body {
+    margin: 0;
+    font-size: 75%;
+  }
+  @page{
+    size: auto; 
+    margin: 10mm;
+  }
+} 
+
+table, p {
+  font-size: 9pt;
+  line-height:1.25;
+}
+.table tbody tr td,.table tbody tr th,.table tfoot tr td,.table tfoot tr th,.table thead tr td,.table thead tr th {
+  padding: 1px 3px;
+}
+.table-bordered,.table-bordered tbody tr td,.table-bordered tbody tr th,.table-bordered tfoot tr td,
+.table-bordered tfoot tr th,.table-bordered thead tr td,.table-bordered thead tr th{
+  border:0px;
+}
+.table-bordered thead tr td,
+.table-bordered thead tr th{
+  border-bottom-width:0px;
+}
+.table-bordered tbody tr td.border,.table-bordered tbody tr th.border,.table-bordered tfoot tr td.border,
+.table-bordered tfoot tr th.border,.table-bordered thead tr td.border,.table-bordered thead tr th.border{
+  border:1px solid #ccc
+}

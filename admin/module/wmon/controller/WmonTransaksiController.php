@@ -6,9 +6,11 @@ class WmonTransaksiController extends CoreModuleController {
     $this->ui->useCoreLib('core-ui', 'admin');
   }
 
-  public function in() {
-    $this->menuId('wmon-transaksi-in');
-    $this->ui->view('line.php', null, CoreModuleView::MODULE);
+  public function mutasikas() {
+    $this->menuId('wmon-mutasi-kas');
+    $this->ui->usePlugin('general-ui','bootstrap-datepicker');
+    $this->ui->useScript('js/mutasi-kas.js');
+    $this->ui->view('mutasi-kas.php', null, CoreModuleView::MODULE);
   }
 
   public function out() {
@@ -16,41 +18,39 @@ class WmonTransaksiController extends CoreModuleController {
     $this->ui->view('line.php', null, CoreModuleView::MODULE);
   }
 
-  // public function index() {
-  //   $this->menuId('mta-line');
-  //   $this->ui->useScript('js/line.js');
-  //   $this->ui->view('line.php', null, CoreModuleView::MODULE);
-  // }
+  public function jenistransaksi() {
+    $this->menuId('wmon-jenis-transaksi-index');
+    $this->ui->usePlugin('general-ui');
+    $this->ui->useScript('js/jenis-transaksi.js');
+    $this->ui->view('jenis-transaksi.php', null, CoreModuleView::MODULE);
+  }
 
-  // public function stop() {
-  //   $this->menuId('mta-stop');
-  //   $this->ui->useScript('js/stop.js');
-  //   $this->ui->view('stop.php', null, CoreModuleView::MODULE);
-  // }
+  public function pembayaranmahasiswa() {
+    $this->menuId('wmon-pembayaran-mahasiswa');
+    $this->ui->usePlugin('general-ui');
+    $this->ui->useScript('js/pembayaran-mahasiswa.js');
+    $this->ui->view('pembayaran-mahasiswa.php', null, CoreModuleView::MODULE);
+  }
 
-  // public function interchange() {
-  //   $this->menuId('mta-interchange');
-  //   $this->ui->usePlugin('general-ui');
-  //   $this->ui->useScript('js/interchange.js');
-  //   $this->ui->view('interchange.php', null, CoreModuleView::MODULE);
-  // }
+  public function hutang() {
+    $this->menuId('wmon-hutang');
+    $this->ui->usePlugin('general-ui', 'bootstrap-datepicker');
+    $this->ui->useScript('js/hutang.js');
+    $this->ui->view('hutang.php', null, CoreModuleView::MODULE);
+  }
 
-  // public function navigation() {
-  //   $this->menuId('mta-navigation');
-  //   $this->ui->useScript('js/navigation.js');
-  //   $this->ui->view('navigation.php', null, CoreModuleView::MODULE);
-  // }
+  public function pengeluaranrt() {
+    $this->menuId('wmon-pengeluaran-kerumahtanggaan');
+    $this->ui->usePlugin('general-ui');
+    $this->ui->useScript('js/pengeluaran-kerumahtanggaan.js');
+    $this->ui->view('pengeluaran-kerumahtanggaan.php', null, CoreModuleView::MODULE);
+  }
 
-  // public function network() {
-  //   $this->menuId('mta-network');
-  //   $this->ui->useScript('js/network.js');
-  //   $this->ui->view('network.php', null, CoreModuleView::MODULE);
-  // }
-
-  // public function import() {
-  //   $this->menuId('mta-line-import');
-  //   $this->ui->useScript('js/import.js');
-  //   $this->ui->view('import.php', null, CoreModuleView::MODULE);
-  // }
+  public function pengeluaranakademi() {
+    $this->menuId('wmon-pengeluaran-akademi');
+    $this->ui->usePlugin('general-ui', 'bootstrap-datepicker');
+    $this->ui->useScript('js/pengeluaran-akademi.js');
+    $this->ui->view('pengeluaran-akademi.php', null, CoreModuleView::MODULE);
+  }
 
 }

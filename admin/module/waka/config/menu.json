@@ -1,0 +1,93 @@
+[
+  {
+    "id": "waka",
+    "label": "WIS Akademik",
+    "url": "docs",
+    "icon": "mortarboard",
+    "subs": [{
+        "id": "waka-penerimaan",
+        "icon": "person-add",
+        "label": "Penerimaan Mahasiswa",
+        "url": "m/x/waka/akademik/penerimaan"
+      },
+      {
+        "id": "waka-pa",
+        "icon": "people-fill",
+        "label": "Penasihat Akademik",
+        "url": "m/x/waka/akademik/pa"
+      },
+      { "type": "separator" },
+      {
+        "id": "waka-penawaran-matakuliah",
+        "icon": "tags-fill",
+        "label": "Penawaran Matakuliah",
+        "url": "m/x/waka/akademik/penawaranmk"
+      },
+      { "type": "separator" },
+      {
+        "id": "waka-krs",
+        "icon": "card-checklist",
+        "label": "KRS",
+        "url": "m/x/waka/akademik/krs"
+      },
+      {
+        "id": "waka-kelas",
+        "icon": "person-video3",
+        "label": "Kelas",
+        "url": "m/x/waka/akademik/kelas"
+      },
+      {
+        "id": "waka-nilai",
+        "icon": "clipboard-check",
+        "label": "Nilai Matakuliah",
+        "url": "m/x/waka/akademik/nilai"
+      },
+      {
+        "id": "waka-khs",
+        "icon": "card-checklist",
+        "label": "KHS",
+        "url": "m/x/waka/akademik/khs"
+      },
+      {
+        "id": "waka-transkrip",
+        "icon": "list-columns",
+        "label": "Transkrip Nilai",
+        "url": "m/x/waka/akademik/transkrip",
+        "type": "public"
+      },
+      {
+        "id": "waka-kelulusan",
+        "icon": "mortarboard-fill",
+        "label": "Kelulusan",
+        "url": "m/x/waka/akademik/kelulusan",
+        "type": "public"
+      },
+      { "type": "separator" },
+      { 
+        "id": "waka-laporan-group",
+        "label": "Laporan",
+        "subs": [
+          {
+            "id": "waka-laporan-khs",
+            "icon": "card-checklist",
+            "label": "Pelaporan KHS",
+            "url": "m/x/waka/akademik/laporankhs"
+          },
+          { "type": "separator" }
+        ]
+      },
+      {
+        "id": "waka-kurikulum",
+        "icon": "123",
+        "label": "Kurikulum",
+        "url": "m/x/waka/akademik/kurikulum"
+      },
+      {
+        "id": "waka-matakuliah",
+        "icon": "book",
+        "label": "Matakuliah",
+        "url": "m/x/waka/akademik/matakuliah"
+      }
+    ]
+  }
+]

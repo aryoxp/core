@@ -26,7 +26,7 @@ class AdminApp {
       $(".sidebar-panel")
         .one('transitionend', (e) => {
           $(".sidebar-panel").off('transitionend');
-          UI.broadcast('sidebar-toggle');
+          UI?.broadcast('sidebar-toggle');
           // console.warn('transition end');
       }).toggleClass("collapsed");
     });
