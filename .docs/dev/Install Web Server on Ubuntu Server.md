@@ -5,11 +5,11 @@
 
    Continue to install until the installation of Ubuntu Server is completed.
 
-   ![install-complete](/Users/aryo/Nginx/kb/docs/dev/images/install-complete.png)
+   ![install-complete](./images/install-complete.png){.w-100}
 
 2. Reboot the server by choosing the [**Reboot Now**] button.
 
-3. Login with username and password, that is configured/used during installation.![login](/Users/aryo/Nginx/kb/docs/dev/images/login.png)
+3. Login with username and password, that is configured/used during installation.![login](./images/login.png){.w-100}
 
 4. Install net-tools
 
@@ -28,29 +28,35 @@
 
 7. Configure Apache Web Server
 
-   $ cd /etc/apache2
+  ```bash
+  $ cd /etc/apache2
+  $ sudo vi apache2.conf
 
-   $ sudo vi apache2.conf
-
-   ````sh
-   <Directory /var/www/>
-     Options Indexes FollowSymLinks
-     AllowOverride All
-     Require all granted
-   </Directory>
-   ````
+  ```sh
+  <Directory /var/www/>
+    Options Indexes FollowSymLinks
+    AllowOverride All
+    Require all granted
+  </Directory>
+  ```
 
 8. Enable Apache Rewrite module
 
+  ```bash
    $ sudo a2enmod rewrite
+  ```
 
 9. Enable Apache PHP module
 
+  ```bash
    $ sudo a2enmod php7.4
+  ```
 
 10. Restart Apache service
 
-    $ sudo systemctl restart apache2
+  ```bash
+  $ sudo systemctl restart apache2
+  ```
 
 11. Check the service
 
@@ -66,32 +72,32 @@
 
 12. Configure Port forwarding (if using VirtualBox)
 
-    ![port-forwarding-1](/Users/aryo/Nginx/kb/docs/dev/images/port-forwarding-1.png)
+    ![port-forwarding-1](./images/port-forwarding-1.png){.w-100}
 
-    ![port-forwarding-2](/Users/aryo/Nginx/kb/docs/dev/images/port-forwarding-2.png)
+    ![port-forwarding-2](./images/port-forwarding-2.png){.w-100}
 
-13. Go to Document Root directory, default: /var/www/html
-    But now go up one level: /var/www
+13. Go to Document Root directory, default: `/var/www/html`
+    But now go up one level: `/var/www`
 
-    ````shell
+    ```shell
     $ ls -al
     total 12
     drwxr-xr-x  3 root root 4096 Oct 15 05:49 .
     drwxr-xr-x 14 root root 4096 Oct 15 05:49 ..
     drwxr-xr-x  2 root root 4096 Oct 15 06:24 html
-    ````
+    ```
 
     Change the owner of html directory to you.
 
     $ sudo chown -R aryo:aryo html
 
-    ````shell
+    ```shell
     $ ls -al
     total 12
     drwxr-xr-x  3 root root 4096 Oct 15 05:49 .
     drwxr-xr-x 14 root root 4096 Oct 15 05:49 ..
     drwxr-xr-x  2 aryo aryo 4096 Oct 15 06:24 html
-    ````
+    ```
 
 14. Create a "Hello World" file on your computer
 
@@ -107,13 +113,13 @@
     your Ubuntu username and password 
     port: 2222
 
-    ![fz](/Users/aryo/Nginx/kb/docs/dev/images/fz.png)
+    ![fz](./images/fz.png){.w-100}
 
-    Upload the file to: /var/www/html
+    Upload the file to: `/var/www/html`
 
-16. Open http://localhost:8000/hello.php
+16. Open `http://localhost:8000/hello.php`
 
-    ![hello](/Users/aryo/Nginx/kb/docs/dev/images/hello.png)
+    ![hello](./images/hello.png){.w-100}
 
 17. Configuring MySQL Server
 
@@ -122,11 +128,11 @@
 
     Issuing this command will get you access denied error:
 
-    ````shell
+    ```shell
     $ mysql -u root
     ERROR 1698 (28000): Access denied for user 'root'@'localhost'
     aryo@ubuntu:/var/www/html$ 
-    ````
+    ```
 
     Instead, use this command:
 
@@ -158,21 +164,21 @@
 
     Change
 
-    ````shell
+    ```shell
     bind-address      = 127.0.0.1
-    ````
+    ```
 
     to
 
-    ````shell
+    ```shell
     bind-address      = 0.0.0.0
-    ````
+    ```
 
     Restart MySQL Server
 
-    ````shell
+    ```shell
     $ sudo systemctl restart mysql
-    ````
+    ```
 
     
 
@@ -250,7 +256,7 @@
 
 19. Configure port forwarding for MySQL
 
-    ![port-forwarding-1](/Users/aryo/Nginx/kb/docs/dev/images/port-forwarding-1.png)
+    ![port-forwarding-1](./images/port-forwarding-1.png){.w-100}
 
     TODO: Screenshot of Port Forwarding Configuration of MySQL
 
@@ -262,7 +268,7 @@
 
     password: `pass`
 
-    ````shell
+    ```shell
     mysql> create user 'user'@'%' identified by 'pass';
     Query OK, 0 rows affected (0.02 sec)
     
@@ -279,7 +285,7 @@
     Query OK, 0 rows affected (0.01 sec)
     
     mysql> 
-    ````
+    ```
 
     
 

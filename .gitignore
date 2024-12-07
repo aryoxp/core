@@ -1,2 +1,10 @@
 /.hintrc
 /php_errors.log
+couchdb-data/
+.idea
+admin/files/*.pdf
+kb/files/*.pdf
+server/node_modules
+/server/package-lock.json
+/server/package.json
+.vscode

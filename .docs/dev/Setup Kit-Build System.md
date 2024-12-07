@@ -34,23 +34,23 @@ Before installing and setup the Kit-Build system the following information is ne
 
 - Ubuntu server non-root user with sudo enabled (Ubuntu server administrator).
 
-- PHP-FPM version 8.1 and MySQL 8.0 is installed and configured.
+- PHP-FPM version 8.1 and bash 8.0 is installed and configured.
 
-- For MySQL, `root` user or other user with `ALL` privileges with `GRANT` option (allowed to execute `CREATE DATABASE`  and `GRANT` queries).
+- For bash, `root` user or other user with `ALL` privileges with `GRANT` option (allowed to execute `CREATE DATABASE`  and `GRANT` queries).
 
-- `mysql` command line installed, so that mysql command can be executed from command line. To check whether this command is installed, open Terminal/Command Prompt window and type:
+- `bash` command line installed, so that bash command can be executed from command line. To check whether this command is installed, open Terminal/Command Prompt window and type:
 
-  ````sh
-  mysql
-  ````
+  ```bash
+  bash
+  ```
 
-  Messages except something like "*command not found*" should be displayed if `mysql` client is installed.
+  Messages except something like "*command not found*" should be displayed if `bash` client is installed.
 
-  > On Windows OS as the server OS, open Command Prompt window on the directory where `mysql.exe` is located.
+  > On Windows OS as the server OS, open Command Prompt window on the directory where `bash.exe` is located.
 
 
 
-## Preparing Empty MySQL Database Server for Kit-Build System
+## Preparing Empty bash Database Server for Kit-Build System
 
 To prepare a new database for Kit-Build system, execute the following commands from server command line. If you are currently on a client computer (different computer/host with server) use SSH to connect to server command line.
 
@@ -62,21 +62,21 @@ To prepare a new database for Kit-Build system, execute the following commands f
 
    Server is Ubuntu server on `localhost` (VirtualBox) port forwarded from 2222 (Host) to 22 (Guest):
 
-   ````shell
+   ```shell
    $ ssh aryo@localhost -p 2222
    aryo@localhost's password: 
    ...
-   ````
+   ```
 
    If you connect to online `kit-build.net` server (SSH default port is 22), use:
 
-   ````sh
+   ```bash
    $ ssh username@kit-build.net
    username@kit-build.net password: 
    ...
-   ````
+   ```
 
-2. Enter the MySQL server using `mysql` client command. The following connection parameter may be different according to the configured settings during server installation.
+2. Enter the bash server using `bash` client command. The following connection parameter may be different according to the configured settings during server installation.
 
    User: `root`
 
@@ -86,12 +86,12 @@ To prepare a new database for Kit-Build system, execute the following commands f
 
    Port: `3307`
 
-   ````shell
-   $ mysql -u root -p -h 127.0.0.1 -P 3306
+   ```shell
+   $ bash -u root -p -h 127.0.0.1 -P 3306
    Enter password: 
-   Welcome to the MySQL monitor.  Commands end with ; or \g.
-   Your MySQL connection id is 10
-   Server version: 8.0.28 MySQL Community Server - GPL
+   Welcome to the bash monitor.  Commands end with ; or \g.
+   Your bash connection id is 10
+   Server version: 8.0.28 bash Community Server - GPL
    
    Copyright (c) 2000, 2022, Oracle and/or its affiliates.
    
@@ -103,134 +103,130 @@ To prepare a new database for Kit-Build system, execute the following commands f
    
    mysql> 
    
-   ````
+   ```
 
-3. From the following step and onward, the following commands are executed from the MySQL client `mysql>` prompt.
+3. From the following step and onward, the following commands are executed from the bash client `bash>` prompt.
 
    The configuration uses the following information example for the Kit-Build system configuration:
 
-   database: `kbv2-fira`
-   username: `kbv2user`
-   password: `kbv2userpass`
+   > - database: `kbv2-fira`
+   > - username: `kbv2user`
+   > - password: `kbv2userpass`
 
-   > For compatibility with PHP 7.3 set authentication method to `mysql_native_password` when creating a user for the application, e.g.:
+
+   > For compatibility with PHP 7.3 set authentication method to `bash_native_password` when creating a user for the application, e.g.:
    >
-   > ````mysql
-   > CREATE USER 'username'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password';
-   > ````
+   > ```bash
+   > CREATE USER 'username'@'localhost' IDENTIFIED WITH bash_native_password BY 'password';
+   > ```
 
    - Show existing databases in database server
 
-     ````mysql
-     SHOW DATABASES;
-     ````
+```bash
+mysql> SHOW DATABASES;
++--------------------+
+| Database |
++--------------------+
+| information_schema |
+| bash    |
+| performance_schema |
+| sys |
++--------------------+
+4 rows in set (0.01 sec)
+```
 
-     ````sh
-     mysql> SHOW DATABASES;
-     +--------------------+
-     | Database           |
-     +--------------------+
-     | information_schema |
-     | mysql              |
-     | performance_schema |
-     | sys                |
-     +--------------------+
-     4 rows in set (0.01 sec)
-     
-     ````
-
-     Ensure that the database name, `kbv2-fira`, which will be used for the new KitBuild system, does not exists.
+Ensure that the database name, `kbv2-fira`, which will be used for the new KitBuild system, does not exists.
 
    - Create new empty database with utf8mb4 character set, to allow the database to store multibyte character such as Japanese kanji character.
 
-     ````sql
-     CREATE DATABASE `kbv2-fira` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-     ````
+```sql
+CREATE DATABASE `kbv2-fira` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+```
 
-     ````shell
-     mysql> CREATE DATABASE `kbv2-fira` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-     Query OK, 1 row affected (0.00 sec)
-     ````
+```shell
+mysql> CREATE DATABASE `kbv2-fira` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+Query OK, 1 row affected (0.00 sec)
+```
 
    - Create user for the new Kit-Build system to connect and use the newly created database:
 
-     ````mysql
-     CREATE USER 'kbv2user'@'localhost' IDENTIFIED WITH mysql_native_password BY 'kbv2userpass';
-     ````
+```bash
+CREATE USER 'kbv2user'@'localhost' IDENTIFIED WITH bash_native_password BY 'kbv2userpass';
+```
 
-     ````shell
-     mysql> CREATE USER 'kbv2user'@'localhost' IDENTIFIED WITH mysql_native_password BY 'kbv2userpass';
-     Query OK, 0 rows affected (0.01 sec)
-     ````
+```shell
+mysql> CREATE USER 'kbv2user'@'localhost' IDENTIFIED WITH bash_native_password BY 'kbv2userpass';
+Query OK, 0 rows affected (0.01 sec)
+```
 
-   - Also create a user with the same name to allow connection from outside server using other MySQL client application (e.g., MySQL Workbench or Jetbrains DataGrip) for easy maintenance and data management.
+   - Also create a user with the same name to allow connection from outside server using other bash client application (e.g., bash Workbench or Jetbrains DataGrip) for easy maintenance and data management.
 
-     ````mysql
-     CREATE USER 'kbv2user'@'%' IDENTIFIED WITH mysql_native_password BY 'kbv2userpass';
-     ````
+```bash
+CREATE USER 'kbv2user'@'%' IDENTIFIED WITH bash_native_password BY 'kbv2userpass';
+```
 
-     ````shell
-     mysql> CREATE USER 'kbv2user'@'%' IDENTIFIED WITH mysql_native_password BY 'kbv2userpass';
-     Query OK, 0 rows affected (0.01 sec)
-     ````
+```shell
+mysql> CREATE USER 'kbv2user'@'%' IDENTIFIED WITH bash_native_password BY 'kbv2userpass';
+Query OK, 0 rows affected (0.01 sec)
+```
 
    - Grant all privileges to the user on the database.
 
-     ````mysql
-     GRANT ALL PRIVILEGES ON `kbv2-fira`.* TO `kbv2user`@`localhost`;
-     GRANT ALL PRIVILEGES ON `kbv2-fira`.* TO `kbv2user`@`%`;
-     ````
+```bash
+GRANT ALL PRIVILEGES ON `kbv2-fira`.* TO `kbv2user`@`localhost`;
+GRANT ALL PRIVILEGES ON `kbv2-fira`.* TO `kbv2user`@`%`;
+```
 
-     ````shell
-     mysql> GRANT ALL PRIVILEGES ON `kbv2-fira`.* TO `kbv2user`@`localhost`;
-     Query OK, 0 rows affected (0.00 sec)
-     
-     mysql> GRANT ALL PRIVILEGES ON `kbv2-fira`.* TO `kbv2user`@`%`;
-     Query OK, 0 rows affected (0.01 sec)
-     ````
+```shell
+mysql> GRANT ALL PRIVILEGES ON `kbv2-fira`.* TO `kbv2user`@`localhost`;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> GRANT ALL PRIVILEGES ON `kbv2-fira`.* TO `kbv2user`@`%`;
+Query OK, 0 rows affected (0.01 sec)
+```
 
    - Apply the new user configuration to be effective.
 
-     ````mysql
-     FLUSH PRIVILEGES;
-     ````
+```bash
+FLUSH PRIVILEGES;
+```
 
-     ````shell
-     mysql> FLUSH PRIVILEGES;
-     Query OK, 0 rows affected (0.01 sec)
-     ````
+```shell
+mysql> FLUSH PRIVILEGES;
+Query OK, 0 rows affected (0.01 sec)
+```
 
    - Check the database, ensure that `kbv2-fira` database is listed.
 
-     ````mysql
-     mysql> SHOW DATABASES;
-     +--------------------+
-     | Database           |
-     +--------------------+
-     | information_schema |
-     | kbv2-fira          |
-     | mysql              |
-     | performance_schema |
-     | sys                |
-     +--------------------+
-     5 rows in set (0.00 sec)
-     ````
+```bash
+mysql> SHOW DATABASES;
++--------------------+
+| Database |
++--------------------+
+| information_schema |
+| kbv2-fira|
+| bash    |
+| performance_schema |
+| sys |
++--------------------+
+5 rows in set (0.00 sec)
+```
 
-   - Exit the MySQL client and go back to Ubuntu server terminal.
+   - Exit the bash client and go back to Ubuntu server terminal.
 
-     ````mysql
-     mysql> QUIT;
-     Bye
-     ````
+```bash
+mysql> QUIT;
+Bye
+```
 
 4. Test the new user and password to connect to the database.
 
-   ````bash
-   $ mysql -u kbv2user -p -h 127.0.0.1 -P 3306
+   ```bash
+   $ bash -u kbv2user -p -h 127.0.0.1 -P 3306
    Enter password: 
-   Welcome to the MySQL monitor.  Commands end with ; or \g.
-   Your MySQL connection id is 12
-   Server version: 8.0.28 MySQL Community Server - GPL
+   Welcome to the bash monitor.  Commands end with ; or \g.
+   Your bash connection id is 12
+   Server version: 8.0.28 bash Community Server - GPL
    
    Copyright (c) 2000, 2022, Oracle and/or its affiliates.
    
@@ -242,29 +238,29 @@ To prepare a new database for Kit-Build system, execute the following commands f
    
    mysql> 
    
-   ````
+   ```
 
 5. Check the database.
 
-   ````mysql
+   ```bash
    mysql> SHOW DATABASES;
    +--------------------+
-   | Database           |
+   | Database |
    +--------------------+
    | information_schema |
-   | kbv2-fira          |
+   | kbv2-fira|
    +--------------------+
    2 rows in set (0.00 sec)
-   ````
+   ```
 
    The database `kbv2-fira` should be listed when connecting to database with this user.
 
-6. Exit the MySQL client and go back to Ubuntu server terminal.
+6. Exit the bash client and go back to Ubuntu server terminal.
 
-   ````mysql
+   ```bash
    mysql> QUIT;
    Bye
-   ````
+   ```
 
 
 
@@ -274,29 +270,29 @@ To prepare a new database for Kit-Build system, execute the following commands f
 
 In this document, the planned document root location for the new Kit-Build system is located at:
 
-````shell
+```shell
 /var/www/fira/html
-````
+```
 
 While the default Document Root is located at:
 
-````sh
+```bash
 /var/www/html
-````
+```
 
 
 
 1. Create the directory for the document root.
 
-   ````bash
+   ```bash
    sudo mkdir -p /var/www/fira/html
-   ````
+   ```
 
 2. Change the owner of the document root user to current user
 
-   ````bash
+   ```bash
    sudo chown -R $USER:$USER /var/www/fira/html
-   ````
+   ```
 
 
 
@@ -306,72 +302,72 @@ While the default Document Root is located at:
 
 In this document the planned Kit-Build system should be accessible from `/fira` sub-directory of the main host, as such:
 
-````http
+```http
 http://example.com/fira
-````
+```
 
 1. Modify the nginx default configuration file using `vi` or `nano`
 
-   ````bash
+   ```bash
    sudo vi /etc/nginx/sites-available/default
-   ````
+   ```
 
 2. Add the following code at the end of the  `server` block:
 
-   ````bash
+   ```bash
    server {
-     ...
-     location ^~ /fira {
-       # set the document root
-       alias /var/www/fira/html;
-       
-       # deny access to shared PHP libraries
-       location ^~ /fira/.shared {
-         deny all;
-         return 404;
-       }
-       
-       # deny access to CoreFramework
-       location ^~ /fira/core {
-         deny all;
-         return 404;
-       }
-       
-       # allow access only to CoreFramework client assets
-       location ^~ /fira/core/asset {
-         allow all;
-       }
-       
-       # process requests of PHP file to PHP-FPM socket.
-       location ~* \.php(/.*)? {
-         include snippets/fastcgi-php.conf;
-         fastcgi_pass unix:/var/run/php/php8.1-fpm.sock;
-         fastcgi_param SCRIPT_FILENAME $request_filename;
-         fastcgi_param DOCUMENT_ROOT $realpath_root;
-       }
-     }
-     ...
+...
+location ^~ /fira {
+  # set the document root
+  alias /var/www/fira/html;
+  
+  # deny access to shared PHP libraries
+  location ^~ /fira/.shared {
+    deny all;
+    return 404;
+  }
+  
+  # deny access to CoreFramework
+  location ^~ /fira/core {
+    deny all;
+    return 404;
+  }
+  
+  # allow access only to CoreFramework client assets
+  location ^~ /fira/core/asset {
+    allow all;
+  }
+  
+  # process requests of PHP file to PHP-FPM socket.
+  location ~* \.php(/.*)? {
+    include snippets/fastcgi-php.conf;
+    fastcgi_pass unix:/var/run/php/php8.1-fpm.sock;
+    fastcgi_param SCRIPT_FILENAME $request_filename;
+    fastcgi_param DOCUMENT_ROOT $realpath_root;
+  }
+}
+...
    }
    
-   ````
+   ```
 
 3. Test the new configuration
 
-   ````sh
+   ```bash
    sudo nginx -t
-   ````
+   ```
 
-   ````bash
+   ```bash
    $ sudo nginx -t
    nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
    nginx: configuration file /etc/nginx/nginx.conf test is successful
-   ````
+   ```
 
 4. Restart Nginx server
 
-   ````bash
+   ```bash
    sudo systemctl restart nginx
-   ````
+   ```
 
    
 
@@ -389,17 +385,17 @@ Download the Kit-Build System source code to the prepared document root director
 
 1. Change the current working directory to the document root directory:
 
-   ````bash
+   ```bash
    cd /var/www/fira/html
-   ````
+   ```
 
 2. Clone the following git URL (don't forget the last dot "." character):
 
-   ````shell
+   ```shell
    git clone --single-branch --branch master https://github.com/aryoxp/kbfira.git .
-   ````
+   ```
 
-   ````bash
+   ```bash
    $ git clone --single-branch --branch master https://github.com/aryoxp/kbfira.git .
    Cloning into '.'...
    remote: Enumerating objects: 2665, done.
@@ -408,7 +404,7 @@ Download the Kit-Build System source code to the prepared document root director
    remote: Total 2665 (delta 376), reused 594 (delta 258), pack-reused 1929
    Receiving objects: 100% (2665/2665), 6.66 MiB | 3.67 MiB/s, done.
    Resolving deltas: 100% (707/707), done.
-   ````
+   ```
 
    
 
@@ -420,19 +416,19 @@ Download the Kit-Build System source code to the prepared document root director
 
 3. Once you have the system source code in the document root, test the system by accessing the "home" page of Kit-Build system.
 
-   ````http
+   ```http
    http://localhost:8081/fira/index.php/home
-   ````
+   ```
 
    If the configured port number is 80 (default port of HTTP server), you can ommit the port part from the URL like so:
 
-   ````http
+   ```http
    http://localhost/fira/index.php/home
-   ````
+   ```
 
    Change `localhost` to the actual hostname of the server.
 
-   ![home](/Users/aryo/Nginx/kb/docs/dev/images/home.png)
+   ![home](./images/home.png){.w-100}
 
    If you can see similar pages like in the above example, the Nginx configuration has been setup successfully.
 
@@ -452,7 +448,7 @@ database: `kbv2-fira`
 username: `kbv2user`
 password: `kbv2userpass`
 port: `3306`
-host: `localhost` or `127.0.0.1` (as PHP/Nginx and MySQL server are located at the same host)
+host: `localhost` or `127.0.0.1` (as PHP/Nginx and bash server are located at the same host)
 charset: `utf8mb4`
 collate: `utf8mb4_general_ci`
 
@@ -462,42 +458,42 @@ collate: `utf8mb4_general_ci`
 
 1. Create a new database setting entry on the following file:
 
-   ````shell
+   ```shell
    /.shared/config/db.ini
-   ````
+   ```
 
    Add the following configuration entry block at the bottom of the `db.ini` file:
 
-   ````ini
+   ```ini
    ...
    
    [kbv2-fira]
-   driver     = "mysqli"
-   host       = "127.0.0.1"
-   port       = "3306"
-   user       = "kbv2user"
+   driver= "bashi"
+   host  = "127.0.0.1"
+   port  = "3306"
+   user  = "kbv2user"
    password   = "kbv2userpass"
    database   = "kbv2-fira"
    charset    = "utf8mb4"
    collate    = "utf8mb4_general_ci"
    persistent = false
-   ````
+   ```
 
    > You can copy-paste the `[_example]` block settings and change the necessary fields.
 
 2. Create or edit the general configuration file:
 
-   ````bash
+   ```bash
    /.shared/config/config.ini
-   ````
+   ```
 
    Add or modify the following entry to match with your database setting key. In this documentation, it is set to `kbv2-fira`.
 
-   ````ini
+   ```ini
    default_db_key = "kbv2-fira"
-   ````
+   ```
 
-   This way, the default connection of MySQL database in Services' queries will be pointed to `kbv2-fira` database.
+   This way, the default connection of bash database in Services' queries will be pointed to `kbv2-fira` database.
 
 
 
@@ -505,21 +501,21 @@ collate: `utf8mb4_general_ci`
 
 Configure the database settings to point the new database. According to the settings, the following parameters are used:
 
-````ini
+```ini
 default_db_key = "kbv2-fira"
-````
+```
 
 Therefore, the setup will target database connection defined on `kbv2-fira`. Follow below steps to setup and initial configure of Kit-Build system database and create Administrator user on the system database.
 
 1. Open the following setup page:
 
-   ````http
+   ```http
    http://localhost:8081/fira/index.php/admin/m/x/app/setup
-   ````
+   ```
 
    Change the hostname `localhost:8081` to match your configuration, and you will get the following page.
 
-   ![setup-page](/Users/aryo/Nginx/kb/docs/dev/images/setup-page.png)
+   ![setup-page](./images/setup-page.png){.w-100}
 
    
 
@@ -561,11 +557,11 @@ password: `<empty>` (no password)
 
 and click the [**Sign in**] button.
 
-<img src="/Users/aryo/Nginx/kb/docs/dev/images/sign-in.png" alt="sign-in" style="zoom:50%;" />
+<img src="./images/sign-in.png" alt="sign-in" style="zoom:50%;" />
 
 7. Congratulations! You are now ready to use Kit-Build.
 
-   ![admin-dashboard](/Users/aryo/Nginx/kb/docs/dev/images/admin-dashboard.png)
+   ![admin-dashboard](./images/admin-dashboard.png){.w-100}
 
    以上です。
 

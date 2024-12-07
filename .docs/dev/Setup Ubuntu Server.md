@@ -10,9 +10,9 @@ To begin with the installation, follow the following steps:
 
 1. Download the ISO of Ubuntu Server v20.04.04 LTS (or a newer version of LTS) from the following URL: 
    
-   ````http
+   ```http
    https://ubuntu.com/download/server
-   ````
+   ```
    
 1. Install Ubuntu Server OS, using the downloaded Ubuntu Server ISO image with *default* configuration and choose to Install OpenSSH when asked. 
    
@@ -27,15 +27,18 @@ To begin with the installation, follow the following steps:
    
    Please refer to your own server configuration for the upcoming steps that uses **sudo** command.
    
-   ![](images/install-openssh.png)
+   <!-- ![install-openssh](images/install-openssh.png){.w-100} -->
    
    Continue the installation process until the installation of Ubuntu Server is completed.
    
-   ![install-complete](images/install-complete.png)
-   
+   <!-- ![install-complete](images/install-complete.png){.w-100}
+    -->
 2. Reboot the server by choosing the [**Reboot Now**] button.
 
-4. Login with username and password that were given during Ubuntu Server installation.![login](images/login.png)
+3. Login with username and password that were given during Ubuntu Server installation.
+   
+   
+   <!-- ![login](images/login.png){.w-100} -->
 
 
 
@@ -48,9 +51,9 @@ To begin with the installation, follow the following steps:
 
 1. Install net-tools
 
-   ````shell
+   ```shell
    sudo apt install net-tools
-   ````
+   ```
 
 
 ## Install Nginx
@@ -63,13 +66,13 @@ Defined settings:
 
 1. Install Nginx Web Server
 
-   ````shell
+   ```shell
    sudo apt install nginx
-   ````
+   ```
 
 2. Check Nginx server status after install. Nginx is running when Active status is `active`.
 
-   ````shell
+   ```shell
    systemctl status nginx
    ● nginx.service - A high performance web server and a reverse proxy server
         Loaded: loaded (/lib/systemd/system/nginx.service; enabled; vendor preset:>
@@ -81,7 +84,7 @@ Defined settings:
         CGroup: /system.slice/nginx.service
                 ├─2638 nginx: master process /usr/sbin/nginx -g daemon on; master_>
                 └─2639 nginx: worker process
-   ````
+   ```
 
 
 
@@ -140,11 +143,11 @@ Defined settings:
 
 1. Check the configured PHP version to install
 
-   ````sh
+   ```sh
    sudo apt list php
    Listing... Done
    php/focal 2:7.4+75 all
-   ````
+   ```
 
    The current configuration state PHP 7.4 instead of PHP 8
 
@@ -170,12 +173,12 @@ Defined settings:
 
 5. Run the `sudo apt list php` command to see the default version of PHP. If the default version is now 8.0, use `php` throughout the following instructions. Otherwise, include the version when specifying the package name, for example, `php8.0` or `php8.0-mysql`.
 
-   ````sh
+   ```sh
    $ sudo apt list php
    Listing... Done
    php/focal 2:8.1+92+ubuntu20.04.1+deb.sury.org+2 all
    N: There is 1 additional version. Please use the '-a' switch to see it
-   ````
+   ```
 
    As it can be seen, the configured PHP repository has now pointed to PHP 8.1
 
@@ -183,9 +186,9 @@ Defined settings:
 
    The procedure to install PHP on NGINX is very similar to the procedure for Apache. If Apache is installed on the system, the PHP installation process might try to activate it. If this happens, stop Apache with the command:
 
-   ````sh
+   ```sh
    sudo systemctl disable --now apache2
-   ````
+   ```
 
 7. Install the `php-fpm` module.
 
@@ -243,13 +246,13 @@ Defined settings:
 
 1. The configuration file for virtual host of Nginx web server is located in:
 
-   ````sh
+   ```sh
    /etc/nginx/sites-available/default
-   ````
+   ```
 
 2. Modify the file and add/modify the following configuration code inside the `server` block.
 
-   ````sh
+   ```sh
    server {
      # Add index.php to the list if you are using PHP
      index index.html index.htm index.nginx-debian.html index.php;
@@ -260,15 +263,15 @@ Defined settings:
      }
    ...
    }
-   ````
+   ```
 
 3. Test the new configuration:
 
-   ````sh
+   ```sh
    $ sudo nginx -t
    nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
    nginx: configuration file /etc/nginx/nginx.conf test is successful
-   ````
+   ```
 
 4. Restart the NGINX service to apply all changes.
 
@@ -282,10 +285,9 @@ To confirm PHP and Nginx are working together, add a PHP file named `phpinfo.php
 
 For easy maintenance and development, change the owner of `/var/www/html` directory to current user. In this case `aryo`. You can change to whatever username configured on your Ubuntu server.
 
-````sh
+```sh
 sudo chown aryo:aryo /var/www/html
-````
-
+```
 
 
 ### Add and Test the “PHP Info” Page
@@ -306,26 +308,26 @@ To create and display the standard “PHP Info” page, follow the below steps:
 
     > For this document case, the virtual machine network configuration is configured the following way:
     >
-    > ![network-settings](images/network-settings.png)
+<!-- ![network-settings](images/network-settings.png){.w-100} -->
     >
     > Port forwarding:
     >
     > Name: HTTP, Protocol: TCP, Host Port: 8081, Guest Port: 80
     > Name: SSH, Protocol: TCP, Host Port: 2222, Guest Port: 22
     >
-    > ![port-forwarding](images/port-forwarding.png)
+<!-- ![port-forwarding](images/port-forwarding.png){.w-100} -->
     >
     > And therefore, the Ubuntu server (guest) can be accessed from host computer using SSH on port 2222, while the Nginx web server can be accessed on port 8081.
 
-4. To test the PHP using the phpinfo.php file above, we can use the following URL using any web browser on host computer.
+1. To test the PHP using the phpinfo.php file above, we can use the following URL using any web browser on host computer.
 
-   ````http
+   ```http
    http://localhost:8081/phpinfo.php
-   ````
+   ```
 
-   ![phpinfo](images/phpinfo.png)
+   <!-- ![phpinfo](images/phpinfo.png){.w-100} -->
 
-5. For security reasons, it is a good idea to remove this file when PHP behavior has been verified.
+2. For security reasons, it is a good idea to remove this file when PHP behavior has been verified.
 
    ```
     sudo rm /var/www/html/phpinfo.php
@@ -341,63 +343,63 @@ The configured MySQL database server version for Kit-Build system is MySQL 8.0
 
 1. Check the configured MySQL server configuration:
 
-   ````sh
+   ```sh
    $ sudo apt list mysql-server
    Listing... Done
    mysql-server/focal-updates,focal-security 8.0.28-0ubuntu0.20.04.3 all
    N: There is 1 additional version. Please use the '-a' switch to see it
-   ````
+   ```
 
    If the configured repository is already MySQL version 8.0, proceed to installation using: 
 
-   ````shell
+   ```shell
    sudo apt install mysql
-   ````
+   ```
 
    Otherwise...
 
 2. Go to your home directory:
 
-   ````sh
+   ```sh
    cd
-   ````
+   ```
 
 3. From your host computer using any web browser go to MySQL server APT repository page.
 
-   ````http
+   ```http
    https://dev.mysql.com/downloads/repo/apt/
-   ````
+   ```
 
    Click the Download button on **Ubuntu / Debian (Architecture Independent), DEB Package**.
 
    Right click on the "No thanks, just start my download." and copy link address. In this case:
 
-   ````http
+   ```http
    https://dev.mysql.com/get/mysql-apt-config_0.8.22-1_all.deb
-   ````
+   ```
 
 4. Download the file from Ubuntu server terminal using curl command:
 
-   ````sh
+   ```sh
    curl -OL https://dev.mysql.com/get/mysql-apt-config_0.8.22-1_all.deb
-   ````
+   ```
 
    The file is now downloaded in your current directory. List the files to make sure:
 
-   ````sh
+   ```sh
    $ ls -l
    ...
    ... mysql-apt-config_0.8.22-1_all.deb
    ...
-   ````
+   ```
 
 5. Use the `dpkg` to begin the install:
 
-   ````sh
+   ```sh
    sudo dpkg -i mysql-apt-config*
-   ````
+   ```
 
-   ![mysql-config](images/mysql-config.png)
+   <!-- ![mysql-config](images/mysql-config.png){.w-100} -->
 
    MySQL Server & Cluster (Currently selected: mysql-8.0)
 
@@ -425,15 +427,15 @@ The configured MySQL database server version for Kit-Build system is MySQL 8.0
 
    You will be asked for root password. It is better to use strong password, but make sure not to forget it or make note for it. For the sake of simplicity, the following root password for mysql server is used:
 
-   ````sh
+   ```sh
    root
-   ````
+   ```
 
    and confirm the password for root:
 
-   ````sh
+   ```sh
    root
-   ````
+   ```
 
    Later you will be asked to choose the authentication method. Choose "**Use Strong Password Encryption (RECOMMENDED)**" and press [**ENTER**].
 
@@ -441,7 +443,7 @@ The configured MySQL database server version for Kit-Build system is MySQL 8.0
 
 2. Check the MySQL server installation using `systemctl`
 
-   ````sh
+   ```sh
    $ systemctl status mysql
    ● mysql.service - MySQL Community Server
         Loaded: loaded (/lib/systemd/system/mysql.service; enabled; vendor preset:>
@@ -455,7 +457,7 @@ The configured MySQL database server version for Kit-Build system is MySQL 8.0
         CGroup: /system.slice/mysql.service
                 └─18017 /usr/sbin/mysqld
    
-   ````
+   ```
 
    MySQL is installed and running if you see `Active: active (running)`. Next, you will secure your installation.
 
@@ -465,7 +467,7 @@ The configured MySQL database server version for Kit-Build system is MySQL 8.0
 
 `mysqladmin` is a command line administrative client for MySQL. You will use it connect to the server and output some version and status information:
 
-````sh
+```bash
 $ mysqladmin -u root -p version
 Enter password: 
 mysqladmin  Ver 8.0.28 for Linux on x86_64 (MySQL Community Server - GPL)
@@ -483,9 +485,12 @@ Uptime:			3 min 1 sec
 
 Threads: 2  Questions: 2  Slow queries: 0  Opens: 117  Flush tables: 3  Open tables: 36  Queries per second avg: 0.011
 
-````
+```
 
 This output indicates that you’ve successfully installed the latest MySQL server.
+
+
+
 
 
 
@@ -515,35 +520,35 @@ sudo chmod -R 755 /var/www/your_domain
 
 Next, create a sample `phpinfo.php` page using `nano` or your favorite editor:
 
-````bash
+```bash
 nano /var/www/your_domain/html/phpinfo.php
-````
+```
 
 Add the following contents to `phpinfo.php` file:
 
-````php
+```php
 <?php phpinfo();
-````
+```
 
 Save and close the file by pressing `Ctrl+X` to exit, then when prompted to save, `Y` and then `Enter`.
 
 In order for Nginx to serve this content, it’s necessary to create a server block with the correct directives. Instead of modifying the default configuration file directly, let’s make a new one at `/etc/nginx/sites-available/your_domain`:
 
-````sh
+```sh
 server {
-        listen 80;
-        listen [::]:80;
+  listen 80;
+  listen [::]:80;
 
-        root /var/www/your_domain/html;
-        index index.html index.htm index.nginx-debian.html;
+  root /var/www/your_domain/html;
+  index index.html index.htm index.nginx-debian.html;
 
-        server_name your_domain www.your_domain;
+  server_name your_domain www.your_domain;
 
-        location / {
-                try_files $uri $uri/ =404;
-        }
+  location / {
+    try_files $uri $uri/ =404;
+  }
 }
-````
+```
 
 Next, let’s enable the file by creating a link from it to the `sites-enabled` directory, which Nginx reads from during startup:
 
@@ -559,39 +564,39 @@ URL Path: `domain-name.net/kb`
 
 1. Create a root directory for the new directory
 
-   ````sh
+   ```sh
    sudo mkdir -p /var/www/kb/html
-   ````
+   ```
 
 2. Assign ownership to current user:
 
-   ````sh
+   ```sh
    sudo chown -R $USER:$USER /var/www/kb/html
-   ````
+   ```
 
 3. Next, create a sample `phpinfo.php` page using `nano` or your favorite editor:
 
-   ````bash
+   ```bash
    nano /var/www/kb/html/phpinfo.php
-   ````
+   ```
 
 4. Add the following contents to `phpinfo.php` file:
 
-   ````php
+   ```php
    <?php phpinfo();
-   ````
+   ```
 
    Save and close the file by pressing `Ctrl+X` to exit, then when prompted to save, `Y` and then `Enter`.
 
 5. Modify Nginx server block configuration for `/kb` in the `default` configuration
 
-   ````sh
+   ```sh
    sudo nano /etc/nginx/sites-available/default
-   ````
+   ```
 
    Copy-paste the following configuration block inside `server` block:
 
-   ````sh
+   ```sh
    server {
      ...
      location ^~ /kb {
@@ -625,7 +630,7 @@ URL Path: `domain-name.net/kb`
      }
    	...
    }
-   ````
+   ```
 
 6. To avoid a possible hash bucket memory problem that can arise from adding additional server names, it is necessary to adjust a single value in the `/etc/nginx/nginx.conf` file. Open the file:
 
@@ -635,15 +640,15 @@ URL Path: `domain-name.net/kb`
 
    Remove the comments tag (#) of line:
 
-   ````
+   ```
    # server_names_hash_bucket_size 64;
-   ````
+   ```
 
    to
    
-   ````
+   ```
    server_names_hash_bucket_size 64;
-   ````
+   ```
    
    Save and close the file when you are finished.
    
@@ -653,11 +658,11 @@ URL Path: `domain-name.net/kb`
 
 7. Test the new configuration:
 
-   ````sh
+   ```sh
    $ sudo nginx -t
    nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
    nginx: configuration file /etc/nginx/nginx.conf test is successful
-   ````
+   ```
 
 9. Restart Nginx to enable your changes:
 
@@ -667,11 +672,11 @@ URL Path: `domain-name.net/kb`
 
 10. Test the new subdirectory using the following URL:
 
-    ````http
+    ```http
     http://localhost:8081/kb/phpinfo.php
-    ````
+    ```
 
-    ![phpinfo-sub](images/phpinfo-sub.png)
+    <!-- ![phpinfo-sub](images/phpinfo-sub.png){.w-100} -->
 
     Check that the current phpinfo.php file is actually served from `/var/www/kb/html` directory and not from `/var/www/html` directory, refer to **$_SERVER['SCRIPT_FILENAME']** variable.
 
@@ -742,43 +747,43 @@ TODO: continue.
 
 1. Install Apache Web Server
 
-   ````sh
+   ```sh
    sudo apt install apache2
-   ````
+   ```
 
 
 2. Install PHP 7.2
 
-   ````sh
+   ```sh
    sudo apt install php 
-   ````
+   ```
 
 3. Install MySQL
 
-   ````sh
+   ```sh
    sudo apt install mysql-server
-   ````
+   ```
 
 4. Configure Apache Web Server
 
-   ````shell
+   ```shell
    $ cd /etc/apache2
    $ sudo vi apache2.conf
-   ````
+   ```
 
-   ````sh
+   ```sh
    <Directory /var/www/>
      Options Indexes FollowSymLinks
      AllowOverride All
      Require all granted
    </Directory>
-   ````
+   ```
 
 5. Enable Apache Rewrite module
 
-   ````bash
+   ```bash
    $ sudo a2enmod rewrite
-   ````
+   ```
 
 4. Enable Apache PHP module
 
@@ -802,32 +807,32 @@ TODO: continue.
 
 7. Configure Port forwarding (if using VirtualBox)
 
-   ![port-forwarding-1](images/port-forwarding-1.png)
+   <!-- ![port-forwarding-1](images/port-forwarding-1.png){.w-100} -->
 
-   ![port-forwarding-2](images/port-forwarding-2.png)
+   <!-- ![port-forwarding-2](images/port-forwarding-2.png){.w-100} -->
 
 8. Go to Document Root directory, default: /var/www/html
    But now go up one level: /var/www
 
-   ````shell
+   ```shell
    $ ls -al
    total 12
    drwxr-xr-x  3 root root 4096 Oct 15 05:49 .
    drwxr-xr-x 14 root root 4096 Oct 15 05:49 ..
    drwxr-xr-x  2 root root 4096 Oct 15 06:24 html
-   ````
+   ```
 
    Change the owner of html directory to you.
 
    $ sudo chown -R aryo:aryo html
 
-   ````shell
+   ```shell
    $ ls -al
    total 12
    drwxr-xr-x  3 root root 4096 Oct 15 05:49 .
    drwxr-xr-x 14 root root 4096 Oct 15 05:49 ..
    drwxr-xr-x  2 aryo aryo 4096 Oct 15 06:24 html
-   ````
+   ```
 
 9. Create a "Hello World" file on your computer
 
@@ -843,13 +848,13 @@ TODO: continue.
     your Ubuntu username and password 
     port: 2222
 
-    ![fz](images/fz.png)
+    <!-- ![fz](images/fz.png){.w-100} -->
 
     Upload the file to: /var/www/html
 
 11. Open http://localhost:8000/hello.php
 
-    ![hello](images/hello.png)
+    <!-- ![hello](images/hello.png){.w-100} -->
 
 12. Configuring MySQL Server
 
@@ -858,11 +863,11 @@ TODO: continue.
 
     Issuing this command will get you access denied error:
 
-    ````shell
+    ```shell
     $ mysql -u root
     ERROR 1698 (28000): Access denied for user 'root'@'localhost'
     aryo@ubuntu:/var/www/html$ 
-    ````
+    ```
 
     Instead, use this command:
 
@@ -894,21 +899,21 @@ TODO: continue.
 
     Change
 
-    ````shell
+    ```shell
     bind-address      = 127.0.0.1
-    ````
+    ```
 
     to
 
-    ````shell
+    ```shell
     bind-address      = 0.0.0.0
-    ````
+    ```
 
     Restart MySQL Server
 
-    ````shell
+    ```shell
     $ sudo systemctl restart mysql
-    ````
+    ```
 
     
 
@@ -986,7 +991,7 @@ TODO: continue.
 
 15. Configure port forwarding for MySQL
 
-    ![port-forwarding-1](images/port-forwarding-1.png)
+    <!-- ![port-forwarding-1](images/port-forwarding-1.png){.w-100} -->
 
     TODO: Screenshot of Port Forwarding Configuration of MySQL
 
@@ -998,7 +1003,7 @@ TODO: continue.
 
     password: `pass`
 
-    ````shell
+    ```shell
     mysql> create user 'user'@'%' identified by 'pass';
     Query OK, 0 rows affected (0.02 sec)
     
@@ -1015,7 +1020,8 @@ TODO: continue.
     Query OK, 0 rows affected (0.01 sec)
     
     mysql> 
-    ````
+    ```
 
     
+
 
