@@ -78,6 +78,23 @@ class App {
       App.getAppUsers(app, rid);
       App.getAppMenu(app, rid);
     });
+    $('#list-role').on('click', '.bt-delete', (e) => {
+      let app = $('form#create-role input[name="app"]').val();
+      let rid = $(e.currentTarget).parents('.list-item').attr('data-rid');
+      let row = $(e.currentTarget).parents('.list-item');
+      let postvalue = {
+        app: app,
+        rid: rid
+      }; console.log(postvalue);
+      CUI.confirm('Delete this role?').positive((e) => {
+        console.log('positive');
+        App.deleteRole(app, rid).then(ok => {
+          row.slideUp('fast', (e) => row.remove());
+        }, err => CUI.error(err).show());
+      }).negative((e) => {
+        console.log('negative')
+      }).show();
+    });
     $('#list-menu').on('click', '.bt-authorize', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -110,11 +127,14 @@ class App {
       e.preventDefault();
       e.stopPropagation();
       let keyword = $('form#search-user input[name="keyword"]').val();
-      let postvalue = { keyword: keyword }; console.log(postvalue);
+      let postvalue = { keyword: keyword }; // console.log(postvalue);
+      let el = $('form#search-user .bt-search');
+      let c = CUI.load(el, el.html());
       this.ajax.post('settingsApi/getUsers', postvalue)
-        .then(users => { console.log(users);
+        .then(users => { // console.log(users);
           App.listUser(users);
-        });
+        }, err => CUI.error(err).show())
+        .finally(() => CUI.done(el, c));
     });
     $('form#search-user').on('click', '.bt-create', (e) => {
       e.preventDefault();
@@ -144,17 +164,21 @@ class App {
       }; // console.log(postvalue, e.currentTarget);
       if (/^\s*$/.test(id)) {
         delete postvalue.id;
+        let el = $('form#user .bt-save');
+        let c = CUI.load(el, 'Saving...');
         this.ajax.post('settingsApi/createUser', postvalue)
           .then(result => {
             $('form#search-user').trigger('submit');
             App.dialogUser.hide();
-          });
+          }).finally(() => CUI.done(el, c));
       } else {
+        let el = $('form#user .bt-save');
+        let c = CUI.load(el, 'Saving...');
         this.ajax.post('settingsApi/updateUser', postvalue)
           .then(result => {
             $('form#search-user').trigger('submit');
             App.dialogUser.hide();
-          });
+          }).finally(() => CUI.done(el, c));
       }
     });
     $('#list-user').on('click', '.bt-select', (e) => {
@@ -306,6 +330,19 @@ App.listRole = (roles, app) => { // console.log(roles);
   $('#list-role').html(html);
   $('.registered-app-info').html('App ID: <code>' + app + '</code>');
 }
+App.deleteRole = (app, rid) => {
+  return new Promise((resolve, reject) => {
+    let postvalue = {
+      app: app,
+      rid: rid
+    }; // console.log(postvalue);
+    App.ajax.post('settingsApi/deleteRole', postvalue)
+      .then(
+        result => resolve(result), 
+        error => reject(error)
+      );
+  });
+}
 App.getAppMenu = (app, rid) => {
   let postvalue = {
     app: app,
@@ -368,15 +405,15 @@ App.listUser = (users) => {
     html += ` data-username="${user.username}" data-name="${user.name}">`;
     html += `<span><span class="me-2">${user.name}</span>`;
     html += `<code class="">${user.username}</code></span>`;
-    html += `<span>`;
+    html += `<span class="text-nowrap">`;
     html += `<button class="btn btn-sm btn-warning text-dark bt-edit px-2 py-1 me-1">`;
-    html += `<i class="bi bi-pencil-fill"></i> Edit`;
+    html += `<i class="bi bi-pencil-fill"></i>`;
+    html += `</button>`;
+    html += `<button class="btn btn-sm btn-danger text-light bt-delete px-2 py-1 me-1">`;
+    html += `<i class="bi bi-x-lg"></i>`;
     html += `</button>`;
     html += `<button class="btn btn-sm btn-primary text-light bt-select px-2 py-1 me-1">`;
     html += `Pilih <i class="bi bi-arrow-right"></i>`;
-    html += `</button>`;
-    html += `<button class="btn btn-sm btn-danger text-light bt-delete px-2 py-1">`;
-    html += `<i class="bi bi-x-lg"></i> Delete`;
     html += `</button>`;
     html += `</span>`;
     html += `</div>`;

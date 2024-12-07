@@ -1,118 +1,73 @@
-$(() => { AdminApp.instance(); });
-
-class AdminApp {
+class App {
   constructor(options) {
     this.settings = Object.assign({}, options);
     this.ajax = Core.instance().ajax();
     this.session = Core.instance().session();
+    App.ajax = this.ajax;
     this.handleEvent();
-    this.handleRefresh();
-  }
-  static instance(options) {
-    return new AdminApp(options);
-  }
-  static signIn(username, password = '') {
-    if (!username) return Promise.reject("Invalid username.");
-    this.ajax = Core.instance().ajax();
-    return this.ajax.post(`RBACApi/signIn`, {
-      username: username,
-      password: password
-    });
+    this.onLoad();
   }
   handleEvent() {
-    this.config = Core.instance().config();
-    if(this.config.get('sidebarcollapse')) $(".sidebar-panel").addClass('collapsed');
-    $(".admin-toggle-sidebar").on("click", (e) => {
-      $(".sidebar-panel")
-        .one('transitionend', (e) => {
-          $(".sidebar-panel").off('transitionend');
-          UI?.broadcast('sidebar-toggle');
-          // console.warn('transition end');
-      }).toggleClass("collapsed");
-    });
-    $(".admin-toggle-sidepanel").on("click", (e) => {
-      $(".side-panel").toggleClass("collapsed");
-    });
-    $("a.has-submenu").on("click", (e) => {
+    $('#change-password').on('click', '.bt-hide-unhide', (e) => {
+      let type = $(e.currentTarget).siblings('input').attr('type');
+      // console.log(type, $(e.currentTarget).siblings('input'));
+      $(e.currentTarget).find('i.bi')
+        .addClass(type == 'password' ? 'bi-eye-slash-fill' : 'bi-eye-fill')
+        .removeClass(type == 'password' ? 'bi-eye-fill' : 'bi-eye-slash-fill');
       $(e.currentTarget)
-        .next("ul")
-        .slideToggle("fast", () => {
-          $(e.currentTarget).toggleClass("collapsed");
-        });
+        .siblings('input')
+        .attr('type', type == 'text' ? 'password' : 'text');
     });
+    $('form#change-password').on('submit', e => {
+      e.preventDefault();
+      let username = $('input.input-username').val().trim();
+      let currentPassword = $('input.input-current-pass').val().trim();
+      let password = $('input.input-pass').val().trim();
+      let passwordAgain = $('input.input-pass-again').val().trim();
+      // console.log(username, currentPassword, password, passwordAgain);
 
-    $('.bt-app-sign-in').on('click', e => {
-      AdminApp.modalSignIn = SignIn.instance({
-        remember: true,
-        // apps: "kome,moke",
-        // rids: "administrator",
-        // gids: "lel",
-        // redirect: 'some/path'
-      }).success((user) => { // console.error(user);
-        if (typeof user == "object") {
-          this.session.set('user', user).then(() => {  
-            UI.success('Sign in successful.').show();
-            setTimeout(() => location.reload(), 1000);
-          });
-        } else UI.error(user).show();
-      }).show();
-    });
-
-    $('.bt-app-sign-out').on('click', e => {
-      // Lang.l('ask-sign-out');
-      let confirm = UI.confirm(Lang.l('ask-sign-out')).positive(() => {
-        // console.log(Core.instance().config()) 'Do you want to sign out?'
-        this.session.get('lang').then(lang => {
-          this.session.destroy().then(() => {
-            Promise.all(lang ? [this.session.set('lang', lang)] : []).then(() => {
-              window.location.href = Core.instance().config('baseurl');
-            });
-          });
-        });
-        confirm.hide();
-      }).show();
-    });
-
-    $('#dd-lang .item-lang').on('click', e => {
-      let langCode = $(e.target).data('code');
-      let lang = $(e.target).text();
-      let currentLangCode = $('#lang-label').attr('data-lang');
-      console.log(langCode, currentLangCode);
-      if (langCode == currentLangCode) {
-        UI.info(`Current language is ${$('#lang-label').text()}.`).show();
-      } else {
-        let confirm = UI.confirm(`Change the language setting to ${lang}?`)
-          .positive(() => {
-            this.session.set('core-lang', langCode).then(() => {
-              confirm.hide();
-              confirm = UI.confirm(`Language setting has been set to ${lang}. Do you want to reload the page to apply the new settings?<br><span class="text-danger">You might lose unsaved work if you reload now.</span>`)
-                .positive(() => {
-                  location.reload();
-                })
-                .show();
-            });
-        }).show();
+      if (password.length == 0) {
+        CUI.error('Password cannot be empty.').show();
+        return;
       }
-    });
+      if (passwordAgain != password) {
+        CUI.error('Password and Password (Again) does not match.').show();
+        return;
+      }
 
-    let config = Core.instance().config();
-    // Auto-activate and auto-collapse menu and menu items
-    $('a.submenu-link.active').parents('.has-submenu').find('.nav-link').addClass('active');
-    $('a.submenu-link.active').parents('.submenu').addClass('show'); 
-    let menu = $(`#menu-${config.get('app')}-${config.get('menu')}`);
-    if (menu[0]) menu[0].scrollIntoView({behavior: "smooth", block: "center"});
+      App.changePassword(username, password, currentPassword)
+        .then(result => { // console.log(result);
+          if (result) {
+            $('input.input-current-pass').val('');
+            $('input.input-pass').val('');
+            $('input.input-pass-again').val('');
+            CUI.info('Password has been updated!').show();
+          } else {
+            CUI.info('Password has not been updated.<br>Wrong current password or the new password is the same with current password.').show();
+          }
+      }, err => CUI.error(err).show());
+
+    });
   }
 
-  handleRefresh() {
-    this.session.getAll().then(sessions => {
-      let lang = (sessions['core-lang']) ? (sessions['core-lang']) : Core.instance().config('defaultlang');
-      $(`#dd-lang .item-lang`).removeClass('text-primary');
-      let name = $(`#dd-lang .item-lang[data-code="${lang}"]`).addClass('text-primary').text();
-      $('#lang-label').attr('data-lang', lang).html(name);
-      // console.log(sessions, name, lang, Core.instance().config());
+  onLoad() {
+    // App.listRegisteredApps();
+  }
+
+  static changePassword(username, password = '', oldPassword = '') {
+    if (!username) return Promise.reject("Invalid username.");
+    this.ajax = Core.instance().ajax();
+    return this.ajax.post(`settingsApi/updatePassword`, {
+      username: username,
+      password: password,
+      oldPassword: oldPassword
     });
   }
 }
+
+$(() => new App());
+
+
 
 
 
