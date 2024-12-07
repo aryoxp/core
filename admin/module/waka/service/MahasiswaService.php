@@ -64,12 +64,12 @@ class MahasiswaService extends CoreService {
   }
   public function getMahasiswaWithPA($nrm) {
     $db = self::instance('wisaka');
-    $qb = QB::instance('wis.mahasiswa m')
+    $qb = QB::instance(self::db('wis','database').'.mahasiswa m')
       ->select()
       ->select('m.nrm')
       ->select('p.nama AS namapa')
       ->leftJoin('pa', 'pa.nrm', 'm.nrm')
-      ->leftJoin('wis.pegawai p', 'p.nip', 'pa.nip')
+      ->leftJoin(self::db('wis','database').'.pegawai p', 'p.nip', 'pa.nip')
       ->where('m.nrm', QB::esc($nrm));
     $result = $db->getRow($qb->get());
     return $result; 
@@ -96,7 +96,7 @@ class MahasiswaService extends CoreService {
         FROM wisaka.krsmatakuliah km 
         LEFT JOIN wisaka.matakuliah mk ON mk.kdmk = km.kdmk AND mk.kurikulum = km.kurikulum
         WHERE km.nrm = m.nrm AND km.status = 1 AND km.bobotnilai > 1),3) AS ipk'))
-      ->leftJoin('wisaka.akademik wa', 'wa.nrm', 'm.nrm')
+      ->leftJoin(self::db('wisaka','database').'.akademik wa', 'wa.nrm', 'm.nrm')
       ->where(QB::OG)
       ->where('m.nim', 'LIKE', QB::esc('%'.$keyword.'%'))
       ->where('m.nrm', 'LIKE', QB::esc('%'.$keyword.'%'), QB::OR)

@@ -304,7 +304,7 @@ $(() => {
         }
         $('form#print-transkrip-ijazah').attr('action', )
         let location = (Core.configuration.get('baseurl') + `m/x/waka/print/ijazah`);
-        (new CoreConfirm('Cetak transkrip kelulusan?')).positive((e) => {
+        (new CoreConfirm('Cetak ijazah mahasiswa yang dipilih?')).positive((e) => {
           $('form#print-transkrip-ijazah').attr('action', location).attr('target', '_blank').trigger('submit');
         }).show();
       });

@@ -47,7 +47,7 @@ class KelasService extends CoreService {
     $db = self::instance('wisaka');
     $qb = QB::instance('kelasmahasiswa k')
       ->select()
-      ->leftJoin('wis.mahasiswa m', 'm.nrm', 'k.nrm')
+      ->leftJoin(self::db('wis','database').'.mahasiswa m', 'm.nrm', 'k.nrm')
       ->where('tahun', QB::esc($tahun))
       ->where('semester', QB::esc($semester))
       ->where('kdmk', QB::esc($kdmk))
@@ -80,7 +80,7 @@ class KelasService extends CoreService {
     $qb->reset();
     $qb = QB::instance('krsmatakuliah k')
       ->select()
-      ->leftJoin('wis.mahasiswa m', 'm.nrm', 'k.nrm')
+      ->leftJoin(self::db('wis','database').'.mahasiswa m', 'm.nrm', 'k.nrm')
       ->where('tahun', QB::esc($tahun))
       ->where('semester', QB::esc($semester))
       ->where('kdmk', QB::esc($kdmk))
@@ -132,7 +132,7 @@ class KelasService extends CoreService {
       ->select()
       ->select(QB::raw('(SELECT nilai FROM krsmatakuliah k WHERE k.nrm = km.nrm AND k.tahun = km.tahun AND k.semester = km.semester AND k.kdmk = km.kdmk AND k.kurikulum = km.kurikulum) AS nilai'))
       ->select(QB::raw('(SELECT bobotnilai FROM krsmatakuliah k WHERE k.nrm = km.nrm AND k.tahun = km.tahun AND k.semester = km.semester AND k.kdmk = km.kdmk AND k.kurikulum = km.kurikulum) AS bobotnilai'))
-      ->leftJoin('wis.mahasiswa m', 'm.nrm', 'km.nrm')
+      ->leftJoin(self::db('wis','database').'.mahasiswa m', 'm.nrm', 'km.nrm')
       ->where('km.tahun', QB::esc($tahun))
       ->where('km.semester', QB::esc($semester))
       ->where('km.kdmk', QB::esc($kdmk))

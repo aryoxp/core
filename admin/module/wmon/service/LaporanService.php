@@ -10,7 +10,7 @@ class LaporanService extends CoreService {
     $qb->select('t.no', 'm.nim', 'm.namam', 'm.prodi')
       ->select('ad.kode as kodekas', 'ak.nama as pembayaran')
       ->select('t.nominal')
-      ->leftJoin('wis.mahasiswa m', 'm.nrm', 'tpm.nrm')
+      ->leftJoin(self::db('wis','database').'.mahasiswa m', 'm.nrm', 'tpm.nrm')
       ->leftJoin('transaksi t', 't.no', 'tpm.no')
       ->leftJoin('akun ad', 'ad.kode', 't.kodeakundebit')
       ->leftJoin('akun ak', 'ak.kode', 't.kodeakunkredit')
@@ -21,7 +21,7 @@ class LaporanService extends CoreService {
     $result->transaksi = $db->query($qb->get());
     $qb = QB::instance('t_pembayaranmahasiswa tpm')
       ->select(QB::raw('COUNT(*)'))
-      ->leftJoin('wis.mahasiswa m', 'm.nrm', 'tpm.nrm')
+      ->leftJoin(self::db('wis','database').'.mahasiswa m', 'm.nrm', 'tpm.nrm')
       ->leftJoin('transaksi t', 't.no', 'tpm.no')
       ->leftJoin('akun ad', 'ad.kode', 't.kodeakundebit')
       ->leftJoin('akun ak', 'ak.kode', 't.kodeakunkredit')

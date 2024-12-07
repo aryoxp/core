@@ -118,9 +118,9 @@ tr td {
       <td style="width:26cm;">
         <table style="width:100%;" class="table-borderless">
           <tr>
-            <td class="text-center align-top" style="height:3.5cm;">
+            <td class="text-center align-top">
               <img src="<?php echo $this->asset('logo-whn.png', 'admin/module/waka/asset/image/'); ?>" class="mb-5"
-                style="width:150pt;">
+                style="width:280pt; margin-left:170pt">
             </td>
             <td class="text-end align-top">
               <barcode code="<?php echo $mahasiswa->nrm; ?>" type="C128A" size="0.8" />

@@ -224,7 +224,7 @@ class AkademikService extends CoreService {
     $db = self::instance('wisaka');
     $qb = QB::instance('krs k')
       ->select()
-      ->leftJoin('wis.mahasiswa m', 'm.nrm', 'k.nrm')
+      ->leftJoin(self::db('wis','database').'.mahasiswa m', 'm.nrm', 'k.nrm')
       ->where('k.tahun', QB::esc($tahun))
       ->where('k.semester', QB::esc($semester))
       ->where('m.prodi', QB::esc($prodi))
@@ -280,7 +280,7 @@ class AkademikService extends CoreService {
   }
   public function getDataAkademikMahasiswa($nrm) {
     $db = self::instance('wisaka');
-    $qb = QB::instance('wis.mahasiswa m')
+    $qb = QB::instance(self::db('wis','database').'.mahasiswa m')
       ->select()
       ->select('m.nrm')
       ->leftJoin('akademik a', 'a.nrm', 'm.nrm')
@@ -403,7 +403,7 @@ class AkademikService extends CoreService {
         FROM wisaka.krsmatakuliah km 
         LEFT JOIN wisaka.matakuliah mk ON mk.kdmk = km.kdmk AND mk.kurikulum = km.kurikulum
         WHERE km.nrm = m.nrm AND km.status = 1 AND km.bobotnilai > 1),3) AS ipk'))
-      ->leftJoin('wis.mahasiswa m', 'm.nrm', 'a.nrm')
+      ->leftJoin(self::db('wis','database').'.mahasiswa m', 'm.nrm', 'a.nrm')
       ->where('a.tgwisuda', QB::esc($tgwisuda))
       ->orderBy('prodi')
       ->orderBy('namam')
@@ -434,7 +434,7 @@ class AkademikService extends CoreService {
         FROM wisaka.krsmatakuliah km 
         LEFT JOIN wisaka.matakuliah mk ON mk.kdmk = km.kdmk AND mk.kurikulum = km.kurikulum
         WHERE km.nrm = m.nrm AND km.status = 1 AND km.bobotnilai > 1),3) AS ipk'))
-      ->leftJoin('wis.mahasiswa m', 'm.nrm', 'a.nrm')
+      ->leftJoin(self::db('wis','database').'.mahasiswa m', 'm.nrm', 'a.nrm')
       ->where('a.tgwisuda', QB::IS, QB::raw('NULL'))
       ->where('a.tglulus', QB::IS, QB::raw('NOT NULL'))
       ->orderBy('prodi')
