@@ -3,3 +3,9 @@
 couchdb-data/
 .idea
 admin/files/*.pdf
+server/
+/.vscode
+/.docs
+/mgm
+/kb
+/sb
