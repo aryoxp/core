@@ -2,3 +2,4 @@
 /php_errors.log
 couchdb-data/
 .idea
+admin/files/*.pdf
