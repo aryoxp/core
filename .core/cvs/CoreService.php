@@ -7,6 +7,7 @@ defined('CORE') or (header($_SERVER["SERVER_PROTOCOL"] . " 403 Forbidden") and d
 class CoreService {
 
   private static $connections = [];
+  private static $dbConfigs = [];
 
   protected static function instance($configKey = null) {
 
@@ -15,6 +16,7 @@ class CoreService {
       $configKey = $config->get('default_db_key');
     
     $dbConfig = $config->loadDatabaseConfig();
+    CoreService::$dbConfigs = $dbConfig;
 
     if (!@$dbConfig[$configKey])
       throw CoreError::instance('Database configuration for key: \'' . $configKey . '\' does not exists.');
@@ -28,6 +30,11 @@ class CoreService {
     }
     return CoreService::$connections[$driverId];
     
+  }
+
+  protected static function db($key, $field = null) {
+    if (!$field) return @CoreService::$dbConfigs[$key];
+    return @CoreService::$dbConfigs[$key][$field];
   }
 
 }
