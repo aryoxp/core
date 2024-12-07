@@ -19,7 +19,7 @@ class Toast {
       this.settings.delay != Toast.default.delay
         ? ` data-bs-delay="${this.settings.delay}"`
         : "";
-    if (!$(".toast-container").length) $('body').append('<div class="toast-container position-absolute top-0 end-0"></div>')
+    if (!$(".toast-container").length) $('body').append('<div class="toast-container position-absolute top-0 end-0 me-3"></div>')
     let idx = $(".toast-container .toast").length
       ? Math.max.apply(
           null,
@@ -31,7 +31,7 @@ class Toast {
         ) + 1
       : 1;
     let id = ` data-id="${idx}" id="toast-${idx}"`;
-    let t = `<div class="toast" role="alert" aria-live="assertive" aria-atomic="true"${autohide}${delay}${id}>`
+    let t = `<div class="toast mt-1 mb-3" role="alert" aria-live="assertive" aria-atomic="true"${autohide}${delay}${id}>`
 
     if (this.settings.title) {
       t += `<div class="toast-header">`
@@ -43,7 +43,7 @@ class Toast {
     }
 
     t += `<div class="toast-body d-flex justify-content-between border rounded border-${this.settings.type} bg-${this.settings.type} text-${this.settings.type}" style="${this.settings.style}"><span class="toast-content" style="${this.settings.textstyle}">${this.content}</span>`
-    t += this.settings.title ? '' : `<button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>`
+    t += this.settings.title ? '' : `<button type="button" class="btn-close ms-3" data-bs-dismiss="toast" aria-label="Close"></button>`
     t += `</div>`
     t += `</div>`
     $('.toast-container').append(t);
@@ -79,17 +79,34 @@ $(window).resize((e) => {
 class Dialog {
   constructor(content, opts) {
     this.settings = Object.assign({
-      zIndex: 2030 
+      zIndex: 2030,
+      dismissNegative: true
     }, Dialog.default, opts);
     this.content = content;
-    this.negCallback = null;
-    this.posCallback = null;
     this.positiveLabel = this.settings.positiveLabel;
     this.negativeLabel = this.settings.negativeLabel
     this.emphasized = false;
     this.titleText = null;
     this.eventListeners = new Set();
+    this.positiveListeners = new Set();
+    this.negativeListeners = new Set();
     this.dismissListeners = new Set();
+    this.positiveListener = (event) => {
+      // console.error("Positive listener", this.positiveListeners);
+      this.dismissListeners.clear();
+      for(let listener of this.positiveListeners) listener();
+      this.hide();
+    }
+    this.negativeListener = (event) => {
+      // console.error("Negative listener", this.negativeListeners);
+      this.dismissListeners.clear();
+      for(let listener of this.negativeListeners) listener();
+      this.hide();
+    }
+    this.dismissListener = (event) => {
+      // console.error("Dismiss listener", this.dismissListeners);
+      for(let listener of this.dismissListeners) listener();
+    }
   }
   static instance(content, opts) {
     return new Dialog(content, opts);
@@ -113,14 +130,21 @@ class Dialog {
     this.titleText = titleText
     return this;
   }
-  positive(callback, label) {
-    this.posCallback = callback
-    if (label) this.positiveLabel = label
+  positive(callback, label, options) {
+    this.positiveListeners.add(callback);
+    this.settings = Object.assign(this.settings, options);
+    if (label) this.positiveLabel = label;
     return this;
   }
-  negative(callback, label) {
-    this.negCallback = callback
-    if (label) this.negativeLabel = label
+  negative(callback, label, options) {
+    this.negativeListeners.add(callback);
+    this.settings = Object.assign(this.settings, options);
+    if (label) this.negativeLabel = label;
+    return this;
+  }
+  dismiss(callback, options) {
+    this.dismissListeners.add(callback);    
+    this.settings = Object.assign(this.settings, options);
     return this;
   }
   emphasize() {
@@ -131,30 +155,25 @@ class Dialog {
     Dialog.inst = this;
     this.settings = Object.assign({}, this.settings, opts)
 
-    let d = $('#modal-dialog').detach();
-    $('body').append(d);
-    if (this.settings.width) $('#modal-dialog .modal-dialog').css('max-width', this.settings.width);
-      $('#modal-dialog .modal-dialog').css('width', 'fit-content');
-      $('#modal-dialog .modal-dialog').css('min-width', '200px');
-      $('#modal-dialog').css('z-index', this.settings.zIndex);
-    $('#modal-dialog .dialog-icon').removeClass(function (index, className) {
-      return (className.match (/\b(bi-|text-)\S+/g) || []).join(' ');
-     }).addClass(`bi bi-${this.settings.icon} text-${this.settings.iconStyle}`);
+    // reattaching...
+    $('body').append($('#modal-dialog').detach());
+
+    // cosmetics
+    $('#modal-dialog .dialog-content').html(this.content);
     $('#modal-dialog .bt-positive').html(this.positiveLabel);
     $('#modal-dialog .bt-negative').html(this.negativeLabel);
-    if (this.negCallback) {
-      $('#modal-dialog .bt-negative').show();
-      $('#modal-dialog .bt-negative').off('click').on('click', this.negCallback);
-      if (!this instanceof Confirm)
-        $('#modal-dialog .dialog-foot').removeClass('text-center').addClass('text-end');
-      else $('#modal-dialog .dialog-foot').removeClass('text-end').addClass('text-center');
-    } else {
-      setTimeout(() => { $('#modal-dialog .bt-positive').focus(); }, 200);
-      $('#modal-dialog .bt-negative').hide();
-      $('#modal-dialog .bt-negative').off('click').on('click', this.hide.bind(this));
-      $('#modal-dialog .dialog-foot').removeClass('text-end').addClass('text-center');
+    $('#modal-dialog .modal-dialog').css('width', 'fit-content');
+    $('#modal-dialog .modal-dialog').css('min-width', '200px');
+    $('#modal-dialog').css('z-index', this.settings.zIndex);
 
-    }
+    if (this.titleText) {
+      $('#modal-dialog .dialog-title').html(this.titleText);
+      $('#modal-dialog .dialog-head').show();
+    } else $('#modal-dialog .dialog-head').hide();
+
+    if (this.settings.width) 
+      $('#modal-dialog .modal-dialog').css('max-width', this.settings.width);
+
     if (this.emphasized) {
       $("#modal-dialog .bt-positive")
         .removeClass("btn-primary")
@@ -164,30 +183,41 @@ class Dialog {
       $("#modal-dialog .bt-positive")
         .removeClass("btn-danger")
         .addClass("btn-primary");
+    
+    $('#modal-dialog .dialog-icon').removeClass((index, className) => {
+      return (className.match (/\b(bi-|text-)\S+/g) || []).join(' ');
+    }).addClass(`bi bi-${this.settings.icon} text-${this.settings.iconStyle}`);
 
-    if (this.posCallback) {
-      $('#modal-dialog .bt-positive').show();
-      $('#modal-dialog .bt-positive').off('click').on('click', () => {
-        this.hide();
-        this.posCallback();
-      })
+    // event listeners
+    // console.log(this.negativeListeners, this.positiveListeners, this.dismissListeners);
+    if (this.negativeListeners.size) {
+      $('#modal-dialog .bt-negative').show();
+      $('#modal-dialog .bt-negative').off('click').on('click', this.negativeListener);
+      if (!this instanceof Confirm)
+        $('#modal-dialog .dialog-foot').removeClass('text-center').addClass('text-end');
+      else $('#modal-dialog .dialog-foot').removeClass('text-end').addClass('text-center');
     } else {
-      $('#modal-dialog .bt-positive').off('click').on('click', this.hide.bind(this));
+      setTimeout(() => { $('#modal-dialog .bt-positive').focus(); }, 200);
+      $('#modal-dialog .bt-negative').hide();
+      $('#modal-dialog .bt-negative').off('click').on('click', this.hide.bind(this));
+      $('#modal-dialog .dialog-foot').removeClass('text-end').addClass('text-center');
     }
-    if (this.titleText) {
-      $('#modal-dialog .dialog-title').html(this.titleText);
-      $('#modal-dialog .dialog-head').show();
-    } else {
-      $('#modal-dialog .dialog-head').hide();
-    }
-    $('#modal-dialog .dialog-content').html(this.content);
+  
+    if (this.settings.dismissNegative) 
+      for(let l of this.negativeListeners)
+        this.dismiss(l);
+
+    $('#modal-dialog .bt-positive').show();
+    $('#modal-dialog .bt-positive').off('click').on('click', this.positiveListener);
+    
+    // create modal
     Dialog.modal = new bootstrap.Modal($('#modal-dialog'), this.settings);
-    var myModalEl = document.querySelector('#modal-dialog');
-    myModalEl.removeEventListener('hidden.bs.modal', Dialog.dismissListener);
-    Dialog.dismissListener = (event) => {
-      for(let listener of this.dismissListeners) listener();
-    }
-    myModalEl.addEventListener('hidden.bs.modal', Dialog.dismissListener);
+
+    // attach bootstrap on modal hidden event
+    $('#modal-dialog')
+      .off('hidden.bs.modal')
+      .on('hidden.bs.modal', this.dismissListener);
+
     if (this.settings.toggle) Dialog.modal.toggle();
     else Dialog.modal.show();
     return Dialog.modal;
@@ -199,7 +229,7 @@ class Dialog {
   hide() {
     if (Dialog.modal) {
       Dialog.modal.hide();
-      Dialog.inst.broadcast('hide');
+      this.broadcast('hide');
     }
   }
   broadcast(event, data) {
@@ -221,7 +251,6 @@ Dialog.default = {
 class Confirm extends Dialog {
   constructor(content, opts) {
     super(content, Object.assign({}, Confirm.default, opts))
-    this.negCallback = this.hide
   }
   static instance(content, opts) {
     return new Confirm(content, Object.assign({}, Confirm.default, opts))
@@ -242,6 +271,31 @@ class Loading {
   }
   static instance(content, opts) {
     return new Loading(content, opts)
+  }
+  static load(element, content, options) {
+    let settings = Object.assign({
+      loadingContent: content ?? 'Loading...',
+      disable: true,
+      target: false,
+      addSpinner: true
+    }, options);
+    let html = (settings.target) ? $(element).find(settings.target).html() : $(element).html();
+    settings.loadingContent = `<div class="d-flex align-items-center"><div class="spinner-border spinner-border-sm me-2" role="status"></div> ${settings.loadingContent}</div>`;
+    if (settings.target) 
+      $(element).find(settings.target).html(settings.loadingContent);
+    else $(element).html(settings.loadingContent);
+    $(element).attr('disabled', true).prop('disabled', true).addClass('disabled');
+    return html;
+  }
+  static done(element, content, options) {
+    let settings = Object.assign({
+      doneContent: content ?? 'OK',
+      target: false
+    }, options);
+    if (settings.target) 
+      $(element).find(settings.target).html(settings.doneContent);
+    else $(element).html(settings.doneContent);
+    $(element).attr('disabled', false).prop('disabled', false).removeClass('disabled');
   }
   show(opts) {
     let content = this.content
@@ -676,7 +730,7 @@ class UI {
     return $.toastInstance(content, {type: 'danger'})
   }
   static info(content) {
-    return $.toastInstance(content, {type: 'info'})
+    return $.toastInstance(content, {type: 'dark-subtle'})
   }
   static success(content) {
     return $.toastInstance(content, {type: 'success'})
