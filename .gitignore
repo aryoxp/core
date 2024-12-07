@@ -1,0 +1,4 @@
+/.hintrc
+/php_errors.log
+couchdb-data/
+.idea
