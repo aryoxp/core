@@ -38,15 +38,13 @@
   <div class="row m-5">
     <div class="col">
       <div class="mahasiswa-list mb-3"></div>
-      <div class="multi-select-action">
-        
-      </div>
+      <div class="multi-select-action"></div>
       <div class="student-pagination"></div>
     </div>
   </div>
-  <div class="row m-5">
+  <div class="row m-5" id="transkrip-nilai">
     <div class="col">
-      <h4 class="mb-3">Transkrip Nilai</h4>
+      <h4 class="mb-3">Transkrip Nilai <small class="student-name text-primary"></small> <small class="student-nim text-secondary"></small></h4>
       <div class="list-matakuliah mb-3"></div>
       <div class="pagination-matakuliah mb-3"></div>
       <div class="info-transkrip mb-3 px-4 py-3 bg-light border rounded"></div>

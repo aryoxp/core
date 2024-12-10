@@ -1,11 +1,7 @@
 <?php
 
-class WmonHomeController extends CoreModuleController {
+class WmonHomeController extends AdminController {
 
-  public function preamble() {
-    $this->ui->useCoreLib('core-ui', 'admin');
-  }
-  
   public function index() {
     $this->menuId('wmon-dashboard');
     $this->ui->usePlugin('general-ui');

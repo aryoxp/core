@@ -1,10 +1,6 @@
 <?php
 
-class WadmUserController extends CoreModuleController {
-
-  public function preamble() {
-    $this->ui->useCoreLib('core-ui', 'admin');
-  }
+class WadmUserController extends AdminController {
 
   public function index() {
     $apps = CoreModule::getModules();

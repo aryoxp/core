@@ -81,20 +81,20 @@ class MahasiswaService extends CoreService {
       ->select()
       ->select('m.nrm')
       ->select(QB::raw('(SELECT SUM(mk.sks) 
-        FROM wisaka.krsmatakuliah km 
-        LEFT JOIN wisaka.matakuliah mk ON mk.kdmk = km.kdmk AND mk.kurikulum = km.kurikulum
+        FROM '.self::db('wisaka','database').'.krsmatakuliah km 
+        LEFT JOIN '.self::db('wisaka','database').'.matakuliah mk ON mk.kdmk = km.kdmk AND mk.kurikulum = km.kurikulum
         WHERE km.nrm = m.nrm AND km.status = 1 AND km.bobotnilai > 1) AS jsks'))
       ->select(QB::raw('(SELECT SUM(km.bobotnilai * mk.sks) 
-        FROM wisaka.krsmatakuliah km
-        LEFT JOIN wisaka.matakuliah mk ON mk.kdmk = km.kdmk AND mk.kurikulum = km.kurikulum
+        FROM '.self::db('wisaka','database').'.krsmatakuliah km
+        LEFT JOIN '.self::db('wisaka','database').'.matakuliah mk ON mk.kdmk = km.kdmk AND mk.kurikulum = km.kurikulum
         WHERE km.nrm = m.nrm AND km.status = 1 AND km.bobotnilai > 1) AS snxk'))
       ->select(QB::raw('ROUND((SELECT SUM(km.bobotnilai * mk.sks) 
-        FROM wisaka.krsmatakuliah km
-        LEFT JOIN wisaka.matakuliah mk ON mk.kdmk = km.kdmk AND mk.kurikulum = km.kurikulum
+        FROM '.self::db('wisaka','database').'.krsmatakuliah km
+        LEFT JOIN '.self::db('wisaka','database').'.matakuliah mk ON mk.kdmk = km.kdmk AND mk.kurikulum = km.kurikulum
         WHERE km.nrm = m.nrm AND km.status = 1 AND km.bobotnilai > 1) / 
         (SELECT SUM(mk.sks) 
-        FROM wisaka.krsmatakuliah km 
-        LEFT JOIN wisaka.matakuliah mk ON mk.kdmk = km.kdmk AND mk.kurikulum = km.kurikulum
+        FROM '.self::db('wisaka','database').'.krsmatakuliah km 
+        LEFT JOIN '.self::db('wisaka','database').'.matakuliah mk ON mk.kdmk = km.kdmk AND mk.kurikulum = km.kurikulum
         WHERE km.nrm = m.nrm AND km.status = 1 AND km.bobotnilai > 1),3) AS ipk'))
       ->leftJoin(self::db('wisaka','database').'.akademik wa', 'wa.nrm', 'm.nrm')
       ->where(QB::OG)

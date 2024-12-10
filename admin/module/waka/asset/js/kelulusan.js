@@ -246,7 +246,7 @@ $(() => {
           if (/^$|\s+/.test(value)) {
             delete postvalue.value;
           }
-          console.log(postvalue);
+          // console.log(postvalue);
           this.ajax.post('m/x/waka/akademikApi/saveDataAkademik', postvalue)
           .then((result) => { // console.log(result);
             $(e.currentTarget).addClass('text-success');
@@ -269,7 +269,7 @@ $(() => {
         let postvalue = {
           tgwisuda: tgwisuda,
           nrms: nrms
-        }; console.log(postvalue);
+        }; // console.log(postvalue);
         $('form#print-transkrip-ijazah').find('input[type="hidden"]').remove();
         if (nrms.length == 0) {
           (new CoreError('Belum ada mahasiswa dipilih untuk dicetak transkripnya.')).show();
@@ -378,7 +378,7 @@ $(() => {
   }
   App.listMahasiswaWisuda = (mahasiswas) => {
     let html = '<table class="table"><tr style="position:sticky;top:0;" class="bg-light">';
-    html += `<th></th><th>NIM</th><th>Nama</th><th>No.</th><th>PIN</th><th>SKS</th><th>IPK</th></tr>`;
+    html += `<th></th><th>NIM</th><th>Nama</th><th>No.</th><th>PIN</th><th>SKS</th><th>IPK</th><th>&nbsp;</th></tr>`;
     mahasiswas.forEach(mahasiswa => {
       html += `<tr class="list-item px-2 py-1" data-nrm="${mahasiswa.nrm}">`;
       html += `<td><input type="checkbox" class="form-check-input"></td>`;
@@ -395,6 +395,7 @@ $(() => {
       // html += `<span class="text-nowrap text-center">${mahasiswa.tglulus ? mahasiswa.tglulus.split("-").reverse().join("/") : '-'}</span>`;
       html += `<td class="text-center"><span>${mahasiswa.jsks ?? '-'}</span></td>`;
       html += `<td class="text-center"><span>${mahasiswa.ipk ?? '-'}</span></td>`;
+      html += `<td><a href="transkrip/${mahasiswa.nrm}" class="btn btn-sm btn-primary"><i class="bi bi-list-columns"></i></a></td>`;
       html += `</tr>`;
     });
     // html += `</table>`;

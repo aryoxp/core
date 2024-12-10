@@ -120,7 +120,25 @@ $(() => {
     }
 
     onLoad() {
-      $('#form-search #input-prodi').trigger('change');
+      let nrm = Core.configuration.get('nrm');
+      if (nrm) {
+        let postvalue = { nrm: nrm };
+        $('form#print-transkrip input[name="nrm"]').val(nrm);
+        this.ajax.post(`m/x/waka/studentApi/getMahasiswaWithPA/${nrm}`).then(mahasiswa => {
+          $('.info-transkrip').html(`<span class="text-primary me-2">${mahasiswa.namam}</span> <span>NIM ${mahasiswa.nim}</span>`);
+          $('.student-name').html(mahasiswa.namam);
+          $('.student-nim').html(`NIM ${mahasiswa.nim}`);
+        });
+        this.ajax.post(`m/x/waka/akademikApi/getTranskripNilai`, postvalue).then(transkrip => {
+          App.listTranskrip(transkrip).then(transkrip => {
+            $('#admin-content-panel').animate({
+              'scrollTop': $('#transkrip-nilai').offset().top 
+                - $('#transkrip-nilai').parent().offset().top - 20
+            }, 500);
+            console.log($('#transkrip-nilai').offset().top);
+          });
+        });
+      } else $('#form-search #input-prodi').trigger('change');
       // this.ajax.get('m/x/waka/dosenApi/getDosenList').then(dosens => App.populatePA(dosens));
     }
 
@@ -154,30 +172,33 @@ $(() => {
     $('#input-angkatan').html(html);
   }
   App.listTranskrip = (transkrip) => { // console.log(mahasiswas);
-    let html = '<table class="table table-sm table-hover">';
-    html += `<tr><th>Semester</th><th>Kode</th><th>Kurikulum</th><th>Nama Matakuliah</th>`;
-    html += `<th>SKS</th><th>Nilai</th><th>Bobot</th><th>Status</th><th></th></tr>`
-    transkrip.forEach(matakuliah => { 
-      html += `<tr class="list-item item-matakuliah" data-nrm="${matakuliah.nrm}" data-tahun="${matakuliah.tahun}" data-semester="${matakuliah.semester}" `
-      html += `data-kdmk="${matakuliah.kdmk}" data-kurikulum="${matakuliah.kurikulum}">`
-      html += `<td class="text-center align-middle">${matakuliah.semesterke}</td>`;
-      html += `<td class="text-center align-middle">${matakuliah.kdmk}</td> `
-      html += `<td class="text-center align-middle">${matakuliah.kurikulum}</td> `
-      html += `<td class="text-primary align-middle">${matakuliah.namamk}</td> `
-      html += `<td class="text-center align-middle">${matakuliah.sks}</td> `
-      html += `<td class="text-center nilai align-middle">${matakuliah.nilai}</td>`
-      html += `<td class="text-center align-middle bobotnilai" data-bobotnilai="${(matakuliah.bobotnilai ? matakuliah.bobotnilai : 0)}">${(matakuliah.bobotnilai ? matakuliah.bobotnilai : 0)}</td>`
-      html += `<td class="text-center align-middle">${(matakuliah.status == "1") ? 'OK' : '-'}</td> `
-      html += `<td class="align-middle">`
-      if (matakuliah.status == "1")
-      html += `<span class="btn btn-sm p-2 py-1 ms-2 btn-danger bt-hapus-nilai text-light text-nowrap"><i class="bi bi-eraser"></i></span>`
-      else html += `<span class="btn btn-sm p-2 py-1 ms-2 btn-success bt-aktif-nilai text-light text-nowrap"><i class="bi bi-check-lg"></i></span>`
-      html += `</td>`
-      html += `</tr>`;
+    return new Promise((resolve, reject) => {
+      let html = '<table class="table table-sm table-hover">';
+      html += `<tr><th>Semester</th><th>Kode</th><th>Kurikulum</th><th>Nama Matakuliah</th>`;
+      html += `<th>SKS</th><th>Nilai</th><th>Bobot</th><th>Status</th><th></th></tr>`
+      transkrip.forEach(matakuliah => { 
+        html += `<tr class="list-item item-matakuliah" data-nrm="${matakuliah.nrm}" data-tahun="${matakuliah.tahun}" data-semester="${matakuliah.semester}" `
+        html += `data-kdmk="${matakuliah.kdmk}" data-kurikulum="${matakuliah.kurikulum}">`
+        html += `<td class="text-center align-middle">${matakuliah.semesterke}</td>`;
+        html += `<td class="text-center align-middle">${matakuliah.kdmk}</td> `
+        html += `<td class="text-center align-middle">${matakuliah.kurikulum}</td> `
+        html += `<td class="text-primary align-middle">${matakuliah.namamk}</td> `
+        html += `<td class="text-center align-middle">${matakuliah.sks}</td> `
+        html += `<td class="text-center nilai align-middle">${matakuliah.nilai}</td>`
+        html += `<td class="text-center align-middle bobotnilai" data-bobotnilai="${(matakuliah.bobotnilai ? matakuliah.bobotnilai : 0)}">${(matakuliah.bobotnilai ? matakuliah.bobotnilai : 0)}</td>`
+        html += `<td class="text-center align-middle">${(matakuliah.status == "1") ? '<span class="badge text-bg-success">OK</span>' : '-'}</td> `
+        html += `<td class="align-middle">`
+        if (matakuliah.status == "1")
+        html += `<span class="btn btn-sm p-2 py-1 ms-2 btn-danger bt-hapus-nilai text-light text-nowrap"><i class="bi bi-eraser"></i></span>`
+        else html += `<span class="btn btn-sm p-2 py-1 ms-2 btn-success bt-aktif-nilai text-light text-nowrap"><i class="bi bi-check-lg"></i></span>`
+        html += `</td>`
+        html += `</tr>`;
+      });
+      html += '</table>'
+      if (transkrip.length == 0) html = '<em class="d-block m-3 user-muted">Data tidak ditemukan atau data mahasiswa belum diset informasi terkait Program Studi yang diikuti.</em>';
+      $('.list-matakuliah').html(html);
+      resolve(transkrip);
     });
-    html += '</table>'
-    if (transkrip.length == 0) html = '<em class="d-block m-3 user-muted">Data tidak ditemukan atau data mahasiswa belum diset informasi terkait Program Studi yang diikuti.</em>';
-    $('.list-matakuliah').html(html);
   } 
 
   new App();

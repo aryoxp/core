@@ -12,8 +12,17 @@
 
   <!-- <div class="row">
   <div class="col"> -->
-  <img src="<?php echo $this->asset('logo-whn.png', 'admin/module/waka/asset/image/'); ?>"
-    class="mb-5" style="width:150pt;">
+  <table class="ffs mb-5" style="width: 100%;">
+    <tr>
+      <td>
+        <img src="<?php echo $this->asset('logo-whn.png', 'admin/module/waka/asset/image/'); ?>" style="width:200pt;"></td>
+      <td style="text-align: right;">
+      Terakreditasi BAN-PT No. 1623/SK/BAN-PT/Ak.P/PT/VIII/2024<br>
+      SK Mendikbud No. 029/D/OT/2021
+      </td>
+    </tr>
+  </table>
+
   <h3 class="mb-4"><i class="bi bi-card-checklist mx-2 text-primary"></i> 
     Kartu Rencana Studi
   </h3>

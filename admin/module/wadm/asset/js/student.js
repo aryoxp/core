@@ -18,12 +18,24 @@ $(() => {
           keyword != App.pagination.keyword ||
           perpage != App.pagination.perpage) ?
           1 : App.pagination.page;
-    
+        let prodis = [];
+        if ($('#prodi-d3').prop('checked')) prodis.push('D3');
+        if ($('#prodi-d3f').prop('checked')) prodis.push('D3F');
+        if ($('#prodi-mik').prop('checked')) prodis.push('MIK');
+        if ($('#prodi-fis').prop('checked')) prodis.push('FIS');
+        if ($('#prodi-none').prop('checked')) prodis.push('-');
+        let params = {
+          keyword: keyword
+        }; 
+        if (prodis.length) Object.assign(params, {
+          filter: {
+            prodi: prodis.join()
+          }
+        });
+        // console.log(params);
         Promise.all([
-          this.ajax.post(`m/x/wadm/studentApi/search/${page}/${perpage}`, {
-            keyword: keyword
-          })])
-        .then(results => {
+          this.ajax.post(`m/x/wadm/studentApi/search/${page}/${perpage}`, params)])
+        .then(results => { // console.log(results);
           let mahasiswas = results[0].mahasiswa;
           let count = results[0].count;
           App.populateMahasiswa(mahasiswas)
@@ -36,6 +48,8 @@ $(() => {
             App.pagination.keyword = keyword;
             App.pagination.perpage = perpage;
             App.pagination.page = page;
+          }, err => {
+            UI.error(err).show();
           });
     
       });
@@ -71,6 +85,7 @@ $(() => {
   }
 
   App.populateMahasiswa = (mahasiswas) => { // console.log(mahasiswas);
+    if (!mahasiswas) mahasiswas = [];
     let listHtml = '';
     let selected = App.selectedUsernames;
     mahasiswas.forEach(mahasiswa => { 
@@ -93,7 +108,7 @@ $(() => {
       listHtml += `  </span>`
       listHtml += `</div>`
     });
-    if (listHtml.length == 0) listHtml = '<em class="d-block m-3 user-muted">No users found in current search.</em>';
+    if (listHtml.length == 0) listHtml = '<em class="d-block m-3 user-muted">No mahasiswa found in current search.</em>';
     $('.mahasiswa-list').html(listHtml);
   }
   App.prodi = (prodi) => {

@@ -46,22 +46,21 @@
               <!-- <img src="https://github.com/mdo.png" alt="mdo" width="28" height="28" class="rounded-circle"> -->
             </a>
             <ul class="dropdown-menu text-small" aria-labelledby="dropdownUser1">
-              <li><a class="dropdown-item" href="<?php echo $this->location('home/profile'); ?>"> Profile </a></li>
               <?php if(UAC::isAdmin()) : ?>
               <li><a class="dropdown-item" href="<?php echo $this->location('settings'); ?>"> Settings</a></li>
-              <li>
               <?php endif; ?>
-                <hr class="dropdown-divider">
-              </li>
+              
               <li>
                 <?php if (UAC::isSignedIn()): ?>
+                <li><a class="dropdown-item" href="<?php echo $this->location('home/profile'); ?>"> Profile </a></li>
+                <li><hr class="dropdown-divider"></li>
                 <a class="dropdown-item bt-app-sign-out" href="<?php echo $this->location('home/signOut'); ?>">
                   <span class="btn btn-sm btn-danger">
                   Sign out <i class="bi bi-box-arrow-right"></i>
                   </span>
                 </a>
                 <?php else: ?>
-                <a class="dropdown-item bt-app-sign-in" href="#">
+                <a class="dropdown-item bt-app-sign-in" href="<?php echo SSO::authUrl('/admin', $_SERVER['REQUEST_URI']); ?>">
                   <span class="btn btn-sm btn-primary">
                   <i class="bi bi-box-arrow-in-right"></i> Sign in</span>
                 </a>

@@ -4,9 +4,10 @@ class WadmStudentApiController extends CoreApi {
 
   public function search($page = 1, $perpage=100, $sort='asc') {
     try {
-      $mahasiswaService = new MahasiswaService();
+      $service = new MahasiswaService();
       $keyword = $this->postv('keyword');
-      $result = $mahasiswaService->search($keyword, $page, $perpage, $sort);
+      $filter = $this->postv('filter');
+      $result = $service->search($keyword, $filter, $page, $perpage, $sort);
       CoreResult::instance($result)->show();    
     } catch(Exception $e) {
       CoreError::instance($e->getMessage())->show();
@@ -14,11 +15,11 @@ class WadmStudentApiController extends CoreApi {
   }
   public function searchProdiAngkatan($page = 1, $perpage=100, $sort='asc') {
     try {
-      $mahasiswaService = new MahasiswaService();
+      $service = new MahasiswaService();
       $prodi = $this->postv('prodi');
       $angkatan = $this->postv('angkatan');
       $keyword = $this->postv('keyword');
-      $result = $mahasiswaService->searchProdiAngkatan($prodi, $angkatan, $keyword, $page, $perpage, $sort);
+      $result = $service->searchProdiAngkatan($prodi, $angkatan, $keyword, $page, $perpage, $sort);
       CoreResult::instance($result)->show();    
     } catch(Exception $e) {
       CoreError::instance($e->getMessage())->show();
@@ -26,11 +27,11 @@ class WadmStudentApiController extends CoreApi {
   }
   public function searchProdiAngkatanPA($page = 1, $perpage=100, $sort='asc') {
     try {
-      $mahasiswaService = new MahasiswaService();
+      $service = new MahasiswaService();
       $prodi = $this->postv('prodi');
       $angkatan = $this->postv('angkatan');
       $keyword = $this->postv('keyword');
-      $result = $mahasiswaService->searchProdiAngkatanPA($prodi, $angkatan, $keyword, $page, $perpage, $sort);
+      $result = $service->searchProdiAngkatanPA($prodi, $angkatan, $keyword, $page, $perpage, $sort);
       CoreResult::instance($result)->show();    
     } catch(Exception $e) {
       CoreError::instance($e->getMessage())->show();
@@ -38,7 +39,7 @@ class WadmStudentApiController extends CoreApi {
   }
   public function register() {
     try {
-      $mahasiswaService = new MahasiswaService();
+      $service = new MahasiswaService();
       $prodi = $this->postv('prodi');
       $group = $this->postv('group');
       $gelombang = $this->postv('gelombang');
@@ -47,7 +48,7 @@ class WadmStudentApiController extends CoreApi {
       $tplahir = $this->postv('tplahir');
       $tglahir = $this->postv('tglahir');
       $nikpaspor = $this->postv('nikp  aspor');
-      $result = $mahasiswaService->register($prodi, $group, $gelombang, 
+      $result = $service->register($prodi, $group, $gelombang, 
         $status, $nama, $tplahir, $tglahir, $nikpaspor);
       CoreResult::instance($result)->show();    
     } catch(Exception $e) {
@@ -56,8 +57,8 @@ class WadmStudentApiController extends CoreApi {
   }
   public function getMahasiswa($nrm) {
     try {
-      $mahasiswaService = new MahasiswaService();
-      $result = $mahasiswaService->getMahasiswa($nrm);
+      $service = new MahasiswaService();
+      $result = $service->getMahasiswa($nrm);
       CoreResult::instance($result)->show();    
     } catch(Exception $e) {
       CoreError::instance($e->getMessage())->show();
@@ -66,8 +67,8 @@ class WadmStudentApiController extends CoreApi {
   public function deleteMahasiswa() {
     try {
       $nrm = $this->postv('nrm');
-      $mahasiswaService = new MahasiswaService();
-      $result = $mahasiswaService->deleteMahasiswa($nrm);
+      $service = new MahasiswaService();
+      $result = $service->deleteMahasiswa($nrm);
       CoreResult::instance($result)->show();    
     } catch(Exception $e) {
       CoreError::instance($e->getMessage())->show();
@@ -79,8 +80,8 @@ class WadmStudentApiController extends CoreApi {
       $prodi = $this->postv('prodi');
       $gelombang = $this->postv('gelombang');
       $status = $this->postv('status');
-      $mahasiswaService = new MahasiswaService();
-      $result = $mahasiswaService->updateProgram($nrm, $prodi, $gelombang, $status);
+      $service = new MahasiswaService();
+      $result = $service->updateProgram($nrm, $prodi, $gelombang, $status);
       CoreResult::instance($result)->show();    
     } catch(Exception $e) {
       CoreError::instance($e->getMessage())->show();
@@ -97,8 +98,8 @@ class WadmStudentApiController extends CoreApi {
       $statnikah = $this->postv('statnikah');
       $nikpaspor = $this->postv('nikpaspor');
       $telp = $this->postv('telp');
-      $mahasiswaService = new MahasiswaService();
-      $result = $mahasiswaService->updateIdentitasDiri($nrm, $nama, $tplahir, 
+      $service = new MahasiswaService();
+      $result = $service->updateIdentitasDiri($nrm, $nama, $tplahir, 
         $tglahir, $goldarah, $kdagama, $statnikah, $nikpaspor, $telp);
       CoreResult::instance($result)->show();    
     } catch(Exception $e) {
@@ -114,8 +115,8 @@ class WadmStudentApiController extends CoreApi {
       $alamat = $this->postv('alamat');
       $prop = $this->postv('prop');
       $kota = $this->postv('kota');
-      $mahasiswaService = new MahasiswaService();
-      $result = $mahasiswaService->updateAlamat($nrm, $alamatasal, 
+      $service = new MahasiswaService();
+      $result = $service->updateAlamat($nrm, $alamatasal, 
         $propasal, $kotaasal, $alamat, $prop, $kota);
       CoreResult::instance($result)->show();    
     } catch(Exception $e) {
@@ -130,8 +131,8 @@ class WadmStudentApiController extends CoreApi {
       $asalsekolah = $this->postv('asalsekolah');
       $jurusan = $this->postv('jurusan');
       $thlulus = $this->postv('thlulus');
-      $mahasiswaService = new MahasiswaService();
-      $result = $mahasiswaService->updateSekolahAsal($nrm, $propsekolah, 
+      $service = new MahasiswaService();
+      $result = $service->updateSekolahAsal($nrm, $propsekolah, 
         $kotasekolah, $asalsekolah, $jurusan, $thlulus);
       CoreResult::instance($result)->show();    
     } catch(Exception $e) {
@@ -145,8 +146,8 @@ class WadmStudentApiController extends CoreApi {
       $pekerjaanortu = $this->postv('pekerjaanortu');
       $telportu = $this->postv('telportu');
       $alamatortu = $this->postv('alamatortu');
-      $mahasiswaService = new MahasiswaService();
-      $result = $mahasiswaService->updateOrtu($nrm, $namaortu, 
+      $service = new MahasiswaService();
+      $result = $service->updateOrtu($nrm, $namaortu, 
         $pekerjaanortu, $telportu, $alamatortu);
       CoreResult::instance($result)->show();    
     } catch(Exception $e) {

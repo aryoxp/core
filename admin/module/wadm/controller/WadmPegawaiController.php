@@ -1,10 +1,6 @@
 <?php
 
-class WadmPegawaiController extends CoreModuleController {
-
-  public function preamble() {
-    $this->ui->useCoreLib('core-ui', 'admin');
-  }
+class WadmPegawaiController extends AdminController {
 
   public function index() {
     $this->menuId('wadm-pegawai');

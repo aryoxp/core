@@ -1,10 +1,6 @@
 <?php
 
-class WmonTransaksiController extends CoreModuleController {
-
-  public function preamble() {
-    $this->ui->useCoreLib('core-ui', 'admin');
-  }
+class WmonTransaksiController extends AdminController {
 
   public function mutasikas() {
     $this->menuId('wmon-mutasi-kas');

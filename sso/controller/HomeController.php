@@ -15,6 +15,7 @@ class HomeController extends CoreController {
     $password = $this->postv('password');
     $redirect = $this->postv('redirect');
     $remember = $this->postv('remember', false);
+    $url      = $this->postv('url');
 
     if($remember)
       setcookie('username', $username, time() + 30 * 24 * 60 * 60, "/");
@@ -42,9 +43,10 @@ class HomeController extends CoreController {
       if($uuid === false) {
         header('location: ' . $this->location() . '?e=2&redirect=' . $redirect);
       } else {
-        $location = ((isset($redirect) && $redirect) 
-          ? $redirect . "?token=$uuid" 
-          : $this->ui->location("/admin/home/index?token=" . $uuid, CoreView::APP));
+        // $location = ((isset($redirect) && $redirect) 
+        //   ? $redirect . "?token=$uuid" 
+        //   : $this->ui->location("/admin/home/index?token=" . $uuid, CoreView::APP));
+        $location = $this->ui->location($url . "?token=" . $uuid . "&redirect=" . $redirect, CoreView::APP);
         header('location: ' . $location);
       }
     } else

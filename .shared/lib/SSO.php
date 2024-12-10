@@ -2,9 +2,9 @@
 
 class SSO {
 
-  public static function authUrl($redirect = '') {
+  public static function authUrl($url, $redirect = '') {
     $uri = Core::lib(Core::URI);
-    return $uri->get(CoreUri::BASELINKURL) . 'sso?redirect=' . $redirect;
+    return $uri->get(CoreUri::BASELINKURL) . 'sso?url=' . $url . '&redirect=' . $redirect;
   }
 
   public static function verify($token, &$error = "") {

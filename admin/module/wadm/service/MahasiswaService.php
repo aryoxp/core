@@ -1,22 +1,44 @@
 <?php
 
 class MahasiswaService extends CoreService {
-  public function search($keyword, $page, $perpage=100, $sort) {
+  public function search($keyword, $filter = "", $page = 1, $perpage=100, $sort) {
+    // $filters = [];
+    function filter($qb, $filter) {
+      if(is_array($filter) and !empty($filter)) {
+        $qb->where(QB::OG);
+        foreach($filter as $c => $v) {
+          $vs = explode(",", $v);
+          foreach($vs as $s) { // echo $c, $s;
+            if ($s == '-') $qb->where($c, QB::IS, QB::raw(QB::NULL), QB::OR);
+            else $qb->where($c, QB::EQ, QB::esc(trim($s)), QB::OR);
+          }
+        }
+        $qb->where(QB::EG);
+      }
+    }
+    // var_dump($filters);
     $offset = ($page-1) * $perpage;
     $db = self::instance('wis');
     $qb = QB::instance('mahasiswa')
       ->select()
+      ->where(QB::OG)
       ->where('nim', 'LIKE', QB::esc('%'.$keyword.'%'))
       ->where('nrm', 'LIKE', QB::esc('%'.$keyword.'%'), QB::OR)
       ->where('namam', 'LIKE', QB::esc('%'.$keyword.'%'), QB::OR)
-      ->orderBy(QB::raw('SUBSTRING(nrm, 1, 4)'), QB::DESC)
+      ->where(QB::EG);
+    filter($qb, $filter);
+    $qb->orderBy(QB::raw('SUBSTRING(nrm, 1, 4)'), QB::DESC)
       ->limit($offset, $perpage);
+    // echo $qb->get();
     $mahasiswa = $db->query($qb->get());
     $qb = QB::instance('mahasiswa')
       ->select(QB::raw('COUNT(*)'))
+      ->where(QB::OG)
       ->where('nim', 'LIKE', QB::esc('%'.$keyword.'%'))
       ->where('nrm', 'LIKE', QB::esc('%'.$keyword.'%'), QB::OR)
-      ->where('namam', 'LIKE', QB::esc('%'.$keyword.'%'), QB::OR);
+      ->where('namam', 'LIKE', QB::esc('%'.$keyword.'%'), QB::OR)
+      ->where(QB::EG);
+    filter($qb, $filter);
     $result = new stdClass;
     $result->mahasiswa = $mahasiswa;
     $result->count = $db->getVar($qb->get());

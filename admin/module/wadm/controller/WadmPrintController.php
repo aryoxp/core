@@ -1,6 +1,6 @@
 <?php
 
-class WadmPrintController extends CoreModuleController {
+class WadmPrintController extends AdminController {
 
   public function preamble() {
     $this->ui->useCoreLib('core-ui', 'admin');

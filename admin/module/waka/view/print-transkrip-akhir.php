@@ -48,7 +48,9 @@ if(!function_exists('bulan')) {function bulan($m) {
   return "";
 }}
 if(!function_exists('tanggal')) {function tanggal($ymd) {
+  if (!$ymd) return "";
   $ymd = array_reverse(explode("-", $ymd));
+  if (count($ymd) < 3) return "";
   $d = (int) $ymd[0];
   $m = (int) $ymd[1];
   $y = (int) $ymd[2];
@@ -67,8 +69,17 @@ if(!function_exists('tanggal')) {function tanggal($ymd) {
 </style>
 
 <div class="<?php if (isset($pb)) echo 'page-break'; ?>">
-  <img src="<?php echo $this->asset('logo-whn.png', 'admin/module/waka/asset/image/'); ?>" class="mb-5"
-    style="width:150pt;">
+  <table class="ffs mb-5" style="width: 100%;">
+    <tr>
+      <td>
+        <img src="<?php echo $this->asset('logo-whn.png', 'admin/module/waka/asset/image/'); ?>" style="width:200pt;"></td>
+      <td style="text-align: right;">
+      Terakreditasi BAN-PT No. 1623/SK/BAN-PT/Ak.P/PT/VIII/2024<br>
+      SK Mendikbud No. 029/D/OT/2021
+      </td>
+    </tr>
+  </table>
+
   <h3 class="m-0 mb-5 text-center ffs fw-bold">
     <span class="text-uppercase">Transkrip Akademik</span>
     <br><span class="fw-normal" style="font-size:13pt">No. <?php echo $akademik->pin; ?></span>

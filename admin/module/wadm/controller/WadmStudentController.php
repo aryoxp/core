@@ -1,10 +1,6 @@
 <?php
 
-class WadmStudentController extends CoreModuleController {
-
-  public function preamble() {
-    $this->ui->useCoreLib('core-ui', 'admin');
-  }
+class WadmStudentController extends AdminController {
 
   public function index() {
     $this->menuId('wadm-mahasiswa');

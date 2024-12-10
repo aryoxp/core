@@ -20,6 +20,7 @@
       <div class="form-signin mx-auto px-3 mt-3">
         <form id="form-sign-in" action="<?php echo $this->location('home/signIn'); ?>" method="post">
           <input type="hidden" id="redirect" name="redirect" value="<?php echo $_GET['redirect'] ?? $this->location('admin', CoreView::APP); ?>" />
+          <input type="hidden" id="url" name="url" value="<?php echo $_GET['url'] ?? ""; ?>" />
           <h1 class="h3 mb-3 fw-normal">Sign In</h1>
           <div class="form-floating">
             <input type="text" name="username" class="form-control" id="input-username" placeholder="User ID" autocomplete="new-password" value="<?php echo $_COOKIE['username'] ?? ""; ?>">

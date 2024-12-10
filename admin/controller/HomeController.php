@@ -10,6 +10,7 @@ class HomeController extends CoreController {
       return;
     } else {
       $token = $this->getv('token');
+      $redirect = $this->getv('redirect');
       if ($token) {
         $error = null;
         $result = SSO::verify($token, $error);
@@ -17,7 +18,10 @@ class HomeController extends CoreController {
           $rbac = new RBACService();
           $_SESSION['user'] = $result;
           $_SESSION['authmenu'] = $rbac->getAuthorizedMenus($result->username);
-          $this->ui->view('index.php');
+          if ($redirect) {
+            header('location:' . $redirect);
+            exit;
+          } else $this->ui->view('index.php');
         } else
           $this->ui->view('index.php', array('error' => 'SSO authentication failed. ' . $error));
       } else $this->ui->view('index.php');

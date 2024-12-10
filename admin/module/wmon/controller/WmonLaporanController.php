@@ -1,10 +1,6 @@
 <?php
 
-class WmonLaporanController extends CoreModuleController {
-
-  public function preamble() {
-    $this->ui->useCoreLib('core-ui', 'admin');
-  }
+class WmonLaporanController extends AdminController {
 
   public function pembayaranmahasiswa() {
     $this->menuId('wmon-laporan-pembayaran-mahasiswa');

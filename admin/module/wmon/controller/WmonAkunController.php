@@ -1,10 +1,6 @@
 <?php
 
-class WmonAkunController extends CoreModuleController {
-
-  public function preamble() {
-    $this->ui->useCoreLib('core-ui', 'admin');
-  }
+class WmonAkunController extends AdminController {
 
   public function index() {
     $this->menuId('wmon-akun-index');

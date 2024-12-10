@@ -11,7 +11,7 @@
     <?php endif; ?>
 
     <p>Please sign-in to access this page.</p>
-    <a class="btn btn-lg btn-primary" href="<?php echo SSO::authUrl($this->location()); ?>">Sign In <i class="bi bi-arrow-right ms-2"></i><i class="bi bi-door-open"></i> </a>
+    <a class="btn btn-lg btn-primary" href="<?php echo SSO::authUrl('/admin', $this->location()); ?>">Sign In <i class="bi bi-arrow-right ms-2"></i><i class="bi bi-door-open"></i> </a>
 
   </div>
 </div> <!--//app-wrapper-->

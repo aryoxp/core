@@ -1,10 +1,6 @@
 <?php
 
-class WakaAkademikController extends CoreModuleController {
-
-  public function preamble() {
-    $this->ui->useCoreLib('core-ui', 'admin');
-  }
+class WakaAkademikController extends AdminController {
 
   public function penerimaan() {
     $this->menuId('waka-penerimaan');
@@ -69,10 +65,14 @@ class WakaAkademikController extends CoreModuleController {
     $this->ui->view('khs.php', null, CoreModuleView::MODULE);
   }
 
-  public function transkrip() {
+  public function transkrip($nrm = null) {
     $this->menuId('waka-transkrip');
     $this->ui->usePlugin('general-ui');
     $this->ui->useScript('js/transkrip.js');
+
+    Core::lib(Core::CONFIG)
+      ->set('nrm', $nrm, CoreConfig::CONFIG_TYPE_CLIENT);
+
     $this->ui->view('transkrip.php', null, CoreModuleView::MODULE);
   }
 
