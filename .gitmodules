@@ -10,3 +10,6 @@
 [submodule "kb"]
 	path = kb
 	url = https://github.com/aryoxp/core-kb.git
+[submodule "sb"]
+	path = sb
+	url = https://github.com/aryoxp/core-sb.git
