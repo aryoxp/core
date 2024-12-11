@@ -4,3 +4,6 @@
 [submodule "admin/module/waka"]
 	path = admin/module/waka
 	url = https://github.com/aryoxp/wis-aka.git
+[submodule "admin/module/wmon"]
+	path = admin/module/wmon
+	url = https://github.com/aryoxp/wis-mon.git
