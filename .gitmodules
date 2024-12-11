@@ -7,3 +7,6 @@
 [submodule "admin/module/wmon"]
 	path = admin/module/wmon
 	url = https://github.com/aryoxp/wis-mon.git
+[submodule "kb"]
+	path = kb
+	url = https://github.com/aryoxp/core-kb.git

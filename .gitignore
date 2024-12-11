@@ -7,6 +7,5 @@ server/
 /.vscode
 /.docs
 /mgm
-/kb
 /sb
 /admin/module/db.ini
