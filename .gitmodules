@@ -1,0 +1,3 @@
+[submodule "admin/module/wadm"]
+	path = admin/module/wadm
+	url = https://github.com/aryoxp/wis-adm.git
