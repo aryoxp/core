@@ -4,7 +4,7 @@
 <div class="container">
   <div class="row m-5">
     <div class="col">
-      <h3 class="border-bottom pb-3"><i class="bi bi-gear-fill mx-2 text-primary"></i> 
+      <h3 class="border-bottom pb-3"><i class="bi bi-person-fill mx-2 text-primary"></i> 
       Profile</h3>
       <div class="row row-cols-2">
         <div class="col-2">Username</div> 

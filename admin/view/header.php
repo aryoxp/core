@@ -78,9 +78,9 @@
 
       <?php
       $ui = $this; // var_dump($ui);
-      function generateMenus($menu, &$ui, $sub = false)
-      {
-
+      $showHR = false;
+      function generateMenus($menu, &$ui, $sub = false) {
+        global $showHR; 
         $app = Core::lib(Core::URI)->get(CoreUri::APP);
         $controller = Core::lib(Core::URI)->get(CoreUri::CONTROLLERID);
         $method = Core::lib(Core::URI)->get(CoreUri::METHOD);
@@ -122,7 +122,9 @@
           <?php else : // var_dump($menu); 
           ?>
             <?php if (property_exists($menu, 'type') && $menu->type == "separator") {
-              echo '<li class="submenu-item ms-4"><hr class="m-0 p-0 mt-2 mb-2"></li>';
+              if ($showHR)
+                echo '<li class="submenu-item ms-4"><hr class="m-0 p-0 mt-2 mb-2"></li>';
+              $showHR = false;
               return;
             } ?>
             <?php if (property_exists($menu, 'type') && $menu->type == "group") {
@@ -143,7 +145,7 @@
                   </ul>
                 </div>
               </li>
-            <?php else : ?>
+            <?php else : $showHR = true; ?>
               <li class="submenu-item text-nowrap">
                 <a id="menu-<?php echo $app ?>-<?php echo $menu->id; ?>" class="submenu-link<?php echo $active; ?>" href="<?php echo $ui->location($menu->url); ?>">
                   <?php if ($menu->icon) echo '<i class="bi bi-' . $menu->icon . ' me-2"></i>'; ?>
