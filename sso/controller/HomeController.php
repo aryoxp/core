@@ -41,7 +41,7 @@ class HomeController extends CoreController {
       // $sess = new CoreSession();
       // $sess->set($userdata);
       if($uuid === false) {
-        header('location: ' . $this->location() . '?e=2&redirect=' . $redirect);
+        header('location: ' . $this->location() . '?e=2&url=' . $url . '&redirect=' . $redirect);
       } else {
         // $location = ((isset($redirect) && $redirect) 
         //   ? $redirect . "?token=$uuid" 
@@ -50,7 +50,7 @@ class HomeController extends CoreController {
         header('location: ' . $location);
       }
     } else
-      header('location: ' . $this->location() . '?e=1&redirect=' . $redirect);
+      header('location: ' . $this->location() . '?e=1&url=' . $url . '&redirect=' . $redirect);
     exit;
   }
 

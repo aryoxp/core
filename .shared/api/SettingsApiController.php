@@ -182,6 +182,32 @@ class SettingsApiController extends CoreApi {
       CoreError::instance($e->getMessage())->show();
     }
   }
+  public function checkUser() {
+    try {
+      $username = $this->postv('username');
+      $result = (new RBACService())->getUser($username);
+      CoreResult::instance($result)->show();
+    } catch(Exception $e) {
+      CoreError::instance($e->getMessage())->show();
+    }
+  }
+  public function registerUser() {
+    try {
+      $username = $this->postv('username');
+      $password = $this->postv('password');
+      $name = $this->postv('name');
+      $roles = $this->postv('roles');
+      $service = new RBACService();
+      $result = $service->createUser($username, $password, $name);
+      foreach($roles as $role) {
+        [$app, $rid] = explode(",", $role); 
+        $result = $service->assignRole($username, $app, $rid);
+      }
+      CoreResult::instance($result)->show();
+    } catch(Exception $e) {
+      CoreError::instance($e->getMessage())->show();
+    }
+  }
   public function getAssignedRoles() {
     try {
       $username = $this->postv('username');
