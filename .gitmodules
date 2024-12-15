@@ -13,3 +13,6 @@
 [submodule "sb"]
 	path = sb
 	url = https://github.com/aryoxp/core-sb.git
+[submodule "mgm"]
+	path = mgm
+	url = https://github.com/aryoxp/core-mgm.git

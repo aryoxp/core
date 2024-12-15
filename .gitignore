@@ -5,7 +5,6 @@ couchdb-data/
 admin/files/*.pdf
 /.vscode
 /.docs
-/mgm
 /admin/module/db.ini
 server/node_modules
 package-lock.json
