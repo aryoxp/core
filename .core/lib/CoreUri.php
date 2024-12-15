@@ -54,7 +54,7 @@ class CoreUri {
   private function __construct($coreConfig = null) {
 
     $xscript        = explode("/", $_SERVER['SCRIPT_NAME']);
-    $this->scheme   = $_SERVER['REQUEST_SCHEME'];
+    $this->scheme   = $_SERVER['SERVER_PORT'] == 443 ? 'https': $_SERVER['REQUEST_SCHEME'];
     $this->host     = rtrim($_SERVER['HTTP_HOST'], ":" . $_SERVER['SERVER_PORT']);
     $this->port     = $_SERVER['SERVER_PORT'] == 80 ? "" : $_SERVER['SERVER_PORT'];
     $this->uri      = $_SERVER['REQUEST_URI'];
@@ -128,7 +128,7 @@ class CoreUri {
       $coreConfig['runtime']['default_method'] :
       $method;
     $this->args = $pathParts;
-    // var_dump($this);
+    // var_dump($this, $_SERVER);
   }
 
   public function get($part = CoreUri::URI) {
