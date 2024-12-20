@@ -1,24 +1,15 @@
 code-input {
-  height: 600px;
+  height: min-content;
   margin: 0;
 }
 code-input pre {
   overflow: initial !important;
 }
 
-code-input {
-  /* border: 1px solid black; */
-  /* margin: 0; */
-
-  /* grow with content */
-  height: min-content;
-}
-
 code-input textarea,
 code-input pre {
   /* always wrap content */
   white-space: pre-wrap;
-  word-break: break-all;
   max-width: min-content;
 
   /* override JS fixating the height with inline style and causing the textarea not to shrink
@@ -32,7 +23,6 @@ code-input pre {
 code-input pre code {
   /* always wrap content */
   white-space: pre-wrap;
-  /* word-break: break-all; */
   max-width: calc(100% - 2em);
 
   /* override JS fixating the height with inline style and causing the textarea not to shrink

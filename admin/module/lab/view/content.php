@@ -51,37 +51,45 @@
       <div class="content-list mb-3"></div>
       <div class="content-pagination"></div>
 
-      <h3 class="my-5"><i class="bi bi-plus-lg me-3 text-primary"></i>
+      <hr class="my-5">
+
+      <h3><i class="bi bi-plus-lg me-3 text-primary"></i>
         <span class="form-title">New Content</span>
       </h3>
 
       <div class="container px-5 my-5">
-        <form id="content-form">
+        <form id="content-form" class="needs-validation" novalidate>
           <input type="hidden" id="cid" name="cid" value="">
+
           <div class="form-floating mb-3">
-            <input class="form-control" id="key" type="text" placeholder="Key" data-sb-validations="required" />
-            <label for="key">Content Key</label>
-            <div class="invalid-feedback" data-sb-feedback="key:required">Key is required.</div>
-          </div>
-          <div class="form-floating mb-3">
-            <input class="form-control" id="title" type="text" placeholder="Title" data-sb-validations="required" />
+            <input class="form-control" id="title" type="text" placeholder="Title" data-sb-validations="required" required />
             <label for="title">Title</label>
-            <div class="invalid-feedback" data-sb-feedback="title:required">Title is required.</div>
+            <div class="invalid-feedback">Title is required.</div>
           </div>
           <div class="form-floating mb-3">
-            <input class="form-control" id="subtitle" type="text" placeholder="Sub-title (Optional)" data-sb-validations="required" />
+            <input class="form-control" id="subtitle" type="text" placeholder="Sub-title (Optional)" />
             <label for="subtitle">Sub-title (Optional)</label>
-            <div class="invalid-feedback" data-sb-feedback="subTitleOptional:required">Sub-title (Optional) is required.</div>
           </div>
-          <div class="mb-3 px-3">
-            <label class="form-label form-label-inline me-3">Content Type</label>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" id="type_md" type="radio" name="type" value="md" checked />
-                <label class="form-check-label" for="type_md">Markdown</label>
+          <div class="row g-3 mb-3">
+            <div class="col">
+              <div class="form-floating">
+                <input class="form-control" id="key" type="text" placeholder="Key" required />
+                <label for="key">Content Key</label>
+                <div class="invalid-feedback">Key is required.</div>
+              </div>
             </div>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" id="type_html" type="radio" name="type" value="html" />
-                <label class="form-check-label" for="type_html">HTML</label>
+            <div class="col d-flex align-items-center px-3 rounded border bg-light me-2">
+              <div class="px-3">
+                <label class="form-label-inline me-3 fw-bold">Content Type</label>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" id="type_md" type="radio" name="type" value="md" checked />
+                    <label class="form-check-label" for="type_md">Markdown</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" id="type_html" type="radio" name="type" value="html" />
+                    <label class="form-check-label" for="type_html">HTML</label>
+                </div>
+              </div>
             </div>
           </div> 
           <div class="mb-3">
@@ -99,7 +107,7 @@
             <div class="text-center text-danger mb-3">Error sending message!</div>
           </div>
           <div class="text-end">
-            <button class="btn btn-secondary btn-lg px-5 me-2" id="clearButton" type="button">Clear</button>
+            <button class="bt-clear btn btn-secondary btn-lg px-5 me-2" id="clearButton" type="button">Clear</button>
             <button class="btn btn-primary btn-lg px-5" id="submitButton" type="submit">Save</button>
           </div>
         </form>

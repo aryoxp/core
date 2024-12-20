@@ -17,6 +17,7 @@ $(() => {
         $('input#subtitle').val("");
         App.simplemde?.value("");
         $('code-input')[0].value = '';
+        $("h3 .form-title").get(0).scrollIntoView({behavior: 'smooth'});
       });
       $('#form-search').on('submit', e => {
         e.preventDefault();
@@ -48,18 +49,25 @@ $(() => {
           });
 
       });
+      $('.content-list').on('click', '.bt-detail', (e) => {
+        $(e.currentTarget).siblings('.bt-edit').trigger('click');
+      });
       $('.content-list').on('click', '.bt-edit', (e) => { // console.log(e);
         let row = $(e.currentTarget).parents('.content-item');
         let cid = row.attr('data-cid');
         $('h3 .form-title').html('Edit Content');
         this.ajax.get(`m/x/lab/contentApi/getContent/${cid}`).then((content) => { 
-          console.log(content);
+          // console.log(content);
           $('input#cid').val(content.cid);
           $('input#key').val(content.key);
           $('input#title').val(content.title);
           $('input#subtitle').val(content.subtitle);
+          $("h3 .form-title").get(0).scrollIntoView({behavior: 'smooth'});
+          $(`input[type="radio"][name="type"][value="${content.type}"]`).trigger('click');
+
           $('code-input')[0].value = content.content;
           App.simplemde?.value(content.content);
+
         }, (err) => CUI.error(err).show());
       });
       $('.content-list').on('click', '.bt-delete', (e) => { // console.log(e);
@@ -84,11 +92,13 @@ $(() => {
         if (type == 'html') {
           $('code-input').removeClass('d-none');
           $('textarea#content').addClass('d-none');
-          App.simplemde.toTextArea();
+          App.simplemde?.toTextArea();
           App.simplemde = null;
         } else {
           $('code-input').addClass('d-none');
           $('textarea#content').removeClass('d-none');
+          App.simplemde?.toTextArea();
+          App.simplemde = null;
           App.simplemde = new SimpleMDE({ element: $("textarea#content")[0],
             spellChecker: false
           });
@@ -97,6 +107,9 @@ $(() => {
       $('#content-form').on('submit', e => {
         e.preventDefault();
         e.stopPropagation();
+        $('#content-form').addClass('was-validated');
+        if(!$('#content-form')[0].checkValidity()) return;
+
         let type = $('input[type="radio"][name="type"]:checked').val();
         
         let content = (type == 'md') ? App.simplemde.value() : $('code-input')[0].value;
@@ -114,6 +127,9 @@ $(() => {
           console.log(result);
           CUI.success('Content has been saved.').show();
         }, err => CUI.error(err).show());
+      });
+      $('.bt-clear').on('click', e => {
+        $('.bt-new-content').trigger('click');
       });
     }
 
@@ -144,12 +160,14 @@ $(() => {
       listHtml += `  <span class="flex-fill ps-2 content-truncate content-nowrap">`
       listHtml += `  <span class="me-3">${content.title}</span>`
       listHtml += !(content.key) ? `` : 
-        `<span class="badge bg-success ms-1">Key ${content.key}</span>`;
+        `<span class="badge bg-success ms-1">${content.key}</span>`;
       listHtml += !(content.subtitle) ? `` : 
         `<span class="badge bg-warning text-dark ms-1">${content.subtitle}</span>`;
-      listHtml += `  <span class="px-2 badge rounded bg-secondary text-light">Content ID ${content.cid}</span>`
-      listHtml += `  </span>`
-      listHtml += `  <span class="text-end text-nowrap ms-3">`
+      listHtml += `  <span class="px-2 badge rounded bg-secondary text-light">ID: ${content.cid}</span>`;
+      listHtml += (content.type == 'md') ? `<span class="badge bg-primary ms-1">MD</span>` : ``;
+      listHtml += `  </span>`;
+      listHtml += `  <span class="text-end text-nowrap ms-3">`;
+      listHtml += `    <span class="me-3"><small>Upd: ${content.updated}</small></span>`;
       listHtml += `    <button class="btn btn-sm btn-primary bt-detail p-2" data-cid="${content.cid}"><i class="bi bi-list"></i><i class="bi bi-search"></i></button>`
       listHtml += `    <a class="btn btn-sm btn-warning bt-edit p-2" data-cid="${content.cid}"><i class="bi bi-pencil"></i></a>`
       listHtml += `    <button class="btn btn-sm btn-danger bt-delete p-2 text-light" data-cid="${content.cid}"><i class="bi bi-x-lg"></i></button>`
