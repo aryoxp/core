@@ -26,5 +26,13 @@
         "url": "m/x/lab/setup"
       }
     ]
+  },
+  {
+    "id": "content",
+    "label": "Web Content",
+    "url": "m/x/lab/content",
+    "icon": "file-text",
+    "subs": [],
+    "type": "public"
   }
 ]

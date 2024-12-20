@@ -161,6 +161,21 @@ class CoreConfirm extends CoreWindow {
   }
 }
 
+class CoreSuccess extends CoreWindow {
+  constructor(content = "Hello, world!", options) {
+    super('.app-dialog-info', Object.assign({
+      backdrop: true,
+      title: '<span class="text-success">Success</span>'
+    }, options));
+    this.setContent(content);
+    if (this.options.title) this.title(this.options.title);
+  }
+  show() {
+    super.show();
+    return this;
+  }
+}
+
 class CoreError extends CoreWindow {
   constructor(content = "Hello, world!", options) {
     super('.app-dialog-info', Object.assign({
@@ -253,12 +268,158 @@ class CoreLoading {
   }
 }
 
+class CorePagination {
+  constructor (containerElement, count = 1, perpage = 5) {
+    this.containerElement = containerElement
+    this.pagination = {
+      page: 1,
+      maxpage: Math.ceil(count/perpage),
+      perpage: perpage,
+      count: count,
+    }
+  }
+  static instance(containerElement, count, perpage) {
+    return new CorePagination(containerElement, count, perpage);
+  }
+  set page(p) {
+    this.pagination.page = parseInt(p);
+  }
+  set perpage(p) {
+    this.pagination.perpage = parseInt(p);
+  }
+  set count(c) {
+    this.pagination.count = parseInt(c);
+  }
+  get page() {
+    return this.pagination.page;
+  }
+  get perpage() {
+    return this.pagination.perpage
+  }
+  get count() {
+    return this.pagination.count;
+  }
+  listen(formElement) {
+    this.formElement = formElement;
+    $(this.containerElement).off('click', '.pagination-next').on('click', '.pagination-next', (e) => {
+      // console.log(this.pagination.page, this.pagination.maxpage)
+      if (this.pagination.page < this.pagination.maxpage) {
+        this.pagination.page++
+        $(formElement).trigger('submit')
+        // console.log(this.pagination.page, this.pagination.maxpage)
+        this.update()
+      }
+      e.preventDefault();
+    })
+
+    $(this.containerElement).off('click', '.pagination-prev').on('click', '.pagination-prev', (e) => {
+      e.preventDefault();
+      if (this.pagination.page > 1) {
+        this.pagination.page--
+        $(formElement).trigger('submit')
+        this.update()
+      }
+    })
+
+    $(this.containerElement).off('click', '.pagination-page').on('click', '.pagination-page', (e) => {
+      e.preventDefault();
+      this.pagination.page = parseInt($(e.currentTarget).attr('data-page'))
+      $(formElement).trigger('submit')
+      this.update()
+    })
+    return this;
+  }
+  callback(callback) {
+    $(this.containerElement).off('click', '.pagination-next').on('click', '.pagination-next', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (this.pagination.page < this.pagination.maxpage) {
+        this.pagination.page++;
+        if (typeof callback == "function")
+          callback(this.pagination.page, this.pagination.perpage);
+        this.update();
+      }
+    })
+
+    $(this.containerElement).off('click', '.pagination-prev').on('click', '.pagination-prev', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (this.pagination.page > 1) {
+        this.pagination.page--
+        if (typeof callback == "function")
+          callback(this.pagination.page, this.pagination.perpage);
+        this.update()
+      }
+    })
+
+    $(this.containerElement).off('click', '.pagination-page').on('click', '.pagination-page', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.pagination.page = parseInt($(e.currentTarget).attr('data-page'))
+      if (typeof callback == "function")
+        callback(this.pagination.page, this.pagination.perpage);
+      this.update()
+    });
+    return this;
+  }
+  update(count = null, perpage = null) { // console.warn(this.pagination)
+    if (count !== null) this.pagination.count = parseInt(count);
+    if (perpage !== null) this.pagination.perpage = parseInt(perpage);
+
+    count   = parseInt(count);
+    perpage = parseInt(perpage);
+
+    let paginationHtml = '';
+    let page = this.pagination.page;
+    let maxpage = count == 0 ? 1 : Math.ceil(this.pagination.count/this.pagination.perpage);
+    if (page > maxpage) {
+      page = maxpage;
+      return this;
+    }
+    this.pagination.page = page;
+    this.pagination.maxpage = maxpage;    
+    
+    if (this.pagination.count) {
+      paginationHtml += `<li class="page-item${page == 1 ? ' disabled': ''}">`
+      paginationHtml += `  <a class="page-link pagination-prev" href="#" tabindex="-1" aria-disabled="true"> <i class="bi bi-chevron-left"></i> Prev</a>`
+      paginationHtml += `</li>`
+      let min = page - 2 < 1 ? 1 : page - 2
+      let max = page + 2 > maxpage ? maxpage : page + 2
+      for(let p = min; p <= max; p++) {
+        paginationHtml += `<li class="page-item${page == p ? ' disabled': ''}"><a class="page-link pagination-page" data-page="${p}" href="#">${p}</a></li>`
+      }
+      paginationHtml += `<li class="page-item${page == maxpage ? ' disabled': ''}">`
+      paginationHtml += `  <a class="page-link pagination-next" href="#">Next <i class="bi bi-chevron-right"></i></a>`
+      paginationHtml += `</li>`
+      $(this.containerElement).addClass('pagination').html(paginationHtml)
+    } else this.renderEmpty();
+    return this;
+  }
+
+  renderEmpty(paginationHtml) {
+    let html = '';
+    html += `<li class="page-item disabled">`
+    html += `  <a class="page-link pagination-prev" href="#">Previous</a>`
+    html += `</li>`
+    html += `<li class="page-item disabled">`
+    html += `  <a class="page-link" href="#">--</a>`
+    html += `</li>`
+    html += `<li class="page-item disabled">`
+    html += `  <a class="page-link pagination-next" href="#">Next</a>`
+    html += `</li>`
+    $(this.containerElement).addClass('pagination').html(html)
+  }
+}
+
 class CUI {
   static confirm(content, options) {
     return new CoreConfirm(content, options);
   }
   static info(content, options) {
     return new CoreInfo(content, options);
+  }
+  static success(content, options) {
+    return new CoreSuccess(content, options);
   }
   static error(content, options) {
     return new CoreError(content, options);
