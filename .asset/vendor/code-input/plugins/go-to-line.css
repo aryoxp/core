@@ -10,14 +10,11 @@
 
 .code-input_go-to-line_dialog {
   position: absolute;
-  top: 0; right: 14px;
-  height: 28px;
-  padding: 6px;
-  padding-top: 8px;
+  top: 0; right: 0;
   border: solid 1px #00000044;
   background-color: white;
-  border-radius: 6px;
   box-shadow: 0 .2em 1em .2em rgba(0, 0, 0, 0.16);
+  font-family: system-ui;
 }
 
 .code-input_go-to-line_dialog:not(.code-input_go-to-line_hidden-dialog) {
@@ -33,14 +30,10 @@
 }
 
 .code-input_go-to-line_dialog input::placeholder {
-  font-size: 80%;
+  /* font-size: 80%; */
 }
 
 .code-input_go-to-line_dialog input {
-  position: relative;
-  width: 240px; height: 32px; top: -3px;
-  font-size: large;
-  color: #000000aa;
   border: 0;
 }
 
@@ -55,20 +48,16 @@
 /* Cancel icon */
 .code-input_go-to-line_dialog span {
   display: inline-block;
-  width: 24px;
-  line-height: 24px;
-  font-family: system-ui;
-  font-size: 22px;
-  font-weight: 500;
+  width: 32px;
+  line-height: 32px;
   text-align: center;
   border-radius: 50%;
   color: black;
   opacity: 0.6;
-  vertical-align: top;
 }
 
 .code-input_go-to-line_dialog span:before {
-  content: "\00d7";
+  /* content: "\00d7"; */
 }
 
 .code-input_go-to-line_dialog span:hover {

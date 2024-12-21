@@ -1,10 +1,6 @@
 <?php
 
-class LabContentController extends CoreModuleController {
-
-  public function preamble() {
-    $this->ui->useCoreLib('core-ui', 'admin');
-  }
+class LabContentController extends AdminController {
 
   public function index() {
     $this->menuId('content');

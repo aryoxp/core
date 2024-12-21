@@ -94,7 +94,7 @@
           </div> 
           <div class="mb-3">
 
-            <code-input template="syntax-highlighted" class="rounded" language="html"></code-input>
+            <code-input template="syntax-highlighted" class="rounded fs-5" language="html"></code-input>
             <textarea class="form-control" id="content" type="text" placeholder="Content" style="height: 10rem;" data-sb-validations="required"></textarea>
 
           </div>

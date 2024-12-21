@@ -140,7 +140,11 @@ $(() => {
       });
       App.ci = codeInput.registerTemplate("syntax-highlighted", 
         codeInput.templates.hljs(
-          hljs, [new codeInput.plugins.Indent(true, 2)]
+          hljs, [
+            new codeInput.plugins.Indent(true, 2),
+            new codeInput.plugins.GoToLine(),
+            new codeInput.plugins.AutoCloseBrackets()
+          ]
         )
       );
       $('input[type="radio"][name="type"][value="html"]').trigger('click');
