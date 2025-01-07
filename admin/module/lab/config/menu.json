@@ -34,5 +34,13 @@
     "icon": "file-text",
     "subs": [],
     "type": "public"
+  },
+  {
+    "id": "book",
+    "label": "Book and Reference",
+    "url": "m/x/lab/book",
+    "icon": "book",
+    "subs": [],
+    "type": "public"
   }
 ]
