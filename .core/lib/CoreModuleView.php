@@ -56,6 +56,13 @@ class CoreModuleView extends CoreView {
     } else parent::useScript($path, $pad, $assetPath);
   }
 
+  public function useModuleScript($path, $pad = null, $assetPath = null, $location = CoreModuleView::MODULE) {
+    if (file_exists(CORE_MODULE_PATH . CORE_APP_ASSET . $path)) {
+      $this->modulescripts[] = $this->moduleAsset($path, $pad, $assetPath, $location);
+      return;
+    } else parent::useModuleScript($path, $pad, $assetPath);
+  }
+
   public function useStyle($path, $pad = null, $assetPath = null, $location = CoreModuleView::MODULE) {
     if (file_exists(CORE_MODULE_PATH . CORE_APP_ASSET . $path)) {
       $this->styles[] = $this->moduleAsset($path, $pad, $assetPath, $location);
