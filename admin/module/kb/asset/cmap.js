@@ -43,7 +43,7 @@ class App {
     canvas.addCanvasMultiTool(KitBuildCanvasTool.UNLOCK);
 
     this.resizeTool = new ResizeTool(canvas);
-    canvas.canvasTool.addTool('TOOL_RESIZE', this.resizeTool);
+    canvas.toolCanvas.addTool('TOOL_RESIZE', this.resizeTool);
     KitBuildCanvasKonva.instance.addListener(this.resizeTool);
 
     this.canvas = canvas;
@@ -556,7 +556,7 @@ class App {
   //       this.canvas.toolbar.tools
   //         .get(KitBuildToolbar.NODE_CREATE)
   //         .setActiveDirection(conceptMap.map.direction);
-  //       this.canvas.canvasTool.clearCanvas().clearIndicatorCanvas();
+  //       this.canvas.toolCanvas.clearCanvas().clearIndicatorCanvas();
   //       KitBuildUI.showBackgroundImage(this.canvas);
   //       UI.success("Concept map loaded.").show();
   //       L.log("open-concept-map", conceptMap.map, null, {
@@ -594,7 +594,7 @@ class App {
     this.canvas.toolbar.tools
       .get(KitBuildToolbar.NODE_CREATE)
       .setActiveDirection(conceptMap.map.direction);
-    this.canvas.canvasTool.clearCanvas().clearIndicatorCanvas();
+    this.canvas.toolCanvas.clearCanvas().clearIndicatorCanvas();
     KitBuildUI.showBackgroundImage(this.canvas);
   }
 

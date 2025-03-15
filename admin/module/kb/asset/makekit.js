@@ -27,7 +27,7 @@ class App {
     this.session = Core.instance().session();
     this.ajax = Core.instance().ajax();
 
-    canvas.canvasTool.addTool("ref", new KitBuildReferenceTool(canvas, {ajax: this.ajax}));
+    canvas.toolCanvas.addTool("ref", new KitBuildReferenceTool(canvas, {ajax: this.ajax}));
 
 
     // Hack for sidebar-panel show/hide
@@ -730,7 +730,7 @@ class App {
           })
         });
       }
-      this.canvas.canvasTool.clearCanvas().clearIndicatorCanvas()
+      this.canvas.toolCanvas.clearCanvas().clearIndicatorCanvas()
     });
 
     $('.app-navbar .bt-toggle-right').on('click', () => {
@@ -745,13 +745,13 @@ class App {
           })
         });
       }
-      this.canvas.canvasTool.clearCanvas().clearIndicatorCanvas()
+      this.canvas.toolCanvas.clearCanvas().clearIndicatorCanvas()
     });
 
     $('.app-navbar .bt-remove').on('click', () => {
       if (!App.inst.conceptMap) return
       if (this.canvas.cy.edges().length) this.canvas.cy.edges().remove();
-      this.canvas.canvasTool.clearCanvas().clearIndicatorCanvas()
+      this.canvas.toolCanvas.clearCanvas().clearIndicatorCanvas()
     });
   
     $('.app-navbar .bt-restore').on('click', () => {
@@ -770,7 +770,7 @@ class App {
           data: JSON.parse(linktarget.target_data)
         })
       });
-      this.canvas.canvasTool.clearCanvas().clearIndicatorCanvas()
+      this.canvas.toolCanvas.clearCanvas().clearIndicatorCanvas()
     });
   
     $('.app-navbar .bt-reset').on('click', () => {
@@ -880,7 +880,7 @@ class App {
     this.canvas.toolbar.tools
       .get(KitBuildToolbar.NODE_CREATE)
       .setActiveDirection(conceptMap.map.direction);
-    this.canvas.canvasTool.clearCanvas().clearIndicatorCanvas();
+    this.canvas.toolCanvas.clearCanvas().clearIndicatorCanvas();
     KitBuildUI.showBackgroundImage(this.canvas);
   }
 

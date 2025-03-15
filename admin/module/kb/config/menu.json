@@ -4,44 +4,51 @@
     "label": "Kit-Build",
     "url": "kb",
     "icon": "diagram-2-fill",
+    "type": "public",
     "subs": [
       {
         "id": "kb-cmap",
         "icon": "node-plus-fill",
         "label": "Concept Map",
-        "url": "m/x/kb/cmap"
+        "url": "m/x/kb/cmap",
+        "type": "public"
       },
       {
         "id": "kb-kit",
         "icon": "layout-wtf",
         "label": "Kit",
-        "url": "m/x/kb/kit"
+        "url": "m/x/kb/kit",
+        "type": "public"
       },
       { "type": "separator" },
       {
         "id": "kb-analyzer-static",
         "icon": "bar-chart-line",
         "label": "Static Analyzer",
-        "url": "m/x/kb/analyzer/static"
+        "url": "m/x/kb/analyzer/static",
+        "type": "public"
       },
       {
         "id": "kb-analyzer-dynamic",
         "icon": "graph-up-arrow",
         "label": "Dynamic Analyzer",
-        "url": "m/x/kb/analyzer/dynamic"
+        "url": "m/x/kb/analyzer/dynamic",
+        "type": "public"
       },
       {
         "id": "kb-analyzer",
         "icon": "bar-chart-line",
         "label": "Analyzer",
-        "url": "m/x/kb/analyzer"
+        "url": "m/x/kb/analyzer",
+        "type": "public"
       },
       { "type": "separator" },
       {
         "id": "kb-encode-decode",
         "icon": "code-square",
         "label": "Log Data Decoder",
-        "url": "m/x/kb/decode"
+        "url": "m/x/kb/decode",
+        "type": "public"
       }
     ]
   }
