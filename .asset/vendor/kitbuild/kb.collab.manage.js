@@ -5,8 +5,10 @@ class CollabManager {
     this.namespace = namespace;
     this.settings = Object.assign({
       host: this.config.get('collabhost'),
-      port: this.config.get('collabport')
+      port: this.config.get('collabport'),
+      path: this.config.get('collabpath')
     }, options);
+    console.log(this.settings);
     this.isReconnect = false;
     this.evtListeners = new Set();
     this.connect();
@@ -44,7 +46,12 @@ class CollabManager {
   }
 
   connect() {
-    const socket = io(`${this.settings.host}:${this.settings.port}/${this.namespace}`);
+    let url = `${this.settings.host}`;
+    if (this.settings.port) url += `:${this.settings.port}`; 
+    if (this.namespace) url += `/${this.namespace}`; 
+    const socket = io(`${url}`, {
+      path: this.settings.path
+    });
     if (!this.socket) {
       socket.io.on("error", (error) => { // console.warn(error);
         $('#connection-status-reason').html(error);
@@ -202,7 +209,7 @@ class CollabManager {
 
   }
 
-  updateSocketConnectionStatus(socket) { console.log(socket);
+  updateSocketConnectionStatus(socket) { // console.log(socket);
     if (this.isConnected()) {
       $('.app-navbar .client-status').html(`Connected: <code>${socket.id}</code>`);
       $('#bt-connect').addClass('visually-hidden');
@@ -238,6 +245,16 @@ class CollabManager {
     return new Promise((resolve, reject) => {
       if(this.socket.connected) {
         this.socket.emit('push-mapid', mapId, room, e => { console.warn(e);
+          resolve(e);
+        });
+      } else reject('Socket is not connected');
+    });
+  }
+
+  pushMapkit(mapkit, room) {
+    return new Promise((resolve, reject) => {
+      if(this.socket.connected) {
+        this.socket.emit('push-mapkit', mapkit, room, e => { console.warn(e);
           resolve(e);
         });
       } else reject('Socket is not connected');

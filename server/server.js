@@ -6,6 +6,16 @@ var config = ini.parse(fs.readFileSync('./config.ini', 'utf-8')); // console.log
 const { createServer } = (config.server.useSSL) ? require("https") : require("http");
 const { Server } = require("socket.io");
 
+const mysql = require('mysql2/promise');
+const { channel } = require('diagnostics_channel');
+const connParam = {
+  host: config.database.host,
+  user: config.database.user,
+  port: config.database.port,
+  password: config.database.password,
+  database: config.database.database
+}
+
 // const { zlib } = require("zlib");
 // const { resolve } = require("path");
 // const { rejects } = require("assert");
@@ -20,11 +30,12 @@ class ServerApp {
     } : {};
     this.httpServer = createServer(options);
     this.io = new Server(this.httpServer, {
-      port: config.server.port,
+      // port: config.server.port,
       cors: {
         origin: config.server.corsOrigin,
         methods: ["GET", "POST"]
-      }
+      },
+      // path: "/sio"
     });
 
     this.rooms    = new Map(); // key is room name, value is room data
@@ -50,9 +61,20 @@ class ServerApp {
 
     this.httpServer.listen(config.server.port);
   }
-  static instance(config) {
-    ServerApp.inst = new ServerApp(config)
-    return ServerApp.inst
+  static async instance(config) {
+    ServerApp.inst = new ServerApp(config);
+    // test db connection
+    try {
+      const db = await mysql.createConnection(connParam);
+      console.log("Database connected.");
+      const sql = "SELECT 1, ?";
+      const [rows, fields] = await db.query(sql, [2]);
+      console.log("Database query test result:", rows, fields);
+      await db.end();
+    } catch (err) {
+      console.log("Error:", err.code);
+    }
+    return ServerApp.inst;
   }
   // static handleCmapSocketEvent(io, socket) {
   //   console.log('CMAP CONNECT', socket.id, socket.rooms)
@@ -618,6 +640,18 @@ class ServerApp {
       io.to(room).emit('push-mapid', mapId);
       callback(true);
     });
+
+    socket.on('push-mapkit', (mapkit, room, callback) => {
+      console.log('KB PUSH MAPKIT', mapkit, room);
+      io.to(room).emit('push-mapkit', mapkit);
+      callback(true);
+    });
+
+    socket.on('load-collabmap', (id, room, callback) => {
+      console.log('KB LOAD COLLABMAP', id, room);
+      io.to(room).emit('load-collabmap', id);
+      callback(true);
+    });
   }
   static getRoomsOfSocket(io, socket) {
     let rooms = [];
@@ -836,19 +870,37 @@ class ServerApp {
           let roomChat = ServerApp.inst.chats.get(room);
           if (roomChat) roomChat.push(message);
           else ServerApp.inst.chats.set(room, [message]);
+          let session = message?.session ?? null;
+          let channel = null;
+          let mapid = message?.mapid ?? null;
+          let channelId = null;
+          let tstampc = message?.when ?? null;
+          let data = message;
+          console.log("Message:", room, message?.sender?.name, socket.id, session, message.text, channel, mapid, channelId, tstampc, data);
+          L.log(room, message?.sender?.name, socket.id, session, message.text, channel, mapid, channelId, tstampc, data);
           } break;
         default: break;
       }
+      
+      // L.log(room, sender, socket, session, message, channel, mapid);
       resolve(true);
     })
   }
   static broadcastMessage(message, io, room, callback) {
     if (!socket || !room) { // validate parameters
       if (typeof callback == 'function') 
-        callback('Invalid socket or room.')
-      return 
+        callback('Invalid socket or room.');
+      return;
     }
+    // console.log(message, io, room);
     io.in(room).emit('broadcast', message)
+    // console.log(room, sender, socket, session, message, channel, mapid);
+    // L.log(room, sender, socket, session, message, channel, mapid);
+    let session = '';
+    let channel = '';
+    let mapid   = '';
+    // console.log("Message:", room, message?.sender?.name, io?.socket?.id, session, message.text, channel, mapid);
+    // L.log(room, message?.sender?.name, io?.socket?.id, session, message.text, channel, mapid);
     if (typeof callback == 'function') callback(true)
   }
   static getChannelsOfRoom(room) {
@@ -859,7 +911,7 @@ class ServerApp {
     })
   }
   static sendChannelMessage(message, socket, room, nodeId) {
-    // console.log("CHANNEL MESSAGE:", message, room, nodeId);
+    // console.log("CHANNEL MESSAGE:", message, socket, room, nodeId);
     return new Promise((resolve, reject) => {
       if (!socket || !room) { // validate parameters
         reject('Invalid socket or room.');
@@ -869,17 +921,28 @@ class ServerApp {
       switch(message.type) {
         case 'text': { // cache the message
           let channelChats = ServerApp.inst.channels.get(room);
+          // console.log(channelChats);
           if (channelChats) {
             let channel = channelChats.get(nodeId);
             if (!channel) channelChats.set(nodeId, [message]);
             else channel.push(message);
-            break;
+          } else {
+            let channelMap = new Map([[nodeId, [message]]]);
+            ServerApp.inst.channels.set(room, channelMap);
           }
-          let channelMap = new Map([[nodeId, [message]]]);
-          ServerApp.inst.channels.set(room, channelMap);
+          let session = message?.session ?? null;
+          let channel = nodeId;
+          let mapid   = message?.mapid ?? null;
+          let channelId = nodeId;
+          let data = message;
+          console.log("Channel message:", room, message?.sender?.name, socket?.id, session, message.text, channel, mapid, channelId, message.when, data);
+          L.log(room, message?.sender?.name, socket?.id, session, message.text, channel, mapid, channelId, message.when, data);
+          
         } break;
         default: break;
       }
+      // console.log("Message:", room, sender, socket, session, message, channel, mapid);
+      // L.log(room, sender, socket, session, message, channel, mapid);
       resolve(true);
     });
   }
@@ -898,6 +961,20 @@ class Utility {
     var deflated = zlib.gzipSync(data).toString('utf8')
     var base64string = Buffer.from(deflated).toString('base64')
     return base64string
+  }
+}
+
+class L {
+  static log = async (room, sender, socket = null, session = null, message = null, channel = null, mapid = null, channelId = null, tstampc = null, data = null) => {
+    try {
+      const db = await mysql.createConnection(connParam);
+      const sql = "INSERT INTO chat (room, sender, socket, session, message, channel, mapid, channelId, tstampc, data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+      const [result] = await db.query(sql, [room, sender, socket, session, message, channel, mapid, channelId, tstampc, data ? JSON.stringify(data) : null]);
+      console.log("Chat log:", result?.insertId);
+      db.end();
+    } catch (err) {
+      console.log("Error:", err.code);
+    }
   }
 }
 

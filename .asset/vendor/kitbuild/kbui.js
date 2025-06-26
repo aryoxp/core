@@ -815,16 +815,95 @@ class KitBuildUI {
       return conceptmap;  
     } catch (error) { throw error }
   }
-  static composeKitMap(kitMapData) {
-    if(!kitMapData.conceptMap || !kitMapData.concepts 
-      || !kitMapData.links || !kitMapData.linktargets)
-      throw "Invalid kit data.";
+  // static composeKitMap(kitMapData) {
+  //   if(!kitMapData.conceptMap || !kitMapData.concepts 
+  //     || !kitMapData.links || !kitMapData.linktargets)
+  //     throw "Invalid kit data.";
+  //   try {
+  //     let kitMap = [];
+  //     let conceptsMap = new Map();
+  //     let linksMap = new Map();
+  //     for(let c of kitMapData.concepts) conceptsMap.set(c.cid, c);
+  //     for(let l of kitMapData.links) linksMap.set(l.lid, l);
+  //     let getConceptPosition = (cid) => {
+  //       let c = conceptsMap.get(cid);
+  //       return c ? {x: parseInt(c.x), y: parseInt(c.y)} : false;
+  //     }
+  //     let getLinkPosition = (lid) => {
+  //       let l = linksMap.get(lid);
+  //       return l ? {x: parseInt(l.x), y: parseInt(l.y)} : false;
+  //     }
+  //     let getLink = (lid) => {
+  //       let l = linksMap.get(lid);
+  //       return l ? linksMap.get(lid) : false;
+  //     }
+  //     let countLinkTargets = (lid) => {
+  //       let count = 0
+  //       for(let l of kitMapData.conceptMap.linktargets) {
+  //         if (l.lid == lid) count++
+  //       }
+  //       return count;
+  //     }
+  //     for (let c of kitMapData.conceptMap.concepts) {
+  //       if (conceptsMap.get(c.cid) == undefined) break;
+  //       let position = getConceptPosition(c.cid);
+  //       kitMap.push({
+  //         group: 'nodes',
+  //         position: position === false ? {x: parseInt(c.x), y: parseInt(c.y)} : position,
+  //         data: Object.assign(JSON.parse(c.data), JSON.parse(conceptsMap.get(c.cid).data), { 
+  //           id: c.cid,
+  //           label: c.label,
+  //         }),
+  //         invalid: position === false ? true : undefined
+  //       });
+  //     }
+  //     for (let l of kitMapData.conceptMap.links) {
+  //       if (linksMap.get(l.lid) == undefined) break;
+  //       let position = getLinkPosition(l.lid)
+  //       kitMap.push({
+  //         group: 'nodes',
+  //         position: position === false ? {x: parseInt(l.x), y: parseInt(l.y)} : position,
+  //         data: Object.assign(JSON.parse(l.data), JSON.parse(linksMap.get(l.lid).data), { 
+  //           id: l.lid,
+  //           label: l.label,
+  //           limit: countLinkTargets(l.lid)
+  //         }),
+  //         invalid: position === false ? true : undefined
+  //       });
+  //       let link = getLink(l.lid)
+  //       if (link && link.source_cid) {
+  //         kitMap.push({
+  //           group: 'edges',
+  //           data: Object.assign(link.source_data ? JSON.parse(link.source_data) : {}, { 
+  //             source: link.lid,
+  //             target: link.source_cid,
+  //           }),
+  //         })
+  //       }
+  //     }
+  //     kitMapData.linktargets.forEach(lt => {
+  //       kitMap.push({
+  //         group: 'edges',
+  //         data: Object.assign(JSON.parse(lt.target_data), { 
+  //           source: lt.lid,
+  //           target: lt.target_cid,
+  //         }),
+  //       })
+  //     });
+  //     return kitMap;  
+  //   } catch (error) { throw error }
+  // }
+  static composeKitMap(kitCanvas, conceptMapCanvas) {
+    if (!kitCanvas.links || !kitCanvas.concepts || !kitCanvas.linktargets)
+      throw "Invalid kit canvas data";
+    if (!conceptMapCanvas.links || !conceptMapCanvas.concepts || !conceptMapCanvas.linktargets)
+      throw "Invalid concept map canvas data";
     try {
       let kitMap = [];
       let conceptsMap = new Map();
       let linksMap = new Map();
-      for(let c of kitMapData.concepts) conceptsMap.set(c.cid, c);
-      for(let l of kitMapData.links) linksMap.set(l.lid, l);
+      for(let c of kitCanvas.concepts) conceptsMap.set(c.cid, c);
+      for(let l of kitCanvas.links) linksMap.set(l.lid, l);
       let getConceptPosition = (cid) => {
         let c = conceptsMap.get(cid);
         return c ? {x: parseInt(c.x), y: parseInt(c.y)} : false;
@@ -839,12 +918,12 @@ class KitBuildUI {
       }
       let countLinkTargets = (lid) => {
         let count = 0
-        for(let l of kitMapData.conceptMap.linktargets) {
+        for(let l of conceptMapCanvas.linktargets) {
           if (l.lid == lid) count++
         }
         return count;
       }
-      for (let c of kitMapData.conceptMap.concepts) {
+      for (let c of conceptMapCanvas.concepts) {
         if (conceptsMap.get(c.cid) == undefined) break;
         let position = getConceptPosition(c.cid);
         kitMap.push({
@@ -857,7 +936,7 @@ class KitBuildUI {
           invalid: position === false ? true : undefined
         });
       }
-      for (let l of kitMapData.conceptMap.links) {
+      for (let l of conceptMapCanvas.links) {
         if (linksMap.get(l.lid) == undefined) break;
         let position = getLinkPosition(l.lid)
         kitMap.push({
@@ -881,7 +960,7 @@ class KitBuildUI {
           })
         }
       }
-      kitMapData.linktargets.forEach(lt => {
+      kitCanvas.linktargets.forEach(lt => {
         kitMap.push({
           group: 'edges',
           data: Object.assign(JSON.parse(lt.target_data), { 
@@ -1139,45 +1218,215 @@ class KitBuildUI {
       return kitMap;  
     } catch (error) { throw error }
   }
-  static composeLearnerMap(learnerMapData) {
-    if(!learnerMapData.conceptMap || !learnerMapData.concepts 
-      || !learnerMapData.links || !learnerMapData.linktargets)
-      throw "Invalid kit data.";
+  // static composeLearnerMap(learnerMapData) {
+  //   if(!learnerMapData.conceptMap || !learnerMapData.concepts 
+  //     || !learnerMapData.links || !learnerMapData.linktargets)
+  //     throw "Invalid kit data.";
+  //   try {
+  //     let cids = new Set();
+  //     let lids = new Set();
+  //     for(let c of learnerMapData.conceptMap.concepts) cids.add(c.cid);
+  //     for(let l of learnerMapData.conceptMap.links) lids.add(l.lid);
+
+  //     let kitMap = []
+  //     let getConceptPosition = (cid) => {
+  //       for(let c of learnerMapData.concepts) {
+  //         if (c.cid == cid) return {x: parseInt(c.x), y: parseInt(c.y)};
+  //       }
+  //       if (learnerMapData.concepts_ext) {
+  //         for(let c of learnerMapData.concepts_ext) {
+  //           if (c.cid == cid) return {x: parseInt(c.x), y: parseInt(c.y)};
+  //         }
+  //       }
+  //       return false;
+  //     }
+  //     let getLinkPosition = (lid) => {
+  //       for(let l of learnerMapData.links) {
+  //         if (l.lid == lid) return {x: parseInt(l.x), y: parseInt(l.y)};
+  //       }
+  //       if (learnerMapData.links_ext) {
+  //         for(let l of learnerMapData.links_ext) {
+  //           if (l.lid == lid) return {x: parseInt(l.x), y: parseInt(l.y)};
+  //         }
+  //       }
+  //       return false;
+  //     }
+  //     let getLink = (lid) => {
+  //       for(let l of learnerMapData.links) {
+  //         if (l.lid == lid) return l
+  //       }
+  //       if (learnerMapData.links_ext) {
+  //         for(let l of learnerMapData.links_ext) {
+  //           if (l.lid == lid) return l
+  //         }
+  //       }
+  //       return false;
+  //     }
+  //     let countLinkTargets = (lid) => {
+  //       let count = 0
+  //       for(let l of learnerMapData.conceptMap.linktargets) {
+  //         if (l.lid == lid) count++
+  //       }
+  //       return count;
+  //     }
+
+  //     // console.error(learnerMapData)
+  //     learnerMapData.conceptMap.concepts.forEach(c => {
+  //       let position = getConceptPosition(c.cid)
+  //       kitMap.push({
+  //         group: 'nodes',
+  //         position: position === false ? {x: parseInt(c.x), y: parseInt(c.y)} : position,
+  //         data: Object.assign(JSON.parse(c.data), { 
+  //           id: c.cid,
+  //           label: c.label,
+  //         }),
+  //         invalid: position === false ? true : undefined
+  //       })
+  //     })
+  //     if (learnerMapData.concepts_ext) {
+  //       learnerMapData.concepts_ext.forEach(c => {
+  //         let position = getConceptPosition(c.cid);
+  //         cids.add(c.cid);
+  //         kitMap.push({
+  //           group: 'nodes',
+  //           position: position === false ? {x: parseInt(c.x), y: parseInt(c.y)} : position,
+  //           data: Object.assign(JSON.parse(c.data), { 
+  //             id: c.cid,
+  //             label: c.label,
+  //             extension: true
+  //           }),
+  //           invalid: position === false ? true : undefined
+  //         })
+  //       })
+  //     }
+
+  //     learnerMapData.conceptMap.links.forEach(l => {
+  //       let position = getLinkPosition(l.lid)
+  //       kitMap.push({
+  //         group: 'nodes',
+  //         position: position === false ? {x: parseInt(l.x), y: parseInt(l.y)} : position,
+  //         data: Object.assign(JSON.parse(l.data), { 
+  //           id: l.lid,
+  //           label: l.label,
+  //           limit: countLinkTargets(l.lid)
+  //         }),
+  //         invalid: position === false ? true : undefined
+  //       })
+  //     });
+  //     if (learnerMapData.links_ext) {
+  //       learnerMapData.links_ext.forEach(l => {
+  //         let position = getLinkPosition(l.lid);
+  //         lids.add(l.lid);
+  //         kitMap.push({
+  //           group: 'nodes',
+  //           position: position === false ? {x: parseInt(l.x), y: parseInt(l.y)} : position,
+  //           data: Object.assign(JSON.parse(l.data), { 
+  //             id: l.lid,
+  //             label: l.label,
+  //             limit: 9,
+  //             extension: true
+  //           }),
+  //           invalid: position === false ? true : undefined
+  //         })
+  //       });
+  //     }
+
+  //     learnerMapData.conceptMap.links.forEach(l => {
+  //       let link = getLink(l.lid)
+  //       if (link && link.source_cid) {
+  //         if (lids.has(link.lid) && cids.has(link.source_cid))
+  //         kitMap.push({
+  //           group: 'edges',
+  //           data: Object.assign(link.source_data ? JSON.parse(link.source_data) : {}, { 
+  //             source: link.lid,
+  //             target: link.source_cid,
+  //           }),
+  //         })
+  //       }
+  //     });
+
+  //     if (learnerMapData.links_ext) {
+  //       learnerMapData.links_ext.forEach(l => {
+  //         let link = getLink(l.lid)
+  //         if (link && link.source_cid) {
+  //           if (lids.has(link.lid) && cids.has(link.source_cid))
+  //           kitMap.push({
+  //             group: 'edges',
+  //             data: Object.assign(link.source_data ? JSON.parse(link.source_data) : {}, { 
+  //               source: link.lid,
+  //               target: link.source_cid,
+  //             }),
+  //           })
+  //         }
+  //       });
+  //     }
+
+  //     learnerMapData.linktargets.forEach(lt => {
+  //       if (lids.has(lt.lid) && cids.has(lt.target_cid))
+  //       kitMap.push({
+  //         group: 'edges',
+  //         data: Object.assign(JSON.parse(lt.target_data), { 
+  //           source: lt.lid,
+  //           target: lt.target_cid,
+  //         }),
+  //       })
+  //     })
+
+  //     if (learnerMapData.linktargets_ext) {
+  //       learnerMapData.linktargets_ext.forEach(lt => {
+  //         if (lids.has(lt.lid) && cids.has(lt.target_cid))
+  //         kitMap.push({
+  //           group: 'edges',
+  //           data: Object.assign(JSON.parse(lt.target_data), { 
+  //             source: lt.lid,
+  //             target: lt.target_cid,
+  //           }),
+  //         })
+  //       })
+  //     }
+  //     return kitMap;  
+  //   } catch (error) { throw error }
+  // }
+  static composeLearnerMap(mapCanvas, conceptMapCanvas) {
+    if (!mapCanvas.links || !mapCanvas.concepts || !mapCanvas.linktargets)
+      throw "Invalid map canvas data";
+    if (!conceptMapCanvas.links || !conceptMapCanvas.concepts || !conceptMapCanvas.linktargets)
+      throw "Invalid concept map canvas data";
     try {
       let cids = new Set();
       let lids = new Set();
-      for(let c of learnerMapData.conceptMap.concepts) cids.add(c.cid);
-      for(let l of learnerMapData.conceptMap.links) lids.add(l.lid);
+      for(let c of conceptMapCanvas.concepts) cids.add(c.cid);
+      for(let l of conceptMapCanvas.links) lids.add(l.lid);
 
       let kitMap = []
       let getConceptPosition = (cid) => {
-        for(let c of learnerMapData.concepts) {
+        for(let c of mapCanvas.concepts) {
           if (c.cid == cid) return {x: parseInt(c.x), y: parseInt(c.y)};
         }
-        if (learnerMapData.concepts_ext) {
-          for(let c of learnerMapData.concepts_ext) {
+        if (mapCanvas.concepts_ext) {
+          for(let c of mapCanvas.concepts_ext) {
             if (c.cid == cid) return {x: parseInt(c.x), y: parseInt(c.y)};
           }
         }
         return false;
       }
       let getLinkPosition = (lid) => {
-        for(let l of learnerMapData.links) {
+        for(let l of mapCanvas.links) {
           if (l.lid == lid) return {x: parseInt(l.x), y: parseInt(l.y)};
         }
-        if (learnerMapData.links_ext) {
-          for(let l of learnerMapData.links_ext) {
+        if (mapCanvas.links_ext) {
+          for(let l of mapCanvas.links_ext) {
             if (l.lid == lid) return {x: parseInt(l.x), y: parseInt(l.y)};
           }
         }
         return false;
       }
       let getLink = (lid) => {
-        for(let l of learnerMapData.links) {
+        for(let l of mapCanvas.links) {
           if (l.lid == lid) return l
         }
-        if (learnerMapData.links_ext) {
-          for(let l of learnerMapData.links_ext) {
+        if (mapCanvas.links_ext) {
+          for(let l of mapCanvas.links_ext) {
             if (l.lid == lid) return l
           }
         }
@@ -1185,14 +1434,14 @@ class KitBuildUI {
       }
       let countLinkTargets = (lid) => {
         let count = 0
-        for(let l of learnerMapData.conceptMap.linktargets) {
+        for(let l of conceptMapCanvas.linktargets) {
           if (l.lid == lid) count++
         }
         return count;
       }
 
-      // console.error(learnerMapData)
-      learnerMapData.conceptMap.concepts.forEach(c => {
+      // console.error(mapCanvas)
+      conceptMapCanvas.concepts.forEach(c => {
         let position = getConceptPosition(c.cid)
         kitMap.push({
           group: 'nodes',
@@ -1204,8 +1453,8 @@ class KitBuildUI {
           invalid: position === false ? true : undefined
         })
       })
-      if (learnerMapData.concepts_ext) {
-        learnerMapData.concepts_ext.forEach(c => {
+      if (mapCanvas.concepts_ext) {
+        mapCanvas.concepts_ext.forEach(c => {
           let position = getConceptPosition(c.cid);
           cids.add(c.cid);
           kitMap.push({
@@ -1221,7 +1470,7 @@ class KitBuildUI {
         })
       }
 
-      learnerMapData.conceptMap.links.forEach(l => {
+      conceptMapCanvas.links.forEach(l => {
         let position = getLinkPosition(l.lid)
         kitMap.push({
           group: 'nodes',
@@ -1234,8 +1483,8 @@ class KitBuildUI {
           invalid: position === false ? true : undefined
         })
       });
-      if (learnerMapData.links_ext) {
-        learnerMapData.links_ext.forEach(l => {
+      if (mapCanvas.links_ext) {
+        mapCanvas.links_ext.forEach(l => {
           let position = getLinkPosition(l.lid);
           lids.add(l.lid);
           kitMap.push({
@@ -1252,7 +1501,7 @@ class KitBuildUI {
         });
       }
 
-      learnerMapData.conceptMap.links.forEach(l => {
+      conceptMapCanvas.links.forEach(l => {
         let link = getLink(l.lid)
         if (link && link.source_cid) {
           if (lids.has(link.lid) && cids.has(link.source_cid))
@@ -1266,8 +1515,8 @@ class KitBuildUI {
         }
       });
 
-      if (learnerMapData.links_ext) {
-        learnerMapData.links_ext.forEach(l => {
+      if (mapCanvas.links_ext) {
+        mapCanvas.links_ext.forEach(l => {
           let link = getLink(l.lid)
           if (link && link.source_cid) {
             if (lids.has(link.lid) && cids.has(link.source_cid))
@@ -1282,7 +1531,7 @@ class KitBuildUI {
         });
       }
 
-      learnerMapData.linktargets.forEach(lt => {
+      mapCanvas.linktargets.forEach(lt => {
         if (lids.has(lt.lid) && cids.has(lt.target_cid))
         kitMap.push({
           group: 'edges',
@@ -1293,8 +1542,8 @@ class KitBuildUI {
         })
       })
 
-      if (learnerMapData.linktargets_ext) {
-        learnerMapData.linktargets_ext.forEach(lt => {
+      if (mapCanvas.linktargets_ext) {
+        mapCanvas.linktargets_ext.forEach(lt => {
           if (lids.has(lt.lid) && cids.has(lt.target_cid))
           kitMap.push({
             group: 'edges',

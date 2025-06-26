@@ -6,8 +6,12 @@ class KitBuildCollab {
     this.settings = Object.assign({
       host: 'http://localhost',
       port: 3000,
+      path: '',
       listener: null
     }, options);
+
+    this.data = new Map();
+    this.data.set('session', options.session?.id ?? null);
 
     this.eventListeners = new Set();
     this.user = null;
@@ -52,12 +56,21 @@ class KitBuildCollab {
   static isServerOnline(namespace = '', options) {
     let settings = Object.assign({
       host: 'http://localhost',
-      port: 3000
-    }, options)
+      port: 3000,
+      path: ''
+    }, options); console.log(settings);
     return new Promise((resolve, reject) => {
-      const checkSocket = io(`${settings.host}:${settings.port}`, {
-        reconnection: false
+      let url = `${settings.host}`;
+      if (settings.port) url += `:${settings.port}`; 
+      if (namespace) url += `/${namespace}`; 
+      const checkSocket = io(`${url}`, {
+        path: settings.path
       });
+      // online at mgm.ub.ac.id
+      // const checkSocket = io('https://mgm.ub.ac.id/kitbuild', {
+      //   reconnection: false,
+      //   path: '/sio'
+      // });
       checkSocket.on("connect_error", (error) => {
         console.error(error);
         checkSocket.disconnect();
@@ -91,8 +104,15 @@ class KitBuildCollab {
     this.socket?.disconnect();
 
     if(!this.socket || !this.socket.active) {
-      // console.log(this.socket);
-      const socket = io(`${this.settings.host}:${this.settings.port}/${this.namespace}`);
+      let url = `${this.settings.host}`;
+      if (this.settings.port) url += `:${this.settings.port}`; 
+      if (this.namespace) url += `/${this.namespace}`; 
+      const socket = io(`${url}`, {
+        path: this.settings.path
+      });
+      // online at mgm.ub.ac.id
+      // const socket = io(`https://mgm.ub.ac.id/kitbuild`, {path:'/sio'});
+      
       socket.io.reconnection(true);
       // console.error(socket, socket.io, socket.io.reconnection());
       socket.on('connect_error', (e) => {
@@ -125,15 +145,26 @@ class KitBuildCollab {
 
   handleSocketEvent(socket) {
 
-    socket.onAny((e, ...args) => { console.warn(e, args);
+    socket.onAny((e, ...args) => { 
+      
+      if (e == 'message' && args[0]?.type == 'typing') {} 
+      else console.warn(e, args);
 
       switch(e) {
         case 'join-room-request': { // this case requires callback
           let room = args.shift();
           let callback = args.shift();
-          this.broadcastEvent("join-room-request", room);
+          this.broadcastEvent(e, room);
           if (typeof callback == 'function') callback(true);
         } break;
+        case 'push-mapid': {
+          let mapid = args.shift();
+          this.broadcastEvent(e, mapid);
+        } break;
+        case 'push-mapkit': {
+          let mapkit = args.shift();
+          this.broadcastEvent(e, mapkit);
+        }
       }
     });
 
@@ -142,6 +173,8 @@ class KitBuildCollab {
       KitBuildCollab.updateSocketConnectionStatus(socket);
       KitBuildCollab.isServerOnline(this.namespace, this.settings);
       this.broadcastEvent(this.isReconnect ? 'reconnected' : 'connected', socket);
+      let collabid = window.localStorage.getItem(`collab-${this.namespace}-collabid`);
+      if (collabid) this.registerUser(collabid);
     });
 
     socket.io.on("reconnect", (attempt) => {
@@ -198,6 +231,10 @@ class KitBuildCollab {
     socket.on("set-map-state", (mapState) => {
       this.broadcastEvent('socket-set-map-state', mapState)
     });
+
+    socket.on("load-collabmap", (id) => {
+      this.broadcastEvent('load-collabmap', id);
+    });
   }
 
 
@@ -227,26 +264,43 @@ class KitBuildCollab {
   }
 
   registerUser(name, groups = 'Public') { // console.warn(name);
-    if (!this.socket.connected) {
-      console.error('Socket is not connected.');
-      return false;
-    }
-    if (!name.trim()) {
-      console.error('Invalid name to register.');
-      return false;
-    }
-    let user = { name: name.trim(), groups: groups }; // groups value is comma-separated
-    this.user = user;
-    this.socket.emit('register-user', user, status => {
-      console.log(`USER REGISTRATION ${user.name} ${status? 'OK': 'NOK'} - Socket ID: ${this.socket.id}`);
-      if (status === true) {
-        KitBuildCollab.getRoomsOfSocket(this.socket);
-        KitBuildCollab.getPublishedRoomsOfGroups(user.groups, this.socket);
-        this.broadcastEvent(`socket-${this.isReconnect ? 'reconnect' : 'connect'}`, 
-          this.socket);
-      } else UI.error(`Unable to register user: ${status}`).show();
+    return new Promise((res, rej) => {
+      if (!this.socket.connected) {
+        console.error('Socket is not connected.');
+        rej('Socket is not connected.'); // return false;
+      }
+      if (!name.trim()) {
+        console.error('Invalid name to register.');
+        rej('Invalid name to register.'); // return false;
+      }
+      let user = { name: name.trim(), groups: groups }; // groups value is comma-separated
+      this.user = user;
+      this.socket.emit('register-user', user, status => {
+        console.log(`USER REGISTRATION ${user.name} ${status? 'OK': 'NOK'} - Socket ID: ${this.socket.id}`);
+        window.localStorage.setItem(`collab-${this.namespace}-collabid`, name);
+        window.localStorage.setItem(`collab-${this.namespace}-collabname`, name.split("/")[1] ?? name);
+        if (status === true) {
+          res(user);
+          KitBuildCollab.getRoomsOfSocket(this.socket);
+          KitBuildCollab.getPublishedRoomsOfGroups(user.groups, this.socket);
+          this.broadcastEvent(`socket-${this.isReconnect ? 'reconnect' : 'connect'}`, 
+            this.socket);
+        } else {
+          UI.error(`Unable to register user: ${status}`).show();
+          rej(`Unable to register user: ${status}`);
+        }
+      });
     });
+
     
+  }
+
+  getCollabId() {
+    return window.localStorage.getItem(`collab-${this.namespace}-collabid`);
+  }
+
+  getCollabName() {
+    return window.localStorage.getItem(`collab-${this.namespace}-collabname`);
   }
 
   // Forward Message/Event: Server --> App
@@ -356,6 +410,17 @@ class KitBuildCollab {
       }
       this.socket.emit("send-map-state", requesterSocketId, mapState, (result) => {})
     })
+  }
+
+  loadCollabMap(id) {
+    let room = KitBuildCollab.getPersonalRoom().name;
+    return new Promise((resolve, reject) => {
+      if(this.socket.connected) {
+        this.socket.emit('load-collabmap', id, room, e => { console.warn(e);
+          resolve(e);
+        });
+      } else reject('Socket is not connected');
+    });
   }
 
   applyReceivedCommand = (command, data) => { // console.log(command, data)
@@ -611,6 +676,9 @@ class KitBuildCollab {
           </span>
           <span class="text-dark" id="app-connection-status-text">App is disconnected</span></a>
           <small class="mx-auto d-block text-center"><code id="notification-app-socket-id"></code></small>
+          <div class="text-center mt-2"><a class="btn btn-primary btn-sm bt-register px-4 d-none">
+            <i class="bi bi-person-lines-fill"></i> Register
+          </a></div>
         </li>
         <li><hr class="dropdown-divider"></li>
         <li><a class="dropdown-item d-flex flex-column" href="#"><span class="bt-connect btn btn-success btn-sm"><i class="bi bi-plug-fill"></i> Connect</span></a></li>
@@ -639,6 +707,26 @@ class KitBuildCollab {
     </div>`;
     $('#collab-control').remove();
     $('.status-control').append(collabControlHtml);
+
+    let registerHtml = `<form id="register-dialog" class="card d-none rounded rounded-3 p-1">
+      <div class="d-flex mx-3 mt-2 align-items-center">
+        <h5 class="flex-fill m-0">Register</h5>
+        <span class="btn btn-sm bt-close bg-secondary-subtle"><i class="bi bi-x-lg"></i></span>
+      </div>
+      <div class="card-body">
+        <input type="text" class="form-control" name="collabid" placeholder="Enter ID" />
+        <input type="text" class="form-control mt-2" name="collabname" placeholder="Enter Name" />
+        <div class="mt-2">
+          <input class="me-2" type="checkbox" value="1" id="inputrememberme" checked>
+          <label class="form-check-label" for="inputrememberme">Remember Me</label>
+        </div>
+      </div>
+      <div class="text-end p-3 pt-0">
+        <button class="btn btn-sm btn-primary px-4 me-1">Register</button>
+        <button class="btn btn-sm btn-secondary">Cancel</button>
+      </div>
+    </form>`;
+    $('body').remove('#register-dialog').append(registerHtml);
   }
 
   static enableControl(enabled = true) {
@@ -646,6 +734,33 @@ class KitBuildCollab {
   }
 
   handleUIEvent() {
+
+    this.registerDialog = UI.modal('#register-dialog', {
+      hideElement: '.bt-close',
+      backdrop: false,
+      draggable: true,
+      dragHandle: '.drag-handle',
+      resizable: true,
+      resizeHandle: '.resize-handle',
+      minWidth: 350,
+      minHeight: 250,
+      width: 350,
+      // height: 250,
+      onShow: () => {
+        let remember = window.localStorage.getItem(`collab-${this.namespace}-remember`);
+        let collabid = window.localStorage.getItem(`collab-${this.namespace}-collabid`);
+        let collabname = window.localStorage.getItem(`collab-${this.namespace}-collabname`);
+        console.log(remember, collabid, collabname);
+        if (remember) {
+          if (collabid) {
+            collabid = collabid.split("/")[0];
+          }
+          $('body #register-dialog input[name="collabid"]').val(collabid);
+          $('body #register-dialog input[name="collabname"]').val(collabname);
+        }
+      }
+    });
+
     // Allow only single dropdown open
     $('.dd[data-bs-toggle="dropdown"]').on('show.bs.dropdown', (e) => { 
       $('.dd[data-bs-toggle="dropdown"]').not(e.currentTarget).dropdown('hide');
@@ -671,6 +786,24 @@ class KitBuildCollab {
       }
     })
 
+    $('#register-dialog').on('submit', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      let collabid = $('#register-dialog input[name="collabid"]').val();
+      let collabname = $('#register-dialog input[name="collabname"]').val();
+      let remember = $('#register-dialog input#inputrememberme:checked').val();
+      if (remember) window.localStorage.setItem(`collab-${this.namespace}-remember`, remember);
+      else window.localStorage.setItem(`collab-${this.namespace}-remember`, undefined);
+
+      if (collabid.trim() == "") UI.warning(`Invalid ID`).show();
+      if (collabname.trim() == "") UI.warning(`Invalid Name`).show();
+      // TODO: sanitize or check
+      this.registerUser(collabid+"/"+collabname).then((user)=> {
+        console.log(user);
+        $('#register-dialog').hide();
+      }, (error) => console.error(error));
+    });
+
     // Connection
     $('#dd-connection-menu .bt-connect').on('click', (e) => {
       this.connect();
@@ -678,6 +811,10 @@ class KitBuildCollab {
     $('#dd-connection-menu .bt-disconnect').on('click', (e) => {
       if (this.socket && this.socket.connected) this.disconnect();
     })
+
+    $('#dd-connection-menu .bt-register').on('click', (e) => {
+      if (this.socket && this.socket.connected) this.registerDialog.show();
+    });
 
     // Room
     $('#dd-room').on('click', (e) => {
@@ -762,6 +899,7 @@ class KitBuildCollab {
       $('#dd-connection-menu .bt-connect').removeClass('disabled').show();
       $('#dd-connection-menu .bt-disconnect').addClass('disabled').hide();
       $('#dd-connection').removeClass('btn-outline-success').addClass('btn-warning');
+      $('#dd-connection-menu .bt-register').addClass('d-none');
     } else {
       $('#notification-app-connection').addClass('bg-success').removeClass('bg-danger')
         .attr('title', socket.id);
@@ -770,6 +908,7 @@ class KitBuildCollab {
       $('#dd-connection-menu .bt-connect').addClass('disabled').hide();
       $('#dd-connection-menu .bt-disconnect').removeClass('disabled').show();
       $('#dd-connection').addClass('btn-outline-success').removeClass('btn-warning');
+      $('#dd-connection-menu .bt-register').removeClass('d-none');
     }
   }
 
@@ -903,22 +1042,22 @@ class KitBuildCollab {
     });
   }
 
-
-
-
-
-
-
-
-
   static async handleRefresh(collab) {
     let previouslyConnected = 
       window.localStorage.getItem(`collab-${collab.namespace}-connected`);
     console.error("CONNECT BY PREVIOUS STATE");
     if (previouslyConnected) return await collab.connect();
   }
-}
 
+  setData(key, value) {
+    this.data.set(key, value);
+  }
+
+  getData(key) {
+    return this.data.get(key) ?? null;
+  }
+
+}
 
 
 
@@ -1104,12 +1243,11 @@ class CollabChannelTool extends CollabTool {
     });
     
     $('#input-channel-message').on('keyup', e => {
-      console.log(e);
+      // console.log(e);
       if (!e.shiftKey && e.key == "Enter") {
-        console.log('should submit');
+        // console.log('should submit');
         // e.preventDefault();
-        let text = $('#input-channel-message')
-          .val().trim();
+        let text = $('#input-channel-message').val().trim();
         if (text.length == 0) return
         if (!collab.socket || !collab.socket.connected) {
           UI.error("Cannot send message: Socket is not connected.").show()
@@ -1124,6 +1262,8 @@ class CollabChannelTool extends CollabTool {
               name: collab.user.name
             }
           };
+          if (this.collab?.data)
+            this.collab?.data?.forEach((v, k) => message[k] = v);          
           collab.socket.emit('channel-message', message, 
             KitBuildCollab.getPersonalRoom().name, 
             this.node.data.id, () => {
@@ -1142,11 +1282,10 @@ class CollabChannelTool extends CollabTool {
       }
     });
     $('#bt-send-channel-message').on('click', e => {
-      // var e = $.Event( "keyup", { key: "Enter" } );
-      // $('#input-channel-message').trigger(e);
+      var e = $.Event( "keyup", { key: "Enter" } );
+      $('#input-channel-message').trigger(e);
     })
-    $('form.channel-chat').on('submit', (e) => {
-      console.log(e);
+    $('form.channel-chat').on('submit', (e) => { // console.log(e);
       e.preventDefault();
       e.stopPropagation();
     });
@@ -1387,6 +1526,7 @@ class CollabChatTool extends CollabTool {
         UI.error("Cannot send message: Socket is not connected.").show()
         return;
       }
+      // console.log(this.collab?.data, this);
       message = {
         when: Date.now() / 1000 | 0,
         type: 'text',
@@ -1394,8 +1534,11 @@ class CollabChatTool extends CollabTool {
         sender: {
           username: collab.user.username,
           name: collab.user.name,
-        }
+        },
       }
+      if (this.collab?.data)
+        this.collab?.data?.forEach((v, k) => message[k] = v);
+
       if (KitBuildCollab.getPersonalRoom()) {
         collab.socket.emit('message', message, KitBuildCollab.getPersonalRoom().name, () => {
           message.self = (message.sender.name == collab.user.name);

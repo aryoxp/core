@@ -1195,7 +1195,6 @@ class KitBuildDistanceColorTool extends KitBuildCanvasTool {
 
   action(event, e, nodes) {
     // console.error(event, e, nodes, nodes[0].data());
-    console.log(this);
     this.raiseEvent(`distance-feedback`, nodes[0].data());
     return;
   }
@@ -1307,6 +1306,10 @@ class KitBuildDistanceColorTool extends KitBuildCanvasTool {
     let lids = new Set();
     let cids = new Set();
     cids.add(cid);
+
+    if (!this.conceptMap) {
+      console.error('Invalid concept map canvas data'); return;
+    }
 
     // find connected links
     for(let lt of this.conceptMap.linktargets) {
