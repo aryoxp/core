@@ -1624,12 +1624,13 @@ class KitBuildToolCanvas {
   }
 
   resizeCanvas() {
-    // console.warn('resize!')
+    // console.warn('resize!');
     let sibling = $($(this.canvas.cy.container()).find("div > canvas")[0]);
     this.dimension = {
       w: sibling.css("width").replace("px", ""),
       h: sibling.css("height").replace("px", ""),
     };
+    // console.warn(this.dimension, this.settings);
     $(`#${this.settings.indicatorCanvasId}`).css("width", sibling.css("width"));
     $(`#${this.settings.indicatorCanvasId}`).css(
       "height",
@@ -1645,6 +1646,14 @@ class KitBuildToolCanvas {
     $(`#${this.settings.konvaCanvasId}`).css("height", sibling.css("height"));
     $(`#${this.settings.konvaCanvasId}`).attr("width", this.dimension.w);
     $(`#${this.settings.konvaCanvasId}`).attr("height", this.dimension.h);
+    $(`#${this.settings.konvaCanvasId} .konvajs-content`).css("width", sibling.css("width"));
+    $(`#${this.settings.konvaCanvasId} .konvajs-content`).css("height", sibling.css("height"));
+    $(`#${this.settings.konvaCanvasId} .konvajs-content`).attr("width", this.dimension.w);
+    $(`#${this.settings.konvaCanvasId} .konvajs-content`).attr("height", this.dimension.h);
+    $(`#${this.settings.konvaCanvasId} .konvajs-content > canvas`).css("width", sibling.css("width"));
+    $(`#${this.settings.konvaCanvasId} .konvajs-content > canvas`).css("height", sibling.css("height"));
+    $(`#${this.settings.konvaCanvasId} .konvajs-content > canvas`).attr("width", this.dimension.w);
+    $(`#${this.settings.konvaCanvasId} .konvajs-content > canvas`).attr("height", this.dimension.h);
 
     return this;
   }
