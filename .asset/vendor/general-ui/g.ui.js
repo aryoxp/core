@@ -94,18 +94,18 @@ class Dialog {
     this.positiveListener = (event) => {
       // console.error("Positive listener", this.positiveListeners);
       this.dismissListeners.clear();
-      for(let listener of this.positiveListeners) listener();
+      for(let listener of this.positiveListeners) listener(event);
       this.hide();
     }
     this.negativeListener = (event) => {
       // console.error("Negative listener", this.negativeListeners);
       this.dismissListeners.clear();
-      for(let listener of this.negativeListeners) listener();
+      for(let listener of this.negativeListeners) listener(event);
       this.hide();
     }
     this.dismissListener = (event) => {
       // console.error("Dismiss listener", this.dismissListeners);
-      for(let listener of this.dismissListeners) listener();
+      for(let listener of this.dismissListeners) listener(event);
     }
   }
   static instance(content, opts) {
@@ -145,6 +145,12 @@ class Dialog {
   dismiss(callback, options) {
     this.dismissListeners.add(callback);    
     this.settings = Object.assign(this.settings, options);
+    return this;
+  }
+  noDismiss() {
+    this.settings.backdrop = 'static';
+    this.settings.keyboard = false;
+    this.settings.dismissNegative = false;
     return this;
   }
   emphasize() {

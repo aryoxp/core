@@ -244,17 +244,13 @@ class Cookie {
     });
   }
 
-  unset(cookieKey = null) {
-    return new Promise((resolve, reject) => {
-      if (cookieKey === null) reject("Cookie key is null");
-      Core.instance()
-        .ajax()
-        .post("coreSession/unsetCookie", {
-          key: cookieKey,
-        })
-        .then(resolve)
-        .catch(reject);
-    });
+  async unset(cookieKey = null) {
+    if (cookieKey === null) reject("Cookie key is null");
+    const result = await Core.instance()
+      .ajax().post("coreSession/unsetCookie", {
+        key: cookieKey,
+      });
+    return result;
   }
 
   get(cookieKey = null) {

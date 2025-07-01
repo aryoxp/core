@@ -1,14 +1,16 @@
 const fs = require('fs');
 const ini = require('ini')
 
-var config = ini.parse(fs.readFileSync('./config.ini', 'utf-8')); // console.log(config)
+var config = ini.parse(fs.readFileSync('./config.ini', 'utf-8')); 
+// console.log(config)
 
 const { createServer } = (config.server.useSSL) ? require("https") : require("http");
 const { Server } = require("socket.io");
 
 const mysql = require('mysql2/promise');
-const { channel } = require('diagnostics_channel');
-const connParam = {
+const { rejects } = require('assert');
+// const { channel } = require('diagnostics_channel');
+const dbConnectionParams = {
   host: config.database.host,
   user: config.database.user,
   port: config.database.port,
@@ -23,20 +25,26 @@ const connParam = {
 
 class ServerApp {
   constructor() {
-    console.log(`Collaboration server listening on port: ${config.server.port} ${config.server.useSSL ? "with" : "without"} SSL.`);
+    console.log(`Kit-Build collaboration server is listening on port: ${config.server.port} ${config.server.useSSL ? "with" : "without"} SSL.`);
     const options = (config.server.useSSL) ? {
       key: fs.readFileSync(config.server.privkey),
       cert: fs.readFileSync(config.server.cert)
     } : {};
     this.httpServer = createServer(options);
-    this.io = new Server(this.httpServer, {
-      // port: config.server.port,
+    let ioOptions = Object.assign({}, {
+      port: config.server.port,
       cors: {
         origin: config.server.corsOrigin,
-        methods: ["GET", "POST"]
+        methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+        preflightContinue: false,
+        optionsSuccessStatus: 204
       },
-      // path: "/sio"
-    });
+      path: config.server.path
+    }); // console.log(ioOptions);
+    // if (config?.server?.port?.trim() != "") 
+    //   ioOptions.port = config.server.port;
+    this.io = new Server(this.httpServer, ioOptions);
+    // console.log(this.io);
 
     this.rooms    = new Map(); // key is room name, value is room data
     this.users    = new Map(); // key is socket ID, value is user data
@@ -62,18 +70,19 @@ class ServerApp {
     this.httpServer.listen(config.server.port);
   }
   static async instance(config) {
-    ServerApp.inst = new ServerApp(config);
-    // test db connection
-    try {
-      const db = await mysql.createConnection(connParam);
-      console.log("Database connected.");
-      const sql = "SELECT 1, ?";
-      const [rows, fields] = await db.query(sql, [2]);
-      console.log("Database query test result:", rows, fields);
+
+    try { // test db connection
+      const db = await mysql.createConnection(dbConnectionParams);
+      console.log("Database connection OK.");
+      // const sql = "SELECT 1, ?";
+      // const [rows, fields] = await db.query(sql, [2]);
+      // console.log("Database query test result:", rows, fields);
       await db.end();
     } catch (err) {
-      console.log("Error:", err.code);
+      console.log("Database Error:", err.code);
     }
+
+    ServerApp.inst = new ServerApp(config);
     return ServerApp.inst;
   }
   // static handleCmapSocketEvent(io, socket) {
@@ -407,8 +416,60 @@ class ServerApp {
       // console.log(io.adapter.rooms, io.adapter.sids)
       // broadcast that this user has been registered in the system
       let rooms = this.getRoomsOfSocket(io, socket);
+      // console.log("user-registered", user, rooms);
       io.emit('user-registered', user, rooms);
       if (typeof callback == 'function') callback(true);
+    });
+    socket.on('get-registered-user', (callback) => {
+      console.log("KB GET REGISTERED USER", socket.id);
+      let user = ServerApp.inst?.users?.get(socket.id) ?? {};
+      user.socketId = socket.id;
+      if (typeof callback == 'function') callback(user);
+    });
+    socket.on('unregister-user', async (user, callback) => {
+      console.log("KB UNREGISTER USER", user?.name, user?.socketId);
+      let socketId = user?.socketId;
+      let name = user?.name;
+      if (!socketId) {
+        console.log('Invalid user'); 
+        if (typeof callback == 'function') callback(false, "Invalid user");
+        return;
+      }
+      // console.log("Users", ServerApp.inst?.users);
+      let sockets = await io.fetchSockets();
+      for (let socket of sockets) {
+        if (socket.id == socketId) {
+          // console.log(socket.id);
+          // console.log(socket.rooms);
+          for(const room of socket.rooms) {
+            // console.log(room);
+            if (room != socket.id && !room.startsWith('GK/')) {
+              // console.log("Try leaving room:", room);
+              this.leaveRoom(io, socket, room);
+              // io.emit('user-leave-room', ServerApp.inst.users.get(socket.id), room);
+            }
+          }
+          ServerApp.inst?.users?.delete(socket.id);
+          break;
+        }
+      }
+      // let rooms = ServerApp.getRoomsOfSocket(io, {id: socketId});
+      // console.log(rooms);
+      // for (let room of rooms) {
+      //   console.log(room);
+      //   console.log(`User ${name} leaves room: ${room?.name}`)
+      //   this.leaveRoom(io, socketId, room?.name).then(result => {
+      //     console.log("Leave result:", result);
+      //   });
+      // }
+      
+      if (typeof callback == 'function') callback(true);
+    });
+    socket.on('get-designated-room', async (userid, callback) => {
+      console.log("KB GET DESIGNATED ROOM", socket.id, userid);
+      let room = await Collab.getRoom(userid);
+      // console.log(room);
+      if (typeof callback == 'function') callback(room);
     });
     socket.on('get-all-clients', (callback) => {
       console.log("KB ALL CLIENTS", socket.id);
@@ -438,9 +499,9 @@ class ServerApp {
       if (typeof callback == 'function') callback(rooms);
     });
     socket.on('get-room-sockets', (name, callback) => {
-      console.log("KB REQUEST ROOM SOCKETS", name, socket.id);
-      if (!name) {
-        callback([]);
+      console.log("KB GET ROOM SOCKETS", name, socket.id);
+      if (!name || name == "null" || name == "undefined" ) {
+        if (typeof callback == 'function') callback([]);
         return;
       } 
       let sockets = Array.from(ServerApp.getSocketsOfRoom(io, name) ?? []);
@@ -450,6 +511,7 @@ class ServerApp {
         user.socketId = socket
         users.push(user);
       };
+      // console.log(sockets, users);
       if (typeof callback == 'function') callback(users);
     });
     socket.on('get-rooms-of-socket', (callback) => {
@@ -595,40 +657,59 @@ class ServerApp {
       // console.log("KB GET CHANNEL MESSAGE", room, nodeId);
       if (typeof callback == 'function') {
         let channels = ServerApp.inst.channels.get(room);
-        console.log(channels)
+        // console.log(channels)
         if (channels) {
           let chats = channels.get(nodeId);
-          console.log(chats)
+          // console.log(chats)
           callback(chats ? chats : []);
         }
         callback([]);
       }
-      console.log(ServerApp.inst.channels);
+      // console.log(ServerApp.inst.channels);
     })
 
     socket.on("command", (room, command, data, callback) => {
       console.log("KB COMMAND", room, command, data, socket.id);
-      socket.in(room).emit('command', command, data)
+      io.in(room).emit('command', command, data);
     });
-    socket.on("get-map-state", (room, callback) => {
+    socket.on("get-map-state", async (room, callback) => {
       console.log("KB GET MAP STATE", room, socket.id);
       if (!room) {
-        if (typeof callback == 'function') callback("Invalid room.") 
-        return
+        if (typeof callback == 'function') callback("Invalid room.");
+        return;
       }
-      let sockets = ServerApp.getSocketsOfRoom(io, room)
+      let sockets = ServerApp.getSocketsOfRoom(io, room);
       if (!sockets) {
-        if (typeof callback == 'function') callback("Unable to get socket list from room.") 
-        return
+        if (typeof callback == 'function') callback("Unable to get socket list from room.");
+        return;
       } 
-      for(let sockId of Array.from(sockets)) {
+      let socketsSet = new Set([...Array.from(sockets)]); // console.log(socketsSet);
+      socketsSet.delete(socket.id); // remove own socket from list
+      socketsSet = Array.from(socketsSet);
+      while (socketsSet.length > 0) {
+        let sockId = socketsSet.shift();
+        // console.log("Try:", sockId, socket.id);
         if (sockId != socket.id) {
-          socket.to(sockId).emit("get-map-state", socket.id)
-          callback(true) 
-          return
+          let response = await new Promise((resolve, reject) => {
+            console.log(`Requesting map state from ${sockId}`);
+            io.timeout(1000).to(sockId).emit("get-map-state", socket.id, 
+              (err, canResponse) => {
+                if (err) reject(err);
+                console.log(`Target ${sockId} can response:`, canResponse);
+                resolve(canResponse?.shift());
+            });
+          }); // console.log(response);
+          if (response) { callback(true); return; }
+          // socket.to(sockId).emit("get-map-state", socket.id, (err, status) => {
+          //   console.log(err, status);
+          // });
+          // callback(true);
+          // return
         }
+        
       }
-      callback("Unable to get map state from peer. No peer found.") 
+      callback("Unable to get map state from peer. No peer found.");
+      return;
     });
     socket.on("send-map-state", (requesterSocketId, mapState, callback) => {
       console.log("KB SEND MAP STATE", requesterSocketId);
@@ -656,10 +737,11 @@ class ServerApp {
   static getRoomsOfSocket(io, socket) {
     let rooms = [];
     let names = io.adapter.sids.get(socket.id);
+    // console.log("GROS", names, socket.id);
     // console.log(socket, names, io.adapter.sids);
     // console.log(io.adapter.sids, socket.id);
     // console.log(ServerApp.inst.rooms);
-    for(let name of names) {
+    for(let name of names ?? []) {
       let room = Object.assign(
         {},
         ServerApp.inst.rooms.get(name), 
@@ -670,6 +752,7 @@ class ServerApp {
         });
       rooms.push(room);
     }
+    // console.log(rooms);
     return rooms;
   }
   static getUsersOfRoom(io, roomName) {
@@ -677,8 +760,10 @@ class ServerApp {
     let socketIds = ServerApp.getSocketsOfRoom(io, roomName) ?? [];
     socketIds.forEach(socketId => {
       let user = ServerApp.inst.users.get(socketId);
+      // console.log("GUOR", roomName, user);
       if (user) users.push(user);
     })
+    // console.log("GUOR", roomName, users, ServerApp.inst.users);
     return users;
   }
   static createRoom(io, socket, name) {
@@ -823,10 +908,10 @@ class ServerApp {
   static leaveRoom(io, socket, name) {
     return new Promise((resolve, reject) => {
       if (!socket) {
-        reject("KB LEAVE ROOM: Socket undefined");
+        reject("KB LEAVE ROOM: Socket undefined.");
         return;
       }
-      socket.leave(name);
+      socket?.leave(name);
       // if no other users in the room, remove it from rooms cache
       if (!io.adapter.rooms.has(name)) 
         ServerApp.inst.rooms.delete(name);
@@ -846,15 +931,13 @@ class ServerApp {
           socketIds: ServerApp.getSocketsOfRoom(io, name),
           users: ServerApp.getUsersOfRoom(io, name) 
         };
-        io.in(groupRoom).emit('user-leave-room', ServerApp.inst.users.get(socket.id), room);
+        io.emit('user-leave-room', ServerApp.inst.users.get(socket.id), room);
       });
       resolve(socket);
     });
   }
   static getSocketsOfRoom(io, name) { 
-    // console.log("GSOR",name);
     let socketIds = io.adapter.rooms.get(name);
-    // console.log(io.adapter.rooms, socketIds);
     return Array.from(socketIds ?? []);
   }
 
@@ -967,13 +1050,28 @@ class Utility {
 class L {
   static log = async (room, sender, socket = null, session = null, message = null, channel = null, mapid = null, channelId = null, tstampc = null, data = null) => {
     try {
-      const db = await mysql.createConnection(connParam);
+      const db = await mysql.createConnection(dbConnectionParams);
       const sql = "INSERT INTO chat (room, sender, socket, session, message, channel, mapid, channelId, tstampc, data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
       const [result] = await db.query(sql, [room, sender, socket, session, message, channel, mapid, channelId, tstampc, data ? JSON.stringify(data) : null]);
       console.log("Chat log:", result?.insertId);
       db.end();
     } catch (err) {
-      console.log("Error:", err.code);
+      console.log("Database Error:", err.code);
+    }
+  }
+}
+
+class Collab {
+  static getRoom = async (userid) => {
+    try {
+      const db = await mysql.createConnection(dbConnectionParams);
+      const sql = "SELECT room FROM pair WHERE userid = ? ORDER BY id DESC LIMIT 1";
+      const [rows, fields] = await db.query(sql, [userid]); // console.log(rows);
+      await db.end();
+      return rows.length ? rows[0] : null;
+    } catch (err) {
+      console.log("Database Error:", err.code);
+      return [];
     }
   }
 }

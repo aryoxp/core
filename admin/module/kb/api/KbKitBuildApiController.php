@@ -67,6 +67,7 @@ class KbKitBuildApiController extends CoreApi {
       $service = new KitBuildService();
       $result = $service->insertOrUpdateKitMap($id, $title, $cmid, $data, $options);
       $result = $service->getKitMap($id);
+      $result->conceptMap = $service->openConceptMap($result->cmid);
       CoreResult::instance($result)->show();    
     } catch(Exception $e) {
       CoreError::instance($e->getMessage())->show();
@@ -74,16 +75,19 @@ class KbKitBuildApiController extends CoreApi {
   }
 
   function updateKitMap() {
+    // var_dump($_POST['id']);//exit;
     $id = $this->postv('id');
     $newid = $this->postv('newid');
     $title = $this->postv('title');
     $cmid = $this->postv('cmid');
     $data = $this->postv('data');
+    // var_dump($data);
     $options = $this->postv('options');
     try {
       $service = new KitBuildService();
       $result = $service->updateKitMap($id, $newid, $title, $cmid, $data, $options);
       $result = $service->getKitMap($newid);
+      $result->conceptMap = $service->openConceptMap($result->cmid);
       CoreResult::instance($result)->show();    
     } catch(Exception $e) {
       CoreError::instance($e->getMessage())->show();

@@ -52,8 +52,8 @@ class App {
       this.canvas.direction = conceptMap.map.direction;
       this.session.set('cmid', conceptMap.map.cmid)
       let status = `<span class="mx-2 d-flex align-items-center status-cmap">`
-        + `<span class="badge rounded-pill bg-secondary">ID: ${conceptMap.map.cmid}</span>`
-        + `<span class="text-secondary ms-2 text-truncate"><small>${conceptMap.title}</small></span>`
+        + `<span class="badge rounded-pill bg-secondary">CMID: ${conceptMap.map.cmid}</span>`
+        // + `<span class="text-secondary ms-2 text-truncate"><small>${conceptMap.title}</small></span>`
         + `</span>`
       StatusBar.instance().remove('.status-cmap').prepend(status);
     } else {
@@ -62,31 +62,30 @@ class App {
     }
   }
 
-  setKitMap(kitMap) { console.warn("KIT MAP SET:", kitMap)
+  setKitMap(kitMap) { console.warn("KIT MAP SET:", kitMap);
     if (!kitMap) {
       this.kitMap = null;
       return;
     } 
     try {
-      let data = Core.decompress(kitMap.data);
-      kitMap.options = JSON.parse(kitMap.options);
-      kitMap = Object.assign(kitMap, data);
-      // console.warn(kitMap);
-    } catch(e) {}
-    this.kitMap = kitMap;
-    CDM.options = kitMap.options;
-    // if (kitMap) {
-    //   this.setConceptMap(kitMap.conceptMap)
-    //   this.session.set('kid', kitMap.map.kid)
-    //   let status = `<span class="mx-2 d-flex align-items-center status-kit">`
-    //     + `<span class="badge rounded-pill bg-primary">ID: ${kitMap.map.kid}</span>`
-    //     + `<span class="text-secondary ms-2 text-truncate"><small>${kitMap.map.name}</small></span>`
-    //     + `</span>`
-    //   StatusBar.instance().remove('.status-kit').append(status);
-    // } else {
-    //   StatusBar.instance().remove('.status-kit');
-    //   this.session.unset('kid')
-    // }
+      // let data = Core.decompress(kitMap.data);
+      // kitMap.options = JSON.parse(kitMap.map.options);
+      // kitMap = Object.assign(kitMap, data);
+      if (kitMap) {
+        //   this.setConceptMap(kitMap.conceptMap)
+        this.kitMap = kitMap;
+        CDM.options = kitMap.map.options;
+        this.session.set('kid', kitMap.map.id)
+        let status = `<span class="mx-2 d-flex align-items-center status-kit">`
+          + `<span class="badge rounded-pill bg-primary">ID: ${kitMap.map.id}</span>`
+          + `<span class="text-secondary ms-2 text-truncate"><small>${kitMap.map.title}</small></span>`
+          + `</span>`
+          StatusBar.instance().remove('.status-kit').append(status);
+        } else {
+        StatusBar.instance().remove('.status-kit');
+        this.session.unset('kid')
+      }
+    } catch(e) { console.error(e); }
   }
 
   handleEvent() {
@@ -94,16 +93,17 @@ class App {
     let saveAsDialog = UI.modal('#kit-save-as-dialog', {
       onShow: () => { 
         if (saveAsDialog.kitMap) { // means save existing kit...
-          $('#kit-save-as-dialog .input-title').val(saveAsDialog.kitMap.map.title)
-          $('#kit-save-as-dialog .input-title').focus().select()
-          $('#input-fid').val(saveAsDialog.kitMap.map.id)
-          $('#input-title').val(saveAsDialog.kitMap.map.title)
+          // console.log(saveAsDialog.kitMap);
+          $('#kit-save-as-dialog .input-title').val(saveAsDialog.kitMap.map.title);
+          $('#kit-save-as-dialog .input-title').focus().select();
+          $('#input-fid').val(saveAsDialog.kitMap.map.id);
+          $('#input-title').val(saveAsDialog.kitMap.map.title);
           // $(`#input-layout-${saveAsDialog.kitMap.map.layout}`).prop('checked', true)
           // $('#input-enabled').prop('checked', saveAsDialog.kitMap.map.enabled == "1" ? true : false)
-        } else {
-          $('#kit-save-as-dialog .input-title').val('Kit of ' + App.inst.conceptMap.title)
-          $('#kit-save-as-dialog .input-title').focus().select()
-          $('#kit-save-as-dialog .bt-generate-fid').trigger('click')
+        } else { console.log(App.inst.conceptMap);
+          $('#kit-save-as-dialog .input-title').val('');
+          $('#kit-save-as-dialog .input-title').focus().select();
+          $('#kit-save-as-dialog .bt-generate-fid').trigger('click');
           // $('#input-layout-preset').prop('checked', true)
           // $('#input-enabled').prop('checked', true)
         }
@@ -369,14 +369,19 @@ class App {
         (new CoreInfo('Please select a concept map and a kit.')).show();
         return;
       }
-      KitBuild.openKitMap(openDialog.kid).then(kitMap => {
+      KitBuild.openKitMap(openDialog.kid).then(mapData => { console.log(mapData);
         try {
-          // console.warn(kitMap);
+          let kitMap = App.inst.decodeMap(mapData.data);
+          let conceptMap = App.inst.decodeMap(mapData.conceptMap?.data);
+          // delete kitMap.data;
+          // delete kitMap.conceptMap;
+          console.log(kitMap, conceptMap);
+          // return;
           App.inst.setKitMap(kitMap);
-          kitMap.conceptMap = Object.assign(kitMap.conceptMap, App.inst.decodeMap(kitMap.conceptMap.data));
-          App.inst.setConceptMap(kitMap.conceptMap);
-          kitMap.canvas.conceptMap = kitMap.conceptMap.canvas;
-          let cyData = KitBuildUI.composeKitMap(kitMap.canvas);
+          App.inst.setConceptMap(conceptMap);
+          // kitMap.conceptMap = Object.assign(kitMap.conceptMap, App.inst.decodeMap(kitMap.conceptMap.data));
+          // kitMap.canvas.conceptMap = kitMap.conceptMap.canvas;
+          let cyData = KitBuildUI.composeKitMap(kitMap.canvas, conceptMap.canvas);
           // console.log(cyData);
           if (this.canvas.cy.elements().length) {
             let confirm = (new CoreConfirm("Open the kit replacing the current kit on Canvas?")).positive(() => {
@@ -542,16 +547,18 @@ class App {
     })
   
     $('form.form-search-text').on('submit', (e) => {
-      e.preventDefault()
-      e.stopPropagation()
-      this.ajax.post(`contentApi/getTexts/1/5`, {
-        keyword: $('#input-keyword').val().trim()
+      e.preventDefault();
+      e.stopPropagation();
+      console.log(this);
+      this.ajax.post(`m/x/kb/contentApi/getTexts/1/5`, {
+        keyword: $('#input-keyword').val().trim(),
+        cmid: this.kitMap?.map?.cmid
       }).then(texts => {
         let textsHtml = ''
         texts.forEach(text => {
           textsHtml += `<div class="text-item d-flex align-items-center py-1 border-bottom" role="button"`
-          textsHtml += `  data-tid="${text.tid}" data-title="${text.title}">`
-          textsHtml += `  <span class="flex-fill ps-2 text-truncate text-nowrap">${text.title}</span>`
+          textsHtml += `  data-id="${text.id}" data-cmid="${text.cmid}">`
+          textsHtml += `  <span class="flex-fill ps-2 text-truncate text-nowrap">${text.id}</span>`
           textsHtml += `  <span class="text-end text-nowrap ms-3">`
           textsHtml += `    <button class="btn btn-sm btn-primary bt-assign"><i class="bi bi-tag-fill"></i> Assign</button>`
           textsHtml += `  </span>`
@@ -601,12 +608,12 @@ class App {
      * Save/Save As Kit
      * */
   
-    $('.app-navbar .bt-save').on('click', () => { // console.log(App.inst)
-      if (!App.inst.kitMap) $('.app-navbar .bt-save-as').trigger('click')
+    $('.app-navbar .bt-save').on('click', () => { console.log(App.inst.kitMap)
+      if (!App.inst.kitMap) $('.app-navbar .bt-save-as').trigger('click');
       else saveAsDialog.setKitMap(App.inst.kitMap)
         .setTitle("Save Kit (Update)")
         .setIcon("file-earmark-check")
-        .show()
+        .show();
     })
     
     $('.app-navbar .bt-save-as').on('click', () => {
@@ -649,12 +656,13 @@ class App {
       }
 
       let id = $('#input-fid').val().match(/^ *$/) ? null : $('#input-fid').val().trim();
+      // console.log(id, $('#input-fid').val().match(/^ *$/), $('#input-fid').val().trim());
       let title = $('#input-title').val().trim();
       if (!id) {
         (new CoreError('Invalid kit ID.')).show();
         return;
       }
-
+      // console.log(id);
       this.canvas.cy.elements().removeClass('select').unselect();
       let kitdata = {};
       kitdata.canvas = KitBuildUI.buildConceptMapData(this.canvas);
@@ -673,6 +681,7 @@ class App {
         delete d.image;
         c.data = JSON.stringify(d);
       });
+      // console.log(kitdata);
       let data = {
         id: id,
         title: kitdata.map.title,
@@ -680,22 +689,30 @@ class App {
         data: Core.compress(kitdata),
         options: JSON.stringify(CDM.options)
       };
+      // console.log(data);
       if (saveAsDialog.kitMap) {
         data.newid = id;   
-        data.id = saveAsDialog.kitMap.id;
+        data.id = saveAsDialog.kitMap.map.id;
         // console.warn(data);
-        this.ajax.post("m/x/kb/kitBuildApi/updateKitMap", data).then(kitMap => { 
-          // console.log(kitMap);
+        this.ajax.post("m/x/kb/kitBuildApi/updateKitMap", data).then(result => { 
+          // console.log(result);
+          let kitMap = Core.decompress(result.data);
+          let conceptMap = Core.decompress(result.conceptMap?.data);
+          // console.log(kitMap, conceptMap);
           App.inst.setKitMap(kitMap);
+          App.inst.setConceptMap(conceptMap);
           UI.success("Kit has been updated successfully.").show(); 
           saveAsDialog.hide(); 
         })
         .catch(error => { UI.error(error).show(); })
       } else {
         // console.warn(data);
-        this.ajax.post("m/x/kb/kitBuildApi/saveKitMap", data).then(kitMap => { 
+        this.ajax.post("m/x/kb/kitBuildApi/saveKitMap", data).then(result => { 
             // console.log(kitMap);
+            let kitMap = Core.decompress(result.data);
+            let conceptMap = Core.decompress(result.conceptMap?.data);
             App.inst.setKitMap(kitMap);
+            App.inst.setConceptMap(conceptMap);
             UI.success("Kit has been saved successfully.").show(); 
             saveAsDialog.hide(); 
           })
@@ -1032,7 +1049,9 @@ class KitBuildReferenceTool extends KitBuildCanvasTool {
       $('.kb-dialog').hide().remove();
     });
 
-    this.settings.ajax.get(`m/x/kb/kitBuildApi/getConceptMapReferenceList/${App.inst.conceptMap.id}`).then(list => {
+    console.log(this);
+
+    this.settings.ajax.get(`m/x/kb/kitBuildApi/getConceptMapReferenceList/${App.inst.conceptMap.map.cmid}`).then(list => {
       for(let ref of list) {
         let selected = nodes[0].data('resid') == ref.id ? 'selected="selected"' : '';
         $('.kb-data-dialog select[name="id"]').append(`<option value="${ref.id}" ${selected}>${ref.id}</option>`);

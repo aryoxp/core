@@ -73,7 +73,8 @@ class CoreSessionController extends CoreApi {
 
   function unsetCookie() {
     $key = self::postv('key');
-    setcookie($key, null, time() - 60);
+    $path = $this->postv('path', "/");
+    setcookie($key, '', time() - 3600, $path);
     CoreResult::instance(true)->show();
   }
 

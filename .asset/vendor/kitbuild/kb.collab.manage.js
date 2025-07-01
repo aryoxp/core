@@ -1,6 +1,6 @@
 class CollabManager {
   constructor(namespace, options) {
-    console.log("Collab Manager Initializing...", options);
+
     this.config = Core.instance().config();
     this.namespace = namespace;
     this.settings = Object.assign({
@@ -8,9 +8,11 @@ class CollabManager {
       port: this.config.get('collabport'),
       path: this.config.get('collabpath')
     }, options);
-    console.log(this.settings);
     this.isReconnect = false;
     this.evtListeners = new Set();
+
+    console.warn("Collab Manager initializing...", this.settings);
+
     this.connect();
     this.handleEvent();
   }
@@ -77,7 +79,7 @@ class CollabManager {
   isConnected() { return this.socket?.connected; }
 
   handleSocketEvent(socket) {
-    socket.onAny((e, ...args) => { console.warn(e, args);
+    socket.onAny((e, ...args) => { console.warn("Socket event:", e, args);
       this.raiseEvent(e, ...args);
     });
 
@@ -122,6 +124,11 @@ class CollabManager {
         this.raiseEvent('clients-updated', clientIds)
       );
     });
+
+    socket.on("get-map-state", (a, b, c, d) => {
+      console.log(a, b, c, d);
+      if (typeof b == "function") b(true);
+    });
     // socket.on("user-registered", (user) => {
     //   this.raiseEvent('user-registered', user);
     // });
@@ -142,15 +149,9 @@ class CollabManager {
     let user = { name: name.trim(), groups: groups }; // groups value is comma-separated
     this.user = user;
     this.socket.emit('register-user', user, status => {
-      console.log(`USER REGISTRATION ${user.name} ${status? 'OK': 'NOK'} - Socket ID: ${this.socket.id}`);
-      if (status === true) {
-        // KitBuildCollab.getRoomsOfSocket(this.socket);
-        // KitBuildCollab.getPublishedRoomsOfGroups(user.groups, this.socket);
-        // this.broadcastEvent(`socket-${this.isReconnect ? 'reconnect' : 'connect'}`, 
-        //   this.socket);
-      } else UI.error(`Unable to register user: ${status}`).show();
-    });
-    
+      console.warn(`Registering user:`, user.name, "SocketID:", this.socket.id, `${status ? 'OK': 'NOK'}`);
+      if (status !== true) UI.error(`Unable to register user: ${status}`).show();
+    }); 
   }
 
   createRoom(room) {
@@ -167,7 +168,7 @@ class CollabManager {
   joinRoom(room) {
     return new Promise((resolve, reject) => {
       if(this.socket.connected) {
-        this.socket.emit('join-room', room, e => { console.warn(e);
+        this.socket.emit('join-room', room, e => { // console.warn(e);
           resolve(e);
         });
       } else reject('Socket is not connected');
@@ -177,7 +178,7 @@ class CollabManager {
   getAllClientSockets() {
     return new Promise((resolve, reject) => {
       if(this.socket.connected) {
-        this.socket.emit('get-all-clients', clientIds => { // console.warn(clientIds);
+        this.socket.emit('get-all-clients', clientIds => { console.warn(clientIds);
           resolve(clientIds);
         });
       } else reject('Socket is not connected');

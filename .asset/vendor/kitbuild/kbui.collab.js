@@ -1,6 +1,5 @@
 class KitBuildCollab {
   constructor(namespace, canvas, options) {
-    console.log("COLLAB INSTANTIATED", options);
     this.namespace = namespace;
     this.canvas = canvas;
     this.settings = Object.assign({
@@ -10,8 +9,10 @@ class KitBuildCollab {
       listener: null
     }, options);
 
+    console.warn("Collab instance initialized", this.settings);
+
     this.data = new Map();
-    this.data.set('session', options.session?.id ?? null);
+    this.data.set('session', this.settings.session?.id ?? null);
 
     this.eventListeners = new Set();
     this.user = null;
@@ -47,25 +48,27 @@ class KitBuildCollab {
     
     KitBuildCollab.isServerOnline(this.namespace, this.settings).then(result => {}, error => {});
     KitBuildCollab.updateSocketConnectionStatus(this.socket);
-    KitBuildCollab.handleRefresh(this);
+    // KitBuildCollab.handleRefresh(this);
   }
   static async instance(namespace, user, canvas, options) {
     return new KitBuildCollab(namespace, user, canvas, options)
   }
 
   static isServerOnline(namespace = '', options) {
+    // console.error("CHECK SERVICE ONLINE");
     let settings = Object.assign({
       host: 'http://localhost',
       port: 3000,
       path: ''
-    }, options); console.log(settings);
+    }, options); // console.log(settings);
     return new Promise((resolve, reject) => {
       let url = `${settings.host}`;
       if (settings.port) url += `:${settings.port}`; 
       if (namespace) url += `/${namespace}`; 
       const checkSocket = io(`${url}`, {
+        reconnection: false,
         path: settings.path
-      });
+      }); // console.log(checkSocket);
       // online at mgm.ub.ac.id
       // const checkSocket = io('https://mgm.ub.ac.id/kitbuild', {
       //   reconnection: false,
@@ -148,7 +151,7 @@ class KitBuildCollab {
     socket.onAny((e, ...args) => { 
       
       if (e == 'message' && args[0]?.type == 'typing') {} 
-      else console.warn(e, args);
+      else console.warn("Socket event:", e, args);
 
       switch(e) {
         case 'join-room-request': { // this case requires callback
@@ -165,20 +168,26 @@ class KitBuildCollab {
           let mapkit = args.shift();
           this.broadcastEvent(e, mapkit);
         }
+        case 'user-registered': {
+          let user = args.shift();
+          // updates only when registering self
+          if (socket.id == user.socketId) {
+            KitBuildCollab.updateRegisterStatus(user);
+            UI.success('Registered successfully.').show();
+          }
+        } break;
       }
     });
 
     socket.on("connect", () => {
-      console.warn("CONNECTED", socket.id);
+      console.warn("Connected socketId:", socket.id);
       KitBuildCollab.updateSocketConnectionStatus(socket);
-      KitBuildCollab.isServerOnline(this.namespace, this.settings);
+      // KitBuildCollab.isServerOnline(this.namespace, this.settings);
       this.broadcastEvent(this.isReconnect ? 'reconnected' : 'connected', socket);
-      let collabid = window.localStorage.getItem(`collab-${this.namespace}-collabid`);
-      if (collabid) this.registerUser(collabid);
     });
 
     socket.io.on("reconnect", (attempt) => {
-      console.warn(`RECONNECTED at attempt: ${attempt}`);
+      console.warn(`Reconnected at attempt:`, attempt);
       // KitBuildCollab.isServerOnline(this.namespace, this.settings);
       this.isReconnect = true;
     });
@@ -186,6 +195,7 @@ class KitBuildCollab {
     socket.on("disconnect", (reason) => {
       console.warn("DISCONNECTED Socket ID:", socket.id, "Reason:", reason); // undefined
       KitBuildCollab.updateSocketConnectionStatus(socket);
+      KitBuildCollab.updateRegisterStatus();
       KitBuildCollab.isServerOnline(this.namespace, this.settings);
       this.isReconnect = false;
       switch(reason) {
@@ -196,15 +206,17 @@ class KitBuildCollab {
     });
 
     socket.on("user-join-room", (user, room) => {
-      KitBuildCollab.getPublishedRoomsOfGroups(this.user.groups, socket);
+      if (!user) return;
+      KitBuildCollab.getPublishedRoomsOfGroups(user.groups, socket);
       KitBuildCollab.getRoomsOfSocket(socket);
       this.broadcastEvent('socket-user-join-room', user, room)
     });
 
     socket.on("user-leave-room", (user, room) => {
-      KitBuildCollab.getPublishedRoomsOfGroups(this.user.groups, socket);
+      if (!user) return;
+      KitBuildCollab.getPublishedRoomsOfGroups(user.groups, socket);
       KitBuildCollab.getRoomsOfSocket(socket);
-      if (user.socketId == socket.id)
+      if (user?.socketId == socket.id)
         this.broadcastEvent('socket-user-leave-room', user, room);
     });
 
@@ -224,7 +236,8 @@ class KitBuildCollab {
       }
     });
 
-    socket.on("get-map-state", (requesterSocketId) => {
+    socket.on("get-map-state", (requesterSocketId, callback) => {
+      if (typeof callback == "function") callback(true);
       this.broadcastEvent('socket-get-map-state', requesterSocketId)
     });
 
@@ -264,8 +277,9 @@ class KitBuildCollab {
   }
 
   registerUser(name, groups = 'Public') { // console.warn(name);
+    console.warn("Registering user", name, 'to Groups:', groups);
     return new Promise((res, rej) => {
-      if (!this.socket.connected) {
+      if (!this.socket || !this.socket?.connected) {
         console.error('Socket is not connected.');
         rej('Socket is not connected.'); // return false;
       }
@@ -276,7 +290,7 @@ class KitBuildCollab {
       let user = { name: name.trim(), groups: groups }; // groups value is comma-separated
       this.user = user;
       this.socket.emit('register-user', user, status => {
-        console.log(`USER REGISTRATION ${user.name} ${status? 'OK': 'NOK'} - Socket ID: ${this.socket.id}`);
+        console.warn(`User registration: "${user.name}" Status: ${status? 'OK': 'NOK'}`, `Socket ID:`, this.socket.id);
         window.localStorage.setItem(`collab-${this.namespace}-collabid`, name);
         window.localStorage.setItem(`collab-${this.namespace}-collabname`, name.split("/")[1] ?? name);
         if (status === true) {
@@ -291,16 +305,89 @@ class KitBuildCollab {
         }
       });
     });
+  }
+  async registerUserGroup(name, groups = 'Public') { // console.warn(name);
+    console.warn("Registering user", name, 'to Groups:', groups);
+    return new Promise((res, rej) => {
+      if (!this.socket.connected) {
+        console.error('Socket is not connected.');
+        rej('Socket is not connected.'); // return false;
+      }
+      if (!name.trim()) {
+        console.error('Invalid name to register.');
+        rej('Invalid name to register.'); // return false;
+      }
 
-    
+      this.registerUser(name, groups).then((user)=> { 
+        // console.log(user);
+        this.user = user;
+        this.socket.emit('get-designated-room', name, (room) => {
+          if (!room || !room?.room ) {
+            UI.error("Unable to get designated room.").show();
+            return;
+          }
+          let roomName = room.room;
+          this.joinRoom(`PK/${roomName}`, this.user).then(({room, user}) => {
+            // console.log(room, user);
+            this.broadcastEvent('join-room', room);
+            $('#register-dialog').hide();
+          }).catch(error => UI.error("Error join room: " + error).show());
+        });
+      }, (error) => console.error(error));
+          
+      // let user = { name: name.trim(), groups: groups }; // groups value is comma-separated
+      // this.user = user;
+      // this.socket.emit('register-user', user, status => {
+      //   console.warn(`User registration: "${user.name}" Status: ${status? 'OK': 'NOK'}`, `Socket ID:`, this.socket.id);
+      //   window.localStorage.setItem(`collab-${this.namespace}-collabid`, name);
+      //   window.localStorage.setItem(`collab-${this.namespace}-collabname`, name.split("/")[1] ?? name);
+      //   if (status === true) {
+      //     res(user);
+      //     KitBuildCollab.getRoomsOfSocket(this.socket);
+      //     KitBuildCollab.getPublishedRoomsOfGroups(user.groups, this.socket);
+      //     this.broadcastEvent(`socket-${this.isReconnect ? 'reconnect' : 'connect'}`, 
+      //       this.socket);
+      //   } else {
+      //     UI.error(`Unable to register user: ${status}`).show();
+      //     rej(`Unable to register user: ${status}`);
+      //   }
+      // });
+    });
   }
 
-  getCollabId() {
-    return window.localStorage.getItem(`collab-${this.namespace}-collabid`);
+  getRegisteredUser() {
+    return new Promise((resolve, reject) => {
+      if (!this.socket) reject("Socket not connected.");
+      this.socket.emit('get-registered-user', user => {
+        console.warn(`Get registered user:`, user);
+        resolve(user);
+      });
+    });
+  }
+
+  getCollabId() { // console.log(this.namespace);
+    let id = window.localStorage.getItem(`collab-${this.namespace}-collabid`);
+    return id;
   }
 
   getCollabName() {
     return window.localStorage.getItem(`collab-${this.namespace}-collabname`);
+  }
+
+  setCollabId(id = null) { // console.log(this.namespace);
+    window.localStorage.setItem(`collab-${this.namespace}-collabid`, id);
+  }
+
+  setCollabName(name = null) {
+    window.localStorage.getItem(`collab-${this.namespace}-collabname`, name);
+  }
+
+  removeCollabId() {
+    window.localStorage.removeItem(`collab-${this.namespace}-collabid`);
+  }
+
+  removeCollabName() {
+    window.localStorage.removeItem(`collab-${this.namespace}-collabname`);
   }
 
   // Forward Message/Event: Server --> App
@@ -310,6 +397,10 @@ class KitBuildCollab {
       case 'reconnect':
         break;
       case 'join-room': {
+        let room = data.shift();
+        data.unshift(room);
+        console.warn("Collab: Room joined", room);
+        console.warn("Collab: Requesting map state.");
         this.send("get-map-state");
       } break;
       case 'socket-user-leave-room':
@@ -640,7 +731,7 @@ class KitBuildCollab {
       } break;
       case 'disconnect': {
         window.localStorage.removeItem(`collab-${this.namespace}-connected`)
-        window.localStorage.removeItem(`collab-${this.namespace}-room`)
+        // window.localStorage.removeItem(`collab-${this.namespace}-room`)
       } break;
       case 'socket-reconnect':
       case 'socket-connect': {
@@ -676,9 +767,14 @@ class KitBuildCollab {
           </span>
           <span class="text-dark" id="app-connection-status-text">App is disconnected</span></a>
           <small class="mx-auto d-block text-center"><code id="notification-app-socket-id"></code></small>
-          <div class="text-center mt-2"><a class="btn btn-primary btn-sm bt-register px-4 d-none">
-            <i class="bi bi-person-lines-fill"></i> Register
-          </a></div>
+          <div class="text-center mt-2 register-status">
+            <a class="btn btn-primary btn-sm bt-register px-4 d-none">
+              <i class="bi bi-person-lines-fill"></i> Register
+            </a>
+            <a class="btn btn-warning btn-sm bt-unregister px-4 d-none">
+              <i class="bi bi-person-fill-slash"></i> Unregister
+            </a>
+          </div>
         </li>
         <li><hr class="dropdown-divider"></li>
         <li><a class="dropdown-item d-flex flex-column" href="#"><span class="bt-connect btn btn-success btn-sm"><i class="bi bi-plug-fill"></i> Connect</span></a></li>
@@ -716,14 +812,15 @@ class KitBuildCollab {
       <div class="card-body">
         <input type="text" class="form-control" name="collabid" placeholder="Enter ID" />
         <input type="text" class="form-control mt-2" name="collabname" placeholder="Enter Name" />
-        <div class="mt-2">
-          <input class="me-2" type="checkbox" value="1" id="inputrememberme" checked>
-          <label class="form-check-label" for="inputrememberme">Remember Me</label>
+        <div class="mt-2 form-check">
+          <input class="form-check-input me-2" type="checkbox" value="1" id="inputrememberregister" checked>
+          <label class="form-check-label user-select-none" for="inputrememberregister">Remember Me</label>
         </div>
       </div>
       <div class="text-end p-3 pt-0">
-        <button class="btn btn-sm btn-primary px-4 me-1">Register</button>
-        <button class="btn btn-sm btn-secondary">Cancel</button>
+        <button class="btn btn-sm btn-secondary bt-cancel">Cancel</button>
+        <button class="btn btn-sm btn-primary ms-1 bt-single-register"><i class="bi bi-person-lines-fill"></i> Register</button>
+        <button class="btn btn-sm btn-primary ms-1 bt-group-register"><i class="bi bi-people-fill"></i><i class="bi bi-list"></i> Group Register</button>
       </div>
     </form>`;
     $('body').remove('#register-dialog').append(registerHtml);
@@ -748,15 +845,20 @@ class KitBuildCollab {
       // height: 250,
       onShow: () => {
         let remember = window.localStorage.getItem(`collab-${this.namespace}-remember`);
-        let collabid = window.localStorage.getItem(`collab-${this.namespace}-collabid`);
-        let collabname = window.localStorage.getItem(`collab-${this.namespace}-collabname`);
-        console.log(remember, collabid, collabname);
+        let collabid = window.localStorage.getItem(`collab-${this.namespace}-remember-collabid`);
+        let collabname = window.localStorage.getItem(`collab-${this.namespace}-remember-collabname`);
+        // console.log(remember, collabid, collabname);
         if (remember) {
           if (collabid) {
             collabid = collabid.split("/")[0];
           }
+          $('#register-dialog input#inputrememberregister').prop('checked', true);
           $('body #register-dialog input[name="collabid"]').val(collabid);
           $('body #register-dialog input[name="collabname"]').val(collabname);
+        } else {
+          $('#register-dialog input#inputrememberregister').prop('checked', false);
+          $('body #register-dialog input[name="collabid"]').val('');
+          $('body #register-dialog input[name="collabname"]').val('');
         }
       }
     });
@@ -767,6 +869,9 @@ class KitBuildCollab {
 
       switch($(e.currentTarget).attr('id')) {
         case 'dd-connection': {
+          this.getRegisteredUser().then(user => { // console.log(user);
+            KitBuildCollab.updateRegisterStatus(user);
+          }).catch(err => console.error(err));
           $('#server-connection').addClass('bg-warning')
             .removeClass('bg-danger bg-success');
           $('#server-status-text').html('Checking...');
@@ -789,19 +894,46 @@ class KitBuildCollab {
     $('#register-dialog').on('submit', (e) => {
       e.preventDefault();
       e.stopPropagation();
+
+      let sender = e.originalEvent.submitter;
       let collabid = $('#register-dialog input[name="collabid"]').val();
       let collabname = $('#register-dialog input[name="collabname"]').val();
-      let remember = $('#register-dialog input#inputrememberme:checked').val();
-      if (remember) window.localStorage.setItem(`collab-${this.namespace}-remember`, remember);
-      else window.localStorage.setItem(`collab-${this.namespace}-remember`, undefined);
+      let remember = $('#register-dialog input#inputrememberregister:checked').val();
 
-      if (collabid.trim() == "") UI.warning(`Invalid ID`).show();
-      if (collabname.trim() == "") UI.warning(`Invalid Name`).show();
       // TODO: sanitize or check
-      this.registerUser(collabid+"/"+collabname).then((user)=> {
-        console.log(user);
+      if ($(sender).hasClass('bt-cancel')) {
         $('#register-dialog').hide();
-      }, (error) => console.error(error));
+        return;
+      }
+      if (collabid.trim() == "") {
+        UI.warning(`Invalid ID`).show();
+        return;
+      }
+      if (collabname.trim() == "") {
+        UI.warning(`Invalid Name`).show();
+        return;
+      }
+      if (remember) {
+        window.localStorage.setItem(`collab-${this.namespace}-remember`, remember);
+        window.localStorage.setItem(`collab-${this.namespace}-remember-collabid`, collabid);
+        window.localStorage.setItem(`collab-${this.namespace}-remember-collabname`, collabname);
+      } else {
+        window.localStorage.removeItem(`collab-${this.namespace}-remember`);
+        window.localStorage.removeItem(`collab-${this.namespace}-remember-collabid`);
+        window.localStorage.removeItem(`collab-${this.namespace}-remember-collabname`);
+      }
+      if ($(sender).hasClass('bt-single-register')) {
+        this.registerUser(collabid+"/"+collabname).then((user)=> { // console.log(user);
+          this.user = user;
+          $('#register-dialog').hide();
+        }, (error) => console.error(error));
+      } else if ($(sender).hasClass('bt-group-register')) {
+        this.registerUserGroup(collabid+"/"+collabname).then((user)=> { // console.log(user);
+          this.user = user;
+          $('#register-dialog').hide();
+        }, (error) => console.error(error));
+      } 
+      else $('#register-dialog').hide();
     });
 
     // Connection
@@ -814,6 +946,27 @@ class KitBuildCollab {
 
     $('#dd-connection-menu .bt-register').on('click', (e) => {
       if (this.socket && this.socket.connected) this.registerDialog.show();
+    });
+    $('#dd-connection-menu .bt-unregister').on('click', (e) => {
+      if (this.socket && this.socket.connected) {
+          let confirm = UI.confirm(`Do you want to <span class="text-danger">unregister</span> yourself?<br>You will leave all rooms and your activities will no longer be synchronized.`).positive(() => {
+          let user = {
+            name: this.getCollabId(),
+            socketId: this.socket.id
+          };
+          if (this.socket && this.socket.connected)
+            this.socket.emit('unregister-user', user, (result) => {
+              // console.error(result);
+              UI.success('User unregistered.').show();
+              // KitBuildCollab.getRoomsOfSocket(this.socket);
+              this.removeCollabId();
+              this.removeCollabName();
+              this.broadcastEvent('user-unregistered', user);
+              // $('#dd-room-menu .bt-refresh-rooms').trigger('click');
+            });
+          confirm.hide();
+        }).negative(()=>confirm.hide()).show();
+      }
     });
 
     // Room
@@ -831,7 +984,8 @@ class KitBuildCollab {
         return;
       }
       let label = Loading.load(e.currentTarget);
-      KitBuildCollab.getRoomsOfSocket(this.socket).then(()=>{
+      KitBuildCollab.getRoomsOfSocket(this.socket).then((rooms) => {
+        // console.log(rooms);
         UI.info("Joined room list refreshed.").show();
         this.broadcastEvent('manual-refresh-rooms');
         Loading.done(e.currentTarget, label);
@@ -889,6 +1043,8 @@ class KitBuildCollab {
 
   }
 
+
+
   // Socket Connection
   static updateSocketConnectionStatus(socket) {
     if (!socket || !socket.connected) {
@@ -909,6 +1065,31 @@ class KitBuildCollab {
       $('#dd-connection-menu .bt-disconnect').removeClass('disabled').show();
       $('#dd-connection').addClass('btn-outline-success').removeClass('btn-warning');
       $('#dd-connection-menu .bt-register').removeClass('d-none');
+    }
+  }
+
+  static updateRegisterStatus(user = false) { // console.log(user)
+    $('.bt-register').parent().find(".userid").remove();
+    if (!user) {
+      $('.bt-register').addClass('d-none');
+      $('.bt-unregister').addClass('d-none');
+      return;
+    }
+    if (user?.name) {
+      let html = ``;
+      html += `<small class="d-flex mx-3 mb-2 px-2 py-1 fw-semibold `;
+      html += `  text-secondary-emphasis bg-secondary-subtle border`;
+      html += `  justify-content-center align-items-center`;
+      html += `  border-secondary-subtle rounded-2 userid" style="font-size:.775em;">`;
+      html += `  <i class="bi bi-person-fill me-2"></i>`;
+      html += `  ${user.name}`;
+      html += `</small>`;
+      $('.bt-register').parent().prepend(html);
+      $('.bt-register').addClass('d-none');
+      $('.bt-unregister').removeClass('d-none');
+    } else {
+      $('.bt-register').removeClass('d-none');
+      $('.bt-unregister').addClass('d-none');
     }
   }
 
@@ -965,7 +1146,7 @@ class KitBuildCollab {
 
   static populateRoomList(rooms) {
     let html = rooms.length ? '' : `<em class="d-block text-muted text-center">No Rooms</em>`;
-    rooms.forEach(room => { console.warn(room);
+    rooms.forEach(room => { // console.warn(room);
       let color = room.type == "group" ? `text-muted` : `text-primary`;
       color = room.type ? color : 'text-dark text-opacity-50';
       let bg = room.type == "group" ? `bg-warning text-dark` : `bg-primary`;
@@ -1018,9 +1199,11 @@ class KitBuildCollab {
     $('#dd-room-menu .published-room-list').html(html);
   }
 
-  joinRoom(room, user) { // console.warn(room, user);
+  joinRoom(room, user) { 
+    console.warn("Joining room:", room, user);
     return new Promise((resolve, reject) => {
-      this.socket.emit('join-room', room, rooms => {
+      this.socket.emit('join-room', room, (rooms) => {
+        // console.log("emit join room", room, rooms);
         if (typeof rooms == 'string') {
           reject(rooms);
           return;
@@ -1029,7 +1212,16 @@ class KitBuildCollab {
         let chatTool = this.tools.get('chat');
         if (chatTool)
           promises.push(chatTool.getAndBuildRoomMessages(room, user));
-        Promise.all(promises).then(result => resolve(result));
+        // console.log(promises);
+        Promise.all(promises).then((result) => {
+          // console.log(result, room);
+          // resolve(result);
+          let roomNameParts = room.split("/");
+          let roomName = roomNameParts.length > 1 ? roomNameParts[1] : roomNameParts[0];
+          // console.log(roomNameParts, roomName, user);
+          window.localStorage.setItem(`collab-${this.namespace}-room`, roomName);
+          resolve({room, user});
+        }).catch((error) => UI.warning(error).show());
       })
     })
   }
@@ -1042,11 +1234,11 @@ class KitBuildCollab {
     });
   }
 
-  static async handleRefresh(collab) {
+  async connectIfPreviouslyConnected() {
     let previouslyConnected = 
-      window.localStorage.getItem(`collab-${collab.namespace}-connected`);
-    console.error("CONNECT BY PREVIOUS STATE");
-    if (previouslyConnected) return await collab.connect();
+      window.localStorage.getItem(`collab-${this.namespace}-connected`);
+    console.warn("Connecting to collab server by previous state ...");
+    if (previouslyConnected) return await this.connect();
   }
 
   setData(key, value) {
@@ -1466,9 +1658,9 @@ class CollabChatTool extends CollabTool {
     super(collab.canvas, options)
     this.collab = collab;
     this.socket = collab.socket;
-    console.error("CHAT INSTANTIATED and SUBSCRIBE event")
-    this.collab.on('event', this.onCollabEvent.bind(this))
-    CollabChatTool.unreadMessageCount = 0
+    this.collab.on('event', this.onCollabEvent.bind(this));
+    CollabChatTool.unreadMessageCount = 0;
+    console.warn("Chat tool created and event subscribed.");
   }
   render() {
     return `<button id="dd-message" type="button" class="dd btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="false" data-bs-offset="30,15" aria-expanded="false">

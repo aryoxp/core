@@ -88,10 +88,14 @@ class KitBuildService extends CoreService {
     $update['data'] = QB::esc($data);
     $update['options'] = QB::esc($options);
 
+    // var_dump($update);
+
     $db = self::instance('kb');
     $qb = QB::instance('kit')
       ->update($update)
-      ->where('id', $id);
+      ->where('id', QB::esc($id));
+
+    // echo $qb->get();
     $result = $db->query($qb->get());
     return $result;
   }

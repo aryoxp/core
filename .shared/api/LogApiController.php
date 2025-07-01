@@ -21,11 +21,12 @@ class LogApiController extends CoreApi {
     $nmatch   = $this->postv('nmatch');
     $nexcess  = $this->postv('nexcess');
     $nmiss    = $this->postv('nmiss');
+    $room     = $this->postv('room');
     
     $logService = new LogService();
     $lid = $logService->log(
       $tstampc, $userid, $cmid, $kid, $sessid, $action, $canvasid, $seq,
-      $data, $canvas, $compare, $nmatch, $nexcess, $nmiss
+      $data, $canvas, $compare, $nmatch, $nexcess, $nmiss, $room
     );
 
     // if ($cmid) {
