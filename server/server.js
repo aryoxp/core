@@ -445,7 +445,7 @@ class ServerApp {
             // console.log(room);
             if (room != socket.id && !room.startsWith('GK/')) {
               // console.log("Try leaving room:", room);
-              this.leaveRoom(io, socket, room);
+              this.leaveRoom(io, socket, room).catch((err) => console.log(err));
               // io.emit('user-leave-room', ServerApp.inst.users.get(socket.id), room);
             }
           }
@@ -597,17 +597,28 @@ class ServerApp {
         };
         // io.emit('user-leave-room', ServerApp.inst.users.get(socket.id), room);
         if (typeof callback == 'function') callback(result ? true : false);
+      }).catch((err) => {
+        if (typeof callback == 'function') callback(false, err);
       });
     });
     socket.on('invite-user-to-room', (socketId, name, callback) => {
       console.log(`KB INVITE USER ${socketId} TO ROOM ${name}`);
-      io.timeout(10000).to(socketId).emit('join-room-request', name, (err, response) => {
-        console.log("INVITE RECEIVED", err, response);
-        if (response) {
-          if (typeof callback == 'function') callback(true);
-          io.to(socket.id).emit('join-room-request-received', true);
-        }
-      });
+      try {
+        io.timeout(30000).to(socketId).emit('join-room-request', name, (err, response) => {
+          console.log("INVITE RECEIVED", err, response);
+          if (response.shift() == true) {
+            if (typeof callback == 'function') callback(true);
+            io.to(socket.id).emit('join-room-request-received', true);
+          } else {
+            let message ='Invite user: Peer did not respond on specified time.';
+            console.log(message);
+            if (typeof callback == 'function') callback(false, message);    
+          }
+        });
+      } catch(err) {
+        console.log('Invite user catch: Peer did not respond on specified time.');
+        if (typeof callback == 'function') callback(false, err);
+      }
       // if (typeof callback == 'function') callback(true);
     });
     socket.on('reject-join-room-request', (room, user, callback) => {
@@ -627,7 +638,10 @@ class ServerApp {
         };
         // if (result) io.emit('user-leave-room', ServerApp.inst.users.get(socket.id), room);
         if (typeof callback == 'function') callback(result ? true : false);
-      }, e => console.error(e));
+      }, (e) => {
+        if (typeof callback == 'function') callback(false, e);
+        console.error(e);
+      });
     });
 
 
@@ -690,21 +704,22 @@ class ServerApp {
         let sockId = socketsSet.shift();
         // console.log("Try:", sockId, socket.id);
         if (sockId != socket.id) {
-          let response = await new Promise((resolve, reject) => {
-            console.log(`Requesting map state from ${sockId}`);
-            io.timeout(1000).to(sockId).emit("get-map-state", socket.id, 
-              (err, canResponse) => {
-                if (err) reject(err);
-                console.log(`Target ${sockId} can response:`, canResponse);
-                resolve(canResponse?.shift());
-            });
-          }); // console.log(response);
-          if (response) { callback(true); return; }
-          // socket.to(sockId).emit("get-map-state", socket.id, (err, status) => {
-          //   console.log(err, status);
-          // });
-          // callback(true);
-          // return
+          try {
+            let response = await new Promise((resolve, reject) => {
+              console.log(`Requesting map state from ${sockId}`);
+              io.timeout(30000).to(sockId).emit("get-map-state", socket.id, 
+                (err, canResponse) => {
+                  if (err) reject(err);
+                  console.log(`Target ${sockId} can response:`, canResponse);
+                  resolve(canResponse?.shift());
+              });
+            }); // console.log(response);
+            if (typeof callback == 'function') {
+              if (response == true) { callback(true); return; }
+            } else { callback(false); return; } 
+          } catch(err) { 
+            if (typeof callback == 'function') callback(false, "Unable to get socket list from room.");
+          }
         }
         
       }

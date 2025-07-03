@@ -226,7 +226,10 @@ class CollabManager {
     return new Promise((resolve, reject) => {
       if(this.socket.connected) {
         this.socket.emit('invite-user-to-room', socketId, room, 
-          result => resolve(result)
+          (result, message) => {
+            resolve({result, message});
+            console.log(result, message);
+          }
         );
       } else reject('Socket is not connected');
     });
@@ -235,7 +238,7 @@ class CollabManager {
   letUserLeaveRoom(socketId, room) {
     return new Promise((resolve, reject) => {
       if(this.socket.connected) {
-        this.socket.emit('let-user-leave-room', socketId, room, e => { console.warn(e);
+        this.socket.emit('let-user-leave-room', socketId, room, (e, message) => { console.warn(e, message);
           resolve(e);
         });
       } else reject('Socket is not connected');
