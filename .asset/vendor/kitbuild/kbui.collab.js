@@ -167,11 +167,11 @@ class KitBuildCollab {
         case 'push-mapkit': {
           let mapkit = args.shift();
           this.broadcastEvent(e, mapkit);
-        }
+        } break;
         case 'user-registered': {
           let user = args.shift();
           // updates only when registering self
-          if (socket.id == user.socketId) {
+          if (socket.id == user?.socketId) {
             KitBuildCollab.updateRegisterStatus(user);
             UI.success('Registered successfully.').show();
           }

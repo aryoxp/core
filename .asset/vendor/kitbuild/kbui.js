@@ -1421,6 +1421,14 @@ class KitBuildUI {
         }
         return false;
       }
+      let getConceptLinkData = (id) => {
+        for(let c of mapCanvas.concepts) {
+          if (c.cid == id) return JSON.parse(c.data);
+        }
+        for(let l of mapCanvas.links) {
+          if (l.lid == id) return JSON.parse(l.data);
+        }
+      }
       let getLink = (lid) => {
         for(let l of mapCanvas.links) {
           if (l.lid == lid) return l
@@ -1449,7 +1457,7 @@ class KitBuildUI {
           data: Object.assign(JSON.parse(c.data), { 
             id: c.cid,
             label: c.label,
-          }),
+          }, getConceptLinkData(c.cid)),
           invalid: position === false ? true : undefined
         })
       })
@@ -1479,7 +1487,7 @@ class KitBuildUI {
             id: l.lid,
             label: l.label,
             limit: countLinkTargets(l.lid)
-          }),
+          }, getConceptLinkData(l.lid)),
           invalid: position === false ? true : undefined
         })
       });
