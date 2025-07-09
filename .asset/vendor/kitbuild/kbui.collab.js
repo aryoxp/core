@@ -218,6 +218,7 @@ class KitBuildCollab {
       KitBuildCollab.getRoomsOfSocket(socket);
       if (user?.socketId == socket.id)
         this.broadcastEvent('socket-user-leave-room', user, room);
+      this.broadcastEvent("user-leave-room", user, room);
     });
 
     socket.on("command", (command, compressedData) => {
