@@ -212,7 +212,7 @@ class KitBuildCollab {
       this.broadcastEvent('socket-user-join-room', user, room)
     });
 
-    socket.on("user-leave-room", (user, room) => {
+    socket.on("user-leave-room", (user, room) => { // console.log(user, room);
       if (!user) return;
       KitBuildCollab.getPublishedRoomsOfGroups(user.groups, socket);
       KitBuildCollab.getRoomsOfSocket(socket);
@@ -223,6 +223,7 @@ class KitBuildCollab {
 
     socket.on("command", (command, compressedData) => {
       let data = Core.decompress(compressedData);
+      console.log(data);
       this.broadcastEvent('socket-command', command, ...data)
       switch(command) {
         case 'update-concept':
@@ -328,7 +329,8 @@ class KitBuildCollab {
             return;
           }
           let roomName = room.room;
-          this.joinRoom(`PK/${roomName}`, this.user).then(({room, user}) => {
+          const ns = this.namespace == 'cmap' ? 'PC' : 'PK';
+          this.joinRoom(`${ns}/${roomName}`, this.user).then(({room, user}) => {
             // console.log(room, user);
             this.broadcastEvent('join-room', room);
             $('#register-dialog').hide();
@@ -392,7 +394,7 @@ class KitBuildCollab {
   }
 
   // Forward Message/Event: Server --> App
-  broadcastEvent(evt, ...data) { // console.warn(evt, data);
+  broadcastEvent(evt, ...data) { console.warn(evt, data);
     switch(evt) {
       case 'connect':
       case 'reconnect':
@@ -410,6 +412,7 @@ class KitBuildCollab {
       } break;
       case 'socket-command': {
         let command = data.shift();
+        console.warn(data);
         // directly apply command 
         // for canvas-related collaboration action
         this.applyReceivedCommand(command, data);
@@ -608,99 +611,105 @@ class KitBuildCollab {
           this.canvas.removeEdge(edge.data.source, edge.data.target)
         })
       } break;
-      // case "create-link":
-      // case "create-concept":
-      // case "redo-duplicate-link":
-      // case "redo-duplicate-concept":
-      // case "duplicate-link":
-      // case "duplicate-concept": { 
-      //   let node = data.shift();
-      //   console.log(node)
-      //   this.canvas.addNode(node.data, node.position)
-      // } break;
-      // case "undo-duplicate-link":
-      // case "undo-duplicate-concept": { 
-      //   let node = data.shift();
-      //   console.log(node)
-      //   this.canvas.removeElements([node.data])
-      // } break;
-      // case "duplicate-nodes": { 
-      //   let nodes = data.shift();
-      //   if (!Array.isArray(nodes)) break;
-      //   nodes.forEach(node =>
-      //     this.canvas.addNode(node.data, node.position))
-      // } break;
-      // case "undo-delete-node":
-      // case "undo-clear-canvas":
-      // case "undo-delete-multi-nodes": { 
-      //   let elements = data.shift();
-      //   this.canvas.addElements(elements)
-      // } break;
-      // case "delete-link":
-      // case "delete-concept": 
-      // case "redo-delete-multi-nodes":
-      // case "delete-multi-nodes": {
-      //   let elements = data.shift();
-      //   this.canvas.removeElements(elements.map(element => element.data))
-      // } break;
-      // case "undo-update-link":
-      // case "undo-update-concept": {
-      //   let node = data.shift();
-      //   this.canvas.updateNodeData(node.id, node.prior.data)
-      // } break;
-      // case "redo-update-link":
-      // case "redo-update-concept":
-      // case "update-link":
-      // case "update-concept": {
-      //   let node = data.shift();
-      //   this.canvas.updateNodeData(node.id, node.later.data)
-      // } break;
-      // case "redo-concept-color-change":
-      // case "undo-concept-color-change": {
-      //   let changes = data.shift();
-      //   this.canvas.changeNodesColor(changes)
-      // } break;
-      // case "concept-color-change": {
-      //   let changes = data.shift();
-      //   let nodesData = changes.later
-      //   this.canvas.changeNodesColor(nodesData)
-      // } break;
-      // case "undo-lock":
-      // case "undo-unlock":
-      // case "redo-lock":
-      // case "redo-unlock":
-      // case "lock-edge":
-      // case "unlock-edge": {
-      //   let edge = data.shift();
-      //   this.canvas.updateEdgeData(edge.id, edge)
-      // } break;
-      // case "undo-lock-edges":
-      // case "undo-unlock-edges":
-      // case "redo-lock-edges":
-      // case "redo-unlock-edges": {
-      //   let lock = data.shift();
-      //   if (!lock) break;
-      //   if (!Array.isArray(lock.edges)) break;
-      //   lock.edges.forEach(edge =>
-      //     this.canvas.updateEdgeData(edge.substring(1), { lock: lock.lock }))
-      // } break;
-      // case "lock-edges":
-      // case "unlock-edges": {
-      //   let edges = data.shift();
-      //   if (!Array.isArray(edges)) return;
-      //   edges.forEach(edge =>
-      //     this.canvas.updateEdgeData(edge.data.id, edge.data))
-      // } break;
-      // case "redo-clear-canvas":
-      // case "clear-canvas": {
-      //   this.canvas.reset()
-      // } break;
-      // case "convert-type": {
-      //   let map = data.shift();
-      //   let elements = map.later
-      //   let direction = map.to
-      //   this.canvas.convertType(direction, elements)
-      // } break;
+
+      // Concept Mapping
+
+      case "create-link":
+      case "create-concept":
+      case "redo-duplicate-link":
+      case "redo-duplicate-concept":
+      case "duplicate-link":
+      case "duplicate-concept": { 
+        let node = data.shift();
+        console.log(node)
+        this.canvas.addNode(node.data, node.position)
+      } break;
+      case "undo-duplicate-link":
+      case "undo-duplicate-concept": { 
+        let node = data.shift();
+        console.log(node)
+        this.canvas.removeElements([node.data])
+      } break;
+      case "duplicate-nodes": { 
+        let nodes = data.shift();
+        if (!Array.isArray(nodes)) break;
+        nodes.forEach(node =>
+          this.canvas.addNode(node.data, node.position))
+      } break;
+      case "undo-delete-node":
+      case "undo-clear-canvas":
+      case "undo-delete-multi-nodes": { 
+        let elements = data.shift();
+        this.canvas.addElements(elements)
+      } break;
+      case "delete-link":
+      case "delete-concept": 
+      case "redo-delete-multi-nodes":
+      case "delete-multi-nodes": {
+        let elements = data.shift();
+        this.canvas.removeElements(elements.map(element => element.data))
+      } break;
+      case "undo-update-link":
+      case "undo-update-concept": {
+        let node = data.shift();
+        this.canvas.updateNodeData(node.id, node.prior.data)
+      } break;
+      case "redo-update-link":
+      case "redo-update-concept":
+      case "update-link":
+      case "update-concept": {
+        let node = data.shift();
+        this.canvas.updateNodeData(node.id, node.later.data)
+      } break;
+      case "redo-concept-color-change":
+      case "undo-concept-color-change": {
+        let changes = data.shift();
+        this.canvas.changeNodesColor(changes)
+      } break;
+      case "concept-color-change": {
+        let changes = data.shift();
+        let nodesData = changes.later
+        this.canvas.changeNodesColor(nodesData)
+      } break;
+      case "undo-lock":
+      case "undo-unlock":
+      case "redo-lock":
+      case "redo-unlock":
+      case "lock-edge":
+      case "unlock-edge": {
+        let edge = data.shift();
+        this.canvas.updateEdgeData(edge.id, edge)
+      } break;
+      case "undo-lock-edges":
+      case "undo-unlock-edges":
+      case "redo-lock-edges":
+      case "redo-unlock-edges": {
+        let lock = data.shift();
+        if (!lock) break;
+        if (!Array.isArray(lock.edges)) break;
+        lock.edges.forEach(edge =>
+          this.canvas.updateEdgeData(edge.substring(1), { lock: lock.lock }))
+      } break;
+      case "lock-edges":
+      case "unlock-edges": {
+        let edges = data.shift();
+        if (!Array.isArray(edges)) return;
+        edges.forEach(edge =>
+          this.canvas.updateEdgeData(edge.data.id, edge.data))
+      } break;
+      case "redo-clear-canvas":
+      case "clear-canvas": {
+        this.canvas.reset()
+      } break;
+      case "convert-type": {
+        let map = data.shift();
+        let elements = map.later
+        let direction = map.to
+        this.canvas.convertType(direction, elements)
+      } break;
+
+      //
+
       case "select-nodes": {
         let ids = data.shift();
         ids = ids.map(id => `#${id}`)
@@ -1102,7 +1111,7 @@ class KitBuildCollab {
     } else $('#notification-room').hide()
   }
 
-  static getPublishedRoomsOfGroups(groups, socket) {
+  static getPublishedRoomsOfGroups(groups, socket) { // console.warn(groups, socket);
     return new Promise((resolve, reject) => {
       if (!socket) {
         reject("Invalid socket.");

@@ -31,7 +31,7 @@ class LogService extends CoreService {
   }
 
   function logsc($tstampc, $userid, $cmid, $sessid, $action, $canvasid, $seq,
-      $data, $canvas, $concept, $link, $proposition, $nc, $nl, $np) {
+      $data, $canvas, $concept, $link, $proposition, $nc, $nl, $np, $room) {
     try {
       $log                = [];
       $log['tstampc']     = QB::esc($tstampc);
@@ -49,6 +49,7 @@ class LogService extends CoreService {
       $log['nc']          = QB::esc($nc);
       $log['nl']          = QB::esc($nl);
       $log['np']          = QB::esc($np);
+      $log['room']        = QB::esc($room);
       $db = self::instance();
       $qb = QB::instance('logsc')->insert($log);
       $result = $db->query($qb->get());

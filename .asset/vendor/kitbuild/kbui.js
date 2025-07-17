@@ -215,7 +215,7 @@ class KitBuildCanvas {
     return ++this._lastLinkId;
   }
 
-  createNode(nodeData, options) {
+  createNode(nodeData, dataMap) {
     
     return new Promise((resolve) => {
       /* nodeData format:
@@ -237,6 +237,7 @@ class KitBuildCanvas {
 
       // add the node at the center of canvas
       let node = this.cy.add(nodeDefinition);
+      if (dataMap) for(let [k, v] of dataMap) node.data(k, v);
       this.applyElementStyle()
 
       // let the system place the position

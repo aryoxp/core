@@ -817,7 +817,7 @@ class UI {
             }
           }
         $(el).addClass("draggable")
-          .css("z-index", 1000)
+          // .css("z-index", $(dialog).css('z-index') ?? 1012)
           .parents()
           .on("mousemove", function (e) {
             $(".draggable").offset(offset(e))

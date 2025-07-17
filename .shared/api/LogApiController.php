@@ -79,11 +79,12 @@ class LogApiController extends CoreApi {
     $nc          = $this->postv('nc');
     $nl          = $this->postv('nl');
     $np          = $this->postv('np');
+    $room        = $this->postv('room');
     
     $logService = new LogService();
     $lid = $logService->logsc(
       $tstampc, $userid, $cmid, $sessid, $action, $canvasid, $seq,
-      $data, $canvas, $concept, $link, $proposition, $nc, $nl, $np
+      $data, $canvas, $concept, $link, $proposition, $nc, $nl, $np, $room
     );
 
     return CoreResult::instance($lid)->show();   
