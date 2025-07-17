@@ -32,7 +32,7 @@ class ServerApp {
     } : {};
     this.httpServer = createServer(options);
     let ioOptions = Object.assign({}, {
-      port: config.server.port,
+      port: parseInt(config.server.port),
       cors: {
         origin: config.server.corsOrigin,
         methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
